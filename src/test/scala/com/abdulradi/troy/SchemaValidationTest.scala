@@ -22,7 +22,7 @@ import org.scalatest._
 
 class SchemaValidationTest extends FlatSpec with Matchers {
 
-  "Schema" should "fetch fields" ignore {
+  "Schema" should "fetch fields" in {
     val schema = Schema(Seq(
       CreateKeyspace(false, KeyspaceName("test"), Seq(CreateKeyspace.Replication(Seq(("class", "SimpleStrategy"), ("replication_factor", "1"))))),
       CreateTable(false, TableName(Some(KeyspaceName("test")), "posts"), Seq(
@@ -38,15 +38,5 @@ class SchemaValidationTest extends FlatSpec with Matchers {
     schema.getField("test", "posts", "author_age").get shouldBe Field("author_age", DataType.int, FieldLevel.Partition)
     schema.getField("test", "posts", "post_id").get shouldBe Field("post_id", DataType.text, FieldLevel.Row)
     schema.getField("test", "posts", "post_title").get shouldBe Field("post_title", DataType.text, FieldLevel.Row)
-
-    //    val table = CreateTable()
-
-    //    val select = SelectStatement(SelectStatement.Fields(Seq(
-    //      SelectStatement.Field("author_id"),
-    //      SelectStatement.Field("author_name"),
-    //      SelectStatement.Field("post_id"),
-    //      SelectStatement.Field("post_title")
-    //    )))
-
   }
 }
