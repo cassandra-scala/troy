@@ -33,13 +33,48 @@ case class Keyspace(name: String, tables: Seq[Table])
 case class ClusteringColumn(column: Field, direction: String)
 case class PrimaryKey(partitionKeys: Seq[Field], clusteringColumns: Seq[ClusteringColumn])
 trait Schema {
-  def getField(keyspace: String, table: String, column: String): Option[Field]
-  def getPrimaryKey: Option[PrimaryKey]
+//  def getField(keyspace: String, table: String, column: String): Option[Field]
+//  def getPrimaryKey: Option[PrimaryKey]
+
+  def withStatement: Cql3Statement => Try[NonEmptySchema]
+}
+
+case object EmptySchema extends Schema {
+  override val withStatement = {
+    case CreateKeyspace(_, name, _) => ???
+    case _ => ???
+  }
+}
+case class NonEmptySchema(schema: Map[CreateKeyspace, Seq[CreateTable]]) extends Schema  {
+
+  override val withStatement = {
+    case s: CreateKeyspace => withKeyspace(s)
+    case s: CreateTable => withTable(s)
+    case _ => ???
+  }
+
+  def keyspaceExists(keyspaceName: KeyspaceName) =
+    schema.keys.exists(_.keyspaceName == keyspaceName)
+
+  def withKeyspace(keyspace: CreateKeyspace) =
+    if (keyspaceExists(keyspace.keyspaceName))
+      ???
+    else
+      ???
+
+  def withTable(table: CreateTable) = ???
+
+}
+object NonEmptySchema {
+  def apply(keyspace: CreateKeyspace) =
+    NonEmptySchema(Map(keyspace -> Seq.empty))
 }
 
 object Schema {
   def apply(statements: Seq[DataDefinition]): Try[Schema] = for {
     enrichedStatements <- enrichWithContext(statements)
+    statementsByKeyspace = groupByKeyspace(enrichedStatements)
+    (k, v) <- statementsByKeyspace
     (keyspaceStatements, tableStatements) = splitStatements(enrichedStatements)
     tables <- ???
     keyspaces <- ???
@@ -55,15 +90,15 @@ object Schema {
     statements.groupBy(keyspaceOfStatement)
 
 
-  private def splitStatements(statements: Seq[DataDefinition]): (Seq[CreateKeyspace], Seq[CreateTable]) = {
-    val grouped = statements.groupBy(_.getClass)
-
-    def getGroupAs[T <: DataDefinition]: Seq[T] =
-      grouped.get(classOf[T]).map(_.asInstanceOf[T]).get //OrElse(Seq.empty[T])
-
-    (grouped.get(classOf[CreateKeyspace]).map(_.asInstanceOf[CreateKeyspace]))
-    ???
-  }
+//  private def splitStatements(statements: Seq[DataDefinition]): (Seq[CreateKeyspace], Seq[CreateTable]) = {
+//    val grouped = statements.groupBy(_.getClass)
+//
+//    def getGroupAs[T <: DataDefinition]: Seq[T] =
+//      grouped.get(classOf[T]).map(_.asInstanceOf[T]).get //OrElse(Seq.empty[T])
+//
+//    (grouped.get(classOf[CreateKeyspace]).map(_.asInstanceOf[CreateKeyspace]))
+//    ???
+//  }
 
 
   /*
