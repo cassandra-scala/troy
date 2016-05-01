@@ -1,6 +1,7 @@
 lazy val agamemnon = project
   .copy(id = "agamemnon")
   .in(file("."))
+  .configs(IntegrationTest extend(Test))
   .enablePlugins(AutomateHeaderPlugin, GitVersioning)
 
 name := "agamemnon"
@@ -8,7 +9,8 @@ name := "agamemnon"
 libraryDependencies ++= Vector(
   Library.scalaTest % "test",
   Library.scalaReflect,
-  Library.scalaParserCombinators
+  Library.scalaParserCombinators,
+  Library.cassandraDriverCore
 )
 
 unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value

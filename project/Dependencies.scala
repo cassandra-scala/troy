@@ -12,4 +12,5 @@ object Library {
   val scalaTest = "org.scalatest" %% "scalatest" % Version.ScalaTest
   val scalaReflect = "org.scala-lang" % "scala-reflect" % Version.Scala
   val scalaParserCombinators = "org.scala-lang.modules" %% "scala-parser-combinators" % Version.ScalaParserCombinators
+  val cassandraDriverCore = "com.datastax.cassandra"  % "cassandra-driver-core" % "3.0.0"
 }
