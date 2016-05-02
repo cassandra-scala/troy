@@ -20,7 +20,7 @@ import com.google.common.util.concurrent.{ FutureCallback, Futures, ListenableFu
 
 import scala.concurrent.{ Promise, Future }
 
-package object native {
+package object datastax {
 
   // http://stackoverflow.com/a/19528638/234998
   implicit class RichListenableFuture[T](lf: ListenableFuture[T]) {

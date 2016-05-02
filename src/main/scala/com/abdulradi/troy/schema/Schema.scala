@@ -18,7 +18,7 @@ package com.abdulradi.troy.schema
 
 import com.abdulradi.troy.ast._
 
-import scala.util.{ Failure, Success, Try }
+import scala.util.Left
 
 trait FieldLevel
 object FieldLevel {
@@ -32,62 +32,129 @@ case class Keyspace(name: String, tables: Seq[Table])
 
 case class ClusteringColumn(column: Field, direction: String)
 case class PrimaryKey(partitionKeys: Seq[Field], clusteringColumns: Seq[ClusteringColumn])
-trait Schema {
-  //  def getField(keyspace: String, table: String, column: String): Option[Field]
-  //  def getPrimaryKey: Option[PrimaryKey]
 
-  //  def withStatement: Cql3Statement => Try[NonEmptySchema]
-}
+case class Schema(schema: Map[KeyspaceName, Seq[CreateTable]], context: Option[KeyspaceName]) {
+  import Schema._
 
-//case object EmptySchema extends Schema {
-//  override val withStatement = {
-//    case CreateKeyspace(_, name, _) => ???
-//    case _ => ???
-//  }
-//}
-//case class NonEmptySchema(schema: Map[CreateKeyspace, Seq[CreateTable]]) extends Schema  {
-//
-//  override val withStatement = {
-//    case s: CreateKeyspace => withKeyspace(s)
-//    case s: CreateTable => withTable(s)
-//    case _ => ???
-//  }
-//
-//  def keyspaceExists(keyspaceName: KeyspaceName) =
-//    schema.keys.exists(_.keyspaceName == keyspaceName)
-//
-//  def withKeyspace(keyspace: CreateKeyspace) =
-//    if (keyspaceExists(keyspace.keyspaceName))
-//      ???
-//    else
-//      ???
-//
-//  def withTable(table: CreateTable) = ???
-//
-//}
-//object NonEmptySchema {
-//  def apply(keyspace: CreateKeyspace) =
-//    NonEmptySchema(Map(keyspace -> Seq.empty))
-//}
-
-object Schema {
-  //  def apply(statements: Seq[DataDefinition]): Try[Schema] = for {
-  //    enrichedStatements <- enrichWithContext(statements)
-  //    statementsByKeyspace = groupByKeyspace(enrichedStatements)
-  //    (k, v) <- statementsByKeyspace
-  //    (keyspaceStatements, tableStatements) = splitStatements(enrichedStatements)
-  //    tables <- ???
-  //    keyspaces <- ???
-  //  } yield keyspaces
-
-  val keyspaceOfStatement: DataDefinition => Option[KeyspaceName] = {
-    case keyspace: CreateKeyspace => Some(keyspace.keyspaceName)
-    case table: CreateTable       => table.tableName.keyspace
-    //    case index: CreateIndex => index.tableName.keyspace
+  def apply(query: SelectStatement): Result[Seq[CreateTable.Column]] = query match {
+    case SelectStatement(_, SelectStatement.Selection(_, SelectStatement.SelectionItems(selection)), TableName(keyspace, table), _, _, _, _) =>
+      getColumns(keyspace, table, selection.map(_.selector).map {
+        case SelectStatement.Identifier(name) => name
+        case _                                => ???
+      })
   }
 
-  private def groupByKeyspace(statements: Seq[DataDefinition]) =
-    statements.groupBy(keyspaceOfStatement)
+  private def resolveKeyspaceName(keyspaceName: Option[KeyspaceName]): Result[KeyspaceName] =
+    keyspaceName.orElse(context).toRight("Keyspace not specified")
+
+  private def getKeyspace(keyspaceName: KeyspaceName): Result[Seq[CreateTable]] =
+    schema.get(keyspaceName).toRight(s"Keyspace '${keyspaceName.name}' not found")
+
+  private def getKeyspace(keyspaceName: Option[KeyspaceName]): Result[Seq[CreateTable]] =
+    for {
+      keyspace <- resolveKeyspaceName(keyspaceName).right
+      tables <- getKeyspace(keyspace).right
+    } yield tables
+
+  private def getTable(keyspace: Seq[CreateTable], table: String): Result[CreateTable] =
+    keyspace.find(_.tableName.table == table).toRight(s"Table '$table' not found")
+
+  private def getTable(keyspaceName: Option[KeyspaceName], tableName: String): Result[CreateTable] =
+    for {
+      tables <- getKeyspace(keyspaceName).right
+      table <- getTable(tables, tableName).right
+    } yield table
+
+  private def getColumn(table: CreateTable, columnName: String): Result[CreateTable.Column] =
+    table.columns.find(_.name == columnName).toRight(s"Column $columnName not found")
+
+  private def getColumns(table: CreateTable, columnNames: Seq[String]): Result[Seq[CreateTable.Column]] =
+    Result.seq(columnNames.map(getColumn(table, _)))
+
+  def getColumns(keyspaceName: Option[KeyspaceName], table: String, selectColumns: Seq[String]): Result[Seq[CreateTable.Column]] =
+    for {
+      table <- getTable(keyspaceName, table).right
+      columns <- getColumns(table, selectColumns).right
+    } yield columns
+
+  val withStatement: DataDefinition => Result[Schema] = {
+    case s: CreateKeyspace => withKeyspace(s)
+    case s: CreateTable    => withTable(s)
+    case _                 => ???
+  }
+
+  def keyspaceExists(keyspaceName: KeyspaceName) =
+    schema.keys.exists(_ == keyspaceName)
+
+  private def tableExists(tables: Seq[CreateTable], createTable: CreateTable) =
+    tables.exists(_.tableName.table == createTable.tableName.table)
+
+  def withKeyspace(keyspace: CreateKeyspace) =
+    if (keyspaceExists(keyspace.keyspaceName))
+      fail(s"Keyspace ${keyspace.keyspaceName.name} exists")
+    else
+      success(copy(schema = schema + (keyspace.keyspaceName -> Seq.empty)))
+
+  def withTable(createTable: CreateTable): Result[Schema]  =
+    for {
+      keyspace <- resolveKeyspaceName(createTable.tableName.keyspace).right
+      tables <- getKeyspace(keyspace).right
+      _ <- (if (tableExists(tables, createTable)) fail(s"Table ${createTable.tableName} already exists") else success).right
+    } yield copy(schema = schema + (keyspace -> (createTable +: tables)))
+
+//    for {
+//      keyspaceName <- resolveKeyspaceName(createTable.tableName.keyspace).right
+//      tables <- getKeyspace(createTable.tableName.keyspace).right
+//      table <- getTable(tables, createTable.tableName.table).right
+////      if !tables.exists(_.tableName.table == table.tableName.table)
+//      newTables = table +: tables
+//
+//    } yield
+}
+
+object Schema {
+  type Result[T] = Either[String, T]
+  object Result {
+    def seq[T](results: Seq[Result[T]]): Result[Seq[T]] =
+      results.collectFirst {
+        case Left(e) => fail(e)
+      }.getOrElse(success(results.map(_.right.get)))
+  }
+
+  val empty: Schema = Schema(Map.empty, None)
+
+  def apply(statements: Seq[DataDefinition]) =
+    (success(empty) /: statements) {
+      case (Right(schema), statement) => schema.withStatement(statement)
+      case (Left(e), _)               => fail(e)
+    }
+
+  private def fail[T](msg: String): Result[T] =
+    Left(msg)
+
+  private def success[T](result: T): Result[T] =
+    Right(result)
+
+  private def success(): Result[_] =
+    Right(())
+
+  //    def apply(statements: Seq[DataDefinition]): Try[Schema] = for {
+  //      enrichedStatements <- enrichWithContext(statements)
+  //      statementsByKeyspace = groupByKeyspace(enrichedStatements)
+  //      (k, v) <- statementsByKeyspace
+  //      (keyspaceStatements, tableStatements) = splitStatements(enrichedStatements)
+  //      tables <- ???
+  //      keyspaces <- ???
+  //    } yield keyspaces
+  //
+  //  val keyspaceOfStatement: DataDefinition => Option[KeyspaceName] = {
+  //    case keyspace: CreateKeyspace => Some(keyspace.keyspaceName)
+  //    case table: CreateTable       => table.tableName.keyspace
+  //    //    case index: CreateIndex => index.tableName.keyspace
+  //  }
+  //
+  //  private def groupByKeyspace(statements: Seq[DataDefinition]) =
+  //    statements.groupBy(keyspaceOfStatement)
 
   //  private def splitStatements(statements: Seq[DataDefinition]): (Seq[CreateKeyspace], Seq[CreateTable]) = {
   //    val grouped = statements.groupBy(_.getClass)
@@ -99,34 +166,33 @@ object Schema {
   //    ???
   //  }
 
-  /*
-   * Accepts data-definition statements including `use` statements
-   * Returns similar statements without `use` statement,
-   * but with all statements enriched with the current keyspace info
-   */
-  private def enrichWithContext(statements: Seq[DataDefinition]): Try[Seq[DataDefinition]] = {
-    def traverse(enriched: Seq[DataDefinition], remaining: Seq[DataDefinition], context: Option[KeyspaceName]): Try[Seq[DataDefinition]] =
-      remaining match {
-        case Seq()                              => Success(enriched)
-        case UseStatement(keyspaceName) +: tail => traverse(enriched, remaining, Some(keyspaceName)) // Switch current keyspace context
-        case (head: CreateTable) +: tail =>
-          enrich(head, context)
-            .map(statement => traverse(statement +: enriched, tail, context))
-            .getOrElse(Failure(new Exception(s"Can't detect the keyspace of table ${head.tableName.table}")))
-        case head +: tail => // Pass other statements without enriching
-          traverse(head +: enriched, tail, context)
-      }
-
-    def enrich(statement: CreateTable, context: Option[KeyspaceName]): Option[DataDefinition] =
-      statement.tableName.keyspace.orElse(context).map(setKeyspace(statement, _))
-
-    def setKeyspace(statement: CreateTable, keyspace: KeyspaceName): CreateTable =
-      statement.copy(tableName = statement.tableName.copy(keyspace = Some(keyspace)))
-
-    traverse(Seq.empty, statements, None)
-  }
+  //  /*
+  //   * Accepts data-definition statements including `use` statements
+  //   * Returns similar statements without `use` statement,
+  //   * but with all statements enriched with the current keyspace info
+  //   */
+  //  private def enrichWithContext(statements: Seq[DataDefinition]): Try[Seq[DataDefinition]] = {
+  //    def traverse(enriched: Seq[DataDefinition], remaining: Seq[DataDefinition], context: Option[KeyspaceName]): Try[Seq[DataDefinition]] =
+  //      remaining match {
+  //        case Seq()                              => Success(enriched)
+  //        case UseStatement(keyspaceName) +: tail => traverse(enriched, remaining, Some(keyspaceName)) // Switch current keyspace context
+  //        case (head: CreateTable) +: tail =>
+  //          enrich(head, context)
+  //            .map(statement => traverse(statement +: enriched, tail, context))
+  //            .getOrElse(Failure(new Exception(s"Can't detect the keyspace of table ${head.tableName.table}")))
+  //        case head +: tail => // Pass other statements without enriching
+  //          traverse(head +: enriched, tail, context)
+  //      }
+  //
+  //    def enrich(statement: CreateTable, context: Option[KeyspaceName]): Option[DataDefinition] =
+  //      statement.tableName.keyspace.orElse(context).map(setKeyspace(statement, _))
+  //
+  //    def setKeyspace(statement: CreateTable, keyspace: KeyspaceName): CreateTable =
+  //      statement.copy(tableName = statement.tableName.copy(keyspace = Some(keyspace)))
+  //
+  //    traverse(Seq.empty, statements, None)
+  //  }
 
 }
 
-// TODO: Shapeless
-case class TypedQuery[Partition, Row](partitionFields: Partition, rowFields: Row, keyspace: String, table: String)
+//case class TypedQuery[Partition, Row](partitionFields: Partition, rowFields: Row, keyspace: String, table: String)

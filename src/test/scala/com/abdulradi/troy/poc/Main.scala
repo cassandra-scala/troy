@@ -19,7 +19,7 @@ package com.abdulradi.troy.poc
 import java.nio.ByteBuffer
 import java.util.UUID
 
-import com.abdulradi.troy.driver.native.Query
+import com.abdulradi.troy.driver.datastax.Query
 import com.datastax.driver.core._
 import com.google.common.util.concurrent.{ ListenableFuture, FutureCallback, Futures }
 
@@ -27,28 +27,16 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{ Await, Promise, Future }
 import scala.collection.JavaConversions._
 import scala.concurrent.ExecutionContext.Implicits.global
-import com.abdulradi.troy.driver.native._
+import com.abdulradi.troy.driver.datastax._
 
 object Main extends App {
-  case class Post(id: UUID, title: String, body: String) // , commentsCount: Int)
+  case class Post(id: UUID, title: String, body: Option[String], commentsCount: Int)
 
   val cluster = Cluster.builder().addContactPoint("127.0.0.1").build()
   implicit val session: Session = cluster.connect()
 
-
-
-  implicit val evUuid = TypeCodec.uuid()
-  implicit val evString = TypeCodec.varchar()
-//   Cannot create a codec for a primitive Java type (int), please use the wrapper type instead
-//  implicit object IntTypeCodec extends TypeCodec[Int](DataType.cint(), classOf[Int]) {
-//    private val codec = TypeCodec.cint()
-//    override def serialize(value: Int, protocolVersion: ProtocolVersion): ByteBuffer = codec.serialize(value, protocolVersion)
-//    override def parse(value: String): Int = codec.parse(value)
-//    override def format(value: Int): String = codec.format(value)
-//    override def deserialize(bytes: ByteBuffer, protocolVersion: ProtocolVersion): Int = codec.deserialize(bytes, protocolVersion)
-//  }
-
-  val results = Query.query[Post]("SELECT id, title, body FROM blog.posts") //, commentsCount
+  import HasCodec._
+  val results = Query.query[Post]("SELECT id, title, body, commentsCount FROM blog.posts")
 
   println(Await.result(results, Duration.fromNanos(1000000)).toList)
   cluster.close()
