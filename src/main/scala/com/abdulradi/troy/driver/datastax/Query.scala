@@ -16,24 +16,20 @@
 
 package com.abdulradi.troy.driver.datastax
 
-import com.abdulradi.troy.ast.{ DataType, SelectStatement, CqlParser }
-import com.abdulradi.troy.schema.{ Schema, Field }
-import com.datastax.driver.core.{ TypeCodec, Row, Session }
+import com.abdulradi.troy.ast.{ DataType, CqlParser }
+import com.abdulradi.troy.schema.Schema
+import com.datastax.driver.core.{ Row, Session }
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.macros.blackbox.Context
 import scala.collection.JavaConversions._
 
 object Query {
-
-  def query[T](cql: String)(implicit session: Session, ec: ExecutionContext): Future[Seq[T]] = macro queryImpl[T]
-
   def queryExec[T](q: String)(f: Row => T)(implicit session: Session, ec: ExecutionContext): Future[Seq[T]] =
     session.executeAsync(q).toScala.map(_.toStream.map(f))
 
   def queryImpl[T: c.WeakTypeTag](c: Context)(cql: c.Expr[String])(session: c.Expr[Session], ec: c.Expr[ExecutionContext]): c.Expr[Future[Seq[T]]] = {
     import c.universe._
-
 
     implicit val liftFieldType = Liftable[DataType] {
       case DataType.ascii => q"_root_.com.abdulradi.troy.ast.DataType.ascii"

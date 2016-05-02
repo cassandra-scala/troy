@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package com.abdulradi.troy.schema
+package com.abdulradi.troy
 
-import com.abdulradi.troy.ast.SelectStatement
+import com.abdulradi.troy.driver.datastax.Query
+import com.datastax.driver.core.Session
 
-object CQL3WithSchema {
-  //  implicit class SelectWithSchema(select: SelectStatement) extends SelectStatement {
-  //
-  //  }
+import scala.concurrent.{Future, ExecutionContext}
+
+object Troy {
+  def query[T](cql: String)(implicit session: Session, ec: ExecutionContext): Future[Seq[T]] = macro Query.queryImpl[T]
 }

@@ -16,18 +16,12 @@
 
 package com.abdulradi.troy.poc
 
-import java.nio.ByteBuffer
 import java.util.UUID
-
-import com.abdulradi.troy.driver.datastax.Query
+import com.abdulradi.troy.Troy
 import com.datastax.driver.core._
-import com.google.common.util.concurrent.{ ListenableFuture, FutureCallback, Futures }
-
 import scala.concurrent.duration.Duration
-import scala.concurrent.{ Await, Promise, Future }
-import scala.collection.JavaConversions._
+import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
-import com.abdulradi.troy.driver.datastax._
 
 object Main extends App {
   case class Post(id: UUID, title: String, body: Option[String], commentsCount: Int)
@@ -35,8 +29,8 @@ object Main extends App {
   val cluster = Cluster.builder().addContactPoint("127.0.0.1").build()
   implicit val session: Session = cluster.connect()
 
-  import HasCodec._
-  val results = Query.query[Post]("SELECT id, title, body, commentsCount FROM blog.posts")
+  import Troy._
+  val results = query[Post]("SELECT id, title, body, commentsCount FROM blog.posts")
 
   println(Await.result(results, Duration.fromNanos(1000000)).toList)
   cluster.close()
