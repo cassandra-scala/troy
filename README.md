@@ -1,52 +1,63 @@
 # What is Troy?
 
 Scala wrapper for Cassandra Java client, that focuses on
-1. Leveraging full power of CQL 
-2. Type Safety
-3. Ease of use, minimal learning curve.
+  1. Leveraging full power of CQL, while retaining full type safety.
+  2. Ease of use, less biolerplate, minimizing learning curve.
 
-## Use case
-Troy shines with complex schemas, especially with nested entities.
-Let's design a simple blog platform, we have the following entities
-- Posts
-- Comments
-One of the possible table schema would be
+## How to use
+Troy needs to know the schema at *compile time*, it expects a file called `schema.cql` under `resources` folder.
+Schema is represented as plain old CQL data definition statements, the same as you'd write in a `cqlsh`
 ```
-CREATE TABLE comments_by_post (
+CREATE KEYSPACE test WITH replication = {'class': 'SimpleStrategy' , 'replication_factor': '1'};
+CREATE TABLE test.posts (
+  author_id text,
+  author_name text static,
   post_id text,
-  post_title text static,
-  post_body text static,
-  comment_id text,
-  comment_body text,
-  PRIMARY KEY ((post_id), comment_id)
+  post_title text,
+  PRIMARY KEY ((author_id), post_id)
 ```
-Here our rows are not flat, `static` columns belong to the partition.
-You can imagine comments grouped/nested under posts.
 
-Troy allows you to query such query in a correct nested structure.
+Now you can write queries as plain strings, as you are used with the Native Cassandra client.
 ```
-case class Comment(id: String, body: String)
-case class Post(id: String, title: String, body: String, comments: Seq[Comment])
+val cluster = Cluster.builder().addContactPoint("127.0.0.1").build()
+implicit val session: Session = cluster.connect()
+val results = Troy.query[Post]("SELECT id, title, body, commentsCount FROM blog.posts") // returns Future[Seq[Post]]
+```
+Given that class Post looks like
+```
+case class Post(id: UUID, title: String, body: Option[String], commentsCount: Int)
+```
+Now using Scala `macro`, Troy will 
+1. Validate the Select query agains the schema, if you are asking for columns that doesn't exists, *your code won't compile*
+2. Rewrite your code something that converts from a Cassandra Row into an instance if your class
 
-val posts: Future[Seq[Post]] = q"select * from comments_by_post".get.as[Post]
-```
+## Performance
+At runtime, your code is directly using the Datastax Java client, so no performance penalties to pay.
+In fact, it may have a slight performance improvement! 
+
+This because when you write something like `row.getString("body")`, the client has to fetch the correct `Codec` instace for you (to deserialize the bytes comming from the wire), but in Cassandra a String can be a VARCHAR or ASCII, each of them have a different Codec, the client doesn't know this information until the query result arrives!
+Well, Troy knows the schema at compile time, so your queires will be use a lower level method, that allow specificing the codec, looks like `row.getString(1, theCorrectCodecInstance)`, this should minimize the work to be done at runtime.
+
+## Types and Codecs
+TODO: Talk about handling `Option`s and ability to use your custom types as well!
+
 ## CQL Syntax
 Troy currently supports CQL v3.3.1
 
 ## Status
-Troy is currently is very early stage, most of the features described above 
-are not even implemented yet! 
-Please watch the repo for updates soon.
-Contribution is very welcome.
+Troy is currently is very early stage, testing, issues and contributions are very welcome.
 
 ### TODO
  - [x] Parse simple select statement
  - [x] Parse create keyspace and table statements
- - [ ] Define Schema classes 
- - [ ] Load and parse schema.cql file into Schema instance
- - [ ] Macro to generate compile error if Select statement doesn't match Schema
- - [ ] Define `Query` class that represents a schematized Select statement.
- - [ ] Macro to replace the CQL string to actual query using Cassandra's Java client.
+ - [x] Load and parse schema.cql file into in memory data structure
+ - [x] Macro to generate compile error if Select statement doesn't match Schema
+ - [x] Macro to replace the CQL string to actual query using Cassandra's Java client.
+ - [ ] Better error reporting in case of selecting wrong fields
+ - [ ] Better error reporting if your case classes doesn't match the type of selected columns
+ - [ ] Validate where clause of select statement
+ - [ ] Support insert, update and delete statement
+ - [ ] Support ALTER TABLE statement (for Schema migration purposes)
 
 ## License ##
 
