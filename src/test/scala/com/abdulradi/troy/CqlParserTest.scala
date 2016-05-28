@@ -16,7 +16,6 @@
 
 package com.abdulradi.troy
 
-import com.abdulradi.troy.CqlInterpolation._
 import com.abdulradi.troy.ast._
 import org.scalatest._
 

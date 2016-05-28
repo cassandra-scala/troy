@@ -95,21 +95,21 @@ case class Schema(schema: Map[KeyspaceName, Seq[CreateTable]], context: Option[K
     else
       success(copy(schema = schema + (keyspace.keyspaceName -> Seq.empty)))
 
-  def withTable(createTable: CreateTable): Result[Schema]  =
+  def withTable(createTable: CreateTable): Result[Schema] =
     for {
       keyspace <- resolveKeyspaceName(createTable.tableName.keyspace).right
       tables <- getKeyspace(keyspace).right
       _ <- (if (tableExists(tables, createTable)) fail(s"Table ${createTable.tableName} already exists") else success).right
     } yield copy(schema = schema + (keyspace -> (createTable +: tables)))
 
-//    for {
-//      keyspaceName <- resolveKeyspaceName(createTable.tableName.keyspace).right
-//      tables <- getKeyspace(createTable.tableName.keyspace).right
-//      table <- getTable(tables, createTable.tableName.table).right
-////      if !tables.exists(_.tableName.table == table.tableName.table)
-//      newTables = table +: tables
-//
-//    } yield
+  //    for {
+  //      keyspaceName <- resolveKeyspaceName(createTable.tableName.keyspace).right
+  //      tables <- getKeyspace(createTable.tableName.keyspace).right
+  //      table <- getTable(tables, createTable.tableName.table).right
+  ////      if !tables.exists(_.tableName.table == table.tableName.table)
+  //      newTables = table +: tables
+  //
+  //    } yield
 }
 
 object Schema {

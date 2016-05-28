@@ -25,33 +25,33 @@ import scala.reflect.macros.blackbox.Context
 import scala.collection.JavaConversions._
 
 object Query {
-  def queryExec[T](q: String)(f: Row => T)(implicit session: Session, ec: ExecutionContext): Future[Seq[T]] =
-    session.executeAsync(q).toScala.map(_.toStream.map(f))
+  def queryExec[T](q: String)(f: Row => T)(implicit session: Session, ec: ExecutionContext): Future[Iterable[T]] =
+    session.executeAsync(q).toScala.map(_.map(f))
 
-  def queryImpl[T: c.WeakTypeTag](c: Context)(cql: c.Expr[String])(session: c.Expr[Session], ec: c.Expr[ExecutionContext]): c.Expr[Future[Seq[T]]] = {
+  def queryImpl[T: c.WeakTypeTag](c: Context)(cql: c.Expr[String])(session: c.Expr[Session], ec: c.Expr[ExecutionContext]): c.Expr[Future[Iterable[T]]] = {
     import c.universe._
 
     implicit val liftFieldType = Liftable[DataType] {
-      case DataType.ascii => q"_root_.com.abdulradi.troy.ast.DataType.ascii"
-      case DataType.bigint => q"_root_.com.abdulradi.troy.ast.DataType.bigint"
-      case DataType.blob => q"_root_.com.abdulradi.troy.ast.DataType.blob"
-      case DataType.boolean => q"_root_.com.abdulradi.troy.ast.DataType.boolean"
-      case DataType.counter => q"_root_.com.abdulradi.troy.ast.DataType.counter"
-      case DataType.date => q"_root_.com.abdulradi.troy.ast.DataType.date"
-      case DataType.decimal => q"_root_.com.abdulradi.troy.ast.DataType.decimal"
-      case DataType.double => q"_root_.com.abdulradi.troy.ast.DataType.double"
-      case DataType.float => q"_root_.com.abdulradi.troy.ast.DataType.float"
-      case DataType.inet => q"_root_.com.abdulradi.troy.ast.DataType.inet"
-      case DataType.int => q"_root_.com.abdulradi.troy.ast.DataType.int"
-      case DataType.smallint => q"_root_.com.abdulradi.troy.ast.DataType.smallint"
-      case DataType.text => q"_root_.com.abdulradi.troy.ast.DataType.text"
-      case DataType.times => q"_root_.com.abdulradi.troy.ast.DataType.times"
+      case DataType.ascii     => q"_root_.com.abdulradi.troy.ast.DataType.ascii"
+      case DataType.bigint    => q"_root_.com.abdulradi.troy.ast.DataType.bigint"
+      case DataType.blob      => q"_root_.com.abdulradi.troy.ast.DataType.blob"
+      case DataType.boolean   => q"_root_.com.abdulradi.troy.ast.DataType.boolean"
+      case DataType.counter   => q"_root_.com.abdulradi.troy.ast.DataType.counter"
+      case DataType.date      => q"_root_.com.abdulradi.troy.ast.DataType.date"
+      case DataType.decimal   => q"_root_.com.abdulradi.troy.ast.DataType.decimal"
+      case DataType.double    => q"_root_.com.abdulradi.troy.ast.DataType.double"
+      case DataType.float     => q"_root_.com.abdulradi.troy.ast.DataType.float"
+      case DataType.inet      => q"_root_.com.abdulradi.troy.ast.DataType.inet"
+      case DataType.int       => q"_root_.com.abdulradi.troy.ast.DataType.int"
+      case DataType.smallint  => q"_root_.com.abdulradi.troy.ast.DataType.smallint"
+      case DataType.text      => q"_root_.com.abdulradi.troy.ast.DataType.text"
+      case DataType.times     => q"_root_.com.abdulradi.troy.ast.DataType.times"
       case DataType.timestamp => q"_root_.com.abdulradi.troy.ast.DataType.timestamp"
-      case DataType.timeuuid => q"_root_.com.abdulradi.troy.ast.DataType.timeuuid"
-      case DataType.tinyint => q"_root_.com.abdulradi.troy.ast.DataType.tinyint"
-      case DataType.uuid => q"_root_.com.abdulradi.troy.ast.DataType.uuid"
-      case DataType.varchar => q"_root_.com.abdulradi.troy.ast.DataType.varchar"
-      case DataType.varint => q"_root_.com.abdulradi.troy.ast.DataType.varint"
+      case DataType.timeuuid  => q"_root_.com.abdulradi.troy.ast.DataType.timeuuid"
+      case DataType.tinyint   => q"_root_.com.abdulradi.troy.ast.DataType.tinyint"
+      case DataType.uuid      => q"_root_.com.abdulradi.troy.ast.DataType.uuid"
+      case DataType.varchar   => q"_root_.com.abdulradi.troy.ast.DataType.varchar"
+      case DataType.varint    => q"_root_.com.abdulradi.troy.ast.DataType.varint"
     }
 
     //1. Query

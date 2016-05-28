@@ -19,8 +19,8 @@ package com.abdulradi.troy
 import com.abdulradi.troy.driver.datastax.Query
 import com.datastax.driver.core.Session
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ Future, ExecutionContext }
 
 object Troy {
-  def query[T](cql: String)(implicit session: Session, ec: ExecutionContext): Future[Seq[T]] = macro Query.queryImpl[T]
+  def query[T](cql: String)(implicit session: Session, ec: ExecutionContext): Future[Iterable[T]] = macro Query.queryImpl[T]
 }
