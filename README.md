@@ -33,10 +33,11 @@ Now using Scala `macro`, Troy will
 
 ## Performance
 At runtime, your code is directly using the Datastax Java client, so no performance penalties to pay.
-In fact, it may have a slight performance improvement! 
+In fact, it uses best practices of the Java driver, like PreparedStatements and specifies Codecs (at compile time).
+### Compile-time Codec registery
+Since Troy knows the schema at compile time, so your queires will be use lower level methods, that allow specificing the codec, looks like `row.getString(1, theCorrectCodecInstance)`, this should minimize the work to be done at runtime.
 
-This because when you write something like `row.getString("body")`, the client has to fetch the correct `Codec` instace for you (to deserialize the bytes comming from the wire), but in Cassandra a String can be a VARCHAR or ASCII, each of them have a different Codec, the client doesn't know this information until the query result arrives!
-Well, Troy knows the schema at compile time, so your queires will be use a lower level method, that allow specificing the codec, looks like `row.getString(1, theCorrectCodecInstance)`, this should minimize the work to be done at runtime.
+Resolving of the correct codec has been done at Compile time rather that Runtime. This is also plugable, using Type Classes, you can define you own `HasCodec` instance that maps any Cassandra type to your custom classes, and the compile will pick your codec instead.
 
 ## Types and Codecs
 TODO: Talk about handling `Option`s and ability to use your custom types as well!
@@ -53,8 +54,8 @@ Troy is currently is very early stage, testing, issues and contributions are ver
  - [x] Load and parse schema.cql file into in memory data structure
  - [x] Macro to generate compile error if Select statement doesn't match Schema
  - [x] Macro to replace the CQL string to actual query using Cassandra's Java client.
- - [ ] Better error reporting in case of selecting wrong fields
- - [ ] Better error reporting if your case classes doesn't match the type of selected columns
+ - [x] Better error reporting in case of selecting wrong fields
+ - [x] Better error reporting if your case classes doesn't match the type of selected columns
  - [ ] Validate where clause of select statement
  - [ ] Support insert, update and delete statement
  - [ ] Support ALTER TABLE statement (for Schema migration purposes)
