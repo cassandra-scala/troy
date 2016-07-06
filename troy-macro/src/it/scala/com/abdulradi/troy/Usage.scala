@@ -30,9 +30,8 @@ import scala.concurrent.duration.Duration
  * Very high level tests, mostly happy path
  * to highlight main usecases of the project
  */
-class Usage extends App {// FlatSpec with Matchers {
+class Usage extends FlatSpec with Matchers {
   import troy.dsl._
-  import DriverHelpers._
 
   val cluster = Cluster.builder().addContactPoint("127.0.0.1").build()
   implicit val session: Session = cluster.connect()
@@ -41,7 +40,7 @@ class Usage extends App {// FlatSpec with Matchers {
   val prefix = "zew"
 
   val getByTitle = troy { (title: String) =>
-    cql"SELECT post_id, author_name, post_title FROM test.posts WHERE post_title = $title AND post_title = $title;".async.all.as[Post]
+    cql"SELECT post_id, author_name, post_title FROM test.posts WHERE post_title = $title;".async.all.as[Post]
   }(session)
 
   println(Await.result(getByTitle("Title"), Duration(1, "second")))

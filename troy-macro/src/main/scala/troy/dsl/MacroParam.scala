@@ -25,7 +25,7 @@ object MacroParam {
   }
 
   class DslFutureOfSeqOfRows(val rows: Future[Seq[Row]]) extends MacroParam[Future[Seq[Row]]] {
-    def as[T](implicit ec: ExecutionContext): MacroParam[Future[Seq[T]]] = ???
+    def as[T]: MacroParam[Future[Seq[T]]] = ???
   }
 
   class DslRow(val row: Row) extends MacroParam[Row] {

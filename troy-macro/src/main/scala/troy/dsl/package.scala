@@ -9,6 +9,6 @@ package object dsl {
     def cql(args: Any*): MacroParam.DslBoundStatement = ???
   }
 
-  def troy[T, R](code: T => MacroParam[R])(session: Session): T => R = macro troy1[T, R]
+  def troy[T, R](code: T => MacroParam[R])(session: Session): T => R = macro troyImpl[T => MacroParam[R]]
 
 }
