@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.abdulradi.troy
+package troy
 
-import com.abdulradi.troy.ast._
+import troy.ast._
 import org.scalatest._
 
 class CqlParserTest extends FlatSpec with Matchers {
@@ -41,6 +41,42 @@ class CqlParserTest extends FlatSpec with Matchers {
     selectionList(2).selector shouldBe SelectStatement.Identifier("post_id")
     selectionList(3).selector shouldBe SelectStatement.Identifier("post_title")
     selectionList.map(_.as).forall(_.isEmpty) shouldBe true
+  }
+
+  it should "select statements with simple where clause" in {
+    val statement = parseQuery("SELECT author_id FROM test.posts WHERE author_name = 'test';")
+
+    statement.where.isDefined shouldBe true
+    val relations = statement.where.get.relations
+    relations.size shouldBe 1
+    import SelectStatement.WhereClause._
+    relations(0).asInstanceOf[Relation.Simple].identifier shouldBe "author_name"
+    relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
+    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Term.Constant].raw shouldBe "test"
+  }
+
+  it should "select statements with where clause containing anonymous variables" in {
+    val statement = parseQuery("SELECT author_id FROM test.posts WHERE author_name = ?;")
+
+    statement.where.isDefined shouldBe true
+    val relations = statement.where.get.relations
+    relations.size shouldBe 1
+    import SelectStatement.WhereClause._
+    relations(0).asInstanceOf[Relation.Simple].identifier shouldBe "author_name"
+    relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
+    relations(0).asInstanceOf[Relation.Simple].term shouldBe Term.Variable.Anonymous
+  }
+
+  it should "select statements with where clause containing named variables" in {
+    val statement = parseQuery("SELECT author_id FROM test.posts WHERE author_name = :x;")
+
+    statement.where.isDefined shouldBe true
+    val relations = statement.where.get.relations
+    relations.size shouldBe 1
+    import SelectStatement.WhereClause._
+    relations(0).asInstanceOf[Relation.Simple].identifier shouldBe "author_name"
+    relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
+    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Term.Variable.Named].name shouldBe "x"
   }
 
   it should "parse create keyspace" in {

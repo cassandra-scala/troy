@@ -30,10 +30,10 @@
 // * limitations under the License.
 // */
 //
-//package com.abdulradi.troy
+//package troy
 //
-//import com.abdulradi.troy.ast._
-//import com.abdulradi.troy.schema.{ FieldLevel, Field, Schema }
+//import troy.ast._
+//import troy.schema.{ FieldLevel, Field, Schema }
 //import org.scalatest._
 //
 //class SchemaValidationTest extends FlatSpec with Matchers {

@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.abdulradi.troy.poc
+package troy.poc
 
 import java.util.UUID
 
-import com.abdulradi.troy.Troy
+import troy.Troy
 import com.datastax.driver.core.{ Cluster, Session }
 
 import scala.concurrent.Await
@@ -71,7 +71,7 @@ object Benchmark extends App {
   println(s"${t2 - t1} ns max commentsCount = $max rows = ${posts.size}")
 
   // Plain old Cassandra client test ////////////////////
-  //  import com.abdulradi.troy.driver.datastax.RichListenableFuture
+  //  import troy.driver.RichListenableFuture
   //  import scala.collection.JavaConversions._
   //  val t1 = System.nanoTime()
   //  val postsF = session.executeAsync("SELECT id, title, body, commentsCount FROM blog.posts")

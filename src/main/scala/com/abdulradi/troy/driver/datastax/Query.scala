@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.abdulradi.troy.driver.datastax
+package troy.driver
 
-import com.abdulradi.troy.ast.{ DataType, CqlParser }
-import com.abdulradi.troy.schema.Schema
+import troy.ast.{ DataType, CqlParser }
+import troy.schema.Schema
 import com.datastax.driver.core.{ Row, Session }
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -26,7 +26,7 @@ import scala.collection.JavaConversions._
 
 object Query {
   def queryExec[T](q: String)(f: Row => T)(implicit session: Session, ec: ExecutionContext): Future[Iterable[T]] =
-    session.executeAsync(q).toScala.map(_.map(f))
+    session.executeAsync(q).asScala.map(_.map(f))
 
   def queryImpl[T: c.WeakTypeTag](c: Context)(cql: c.Expr[String])(session: c.Expr[Session], ec: c.Expr[ExecutionContext]): c.Expr[Future[Iterable[T]]] = {
     import c.universe._
@@ -111,13 +111,13 @@ object Query {
 
     val params = (paramTypes zip columnTypes).zipWithIndex.map {
       case ((`intTypeTag`, c), i) =>
-        q"row.get($i, implicitly[com.abdulradi.troy.driver.datastax.HasCodec[Integer, $c.type]].codec)"
+        q"row.get($i, implicitly[com.abdulradi.troy.driver.HasCodec[Integer, $c.type]].codec)"
       case ((p, c), i) =>
-        q"row.get($i, implicitly[com.abdulradi.troy.driver.datastax.HasCodec[$p, $c.type]].codec)"
+        q"row.get($i, implicitly[com.abdulradi.troy.driver.HasCodec[$p, $c.type]].codec)"
     }
 
     c.Expr[Future[Seq[T]]](
-      q"""com.abdulradi.troy.driver.datastax.Query.queryExec($cql){ row =>
+      q"""com.abdulradi.troy.driver.Query.queryExec($cql){ row =>
          $companionObject.apply(..$params)
       }($session, $ec)"""
     )

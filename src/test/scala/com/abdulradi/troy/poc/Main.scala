@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.abdulradi.troy.poc
+package troy.poc
 
 import java.util.UUID
-import com.abdulradi.troy.Troy
+import troy.Troy
 import com.datastax.driver.core._
 import scala.concurrent.duration.Duration
 import scala.concurrent.Await
