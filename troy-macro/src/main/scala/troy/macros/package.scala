@@ -33,7 +33,7 @@ package object macros {
 
   def log[T](value: T): T = { println(value); value }
 
-  def troyImpl[F: c.WeakTypeTag](c: Context)(code: c.Expr[F])(session: c.Expr[Session]): c.Expr[F] = {
+  def troyImpl[F](c: Context)(code: c.Expr[F])(session: c.Expr[Session]): c.Expr[F] = {
     import c.universe._
     implicit val c_ = c
 
@@ -61,12 +61,23 @@ package object macros {
     val prepareStatement = q"""
       val prepared = $session.prepare($rawQuery)
     """
-    val parser = q"""
-      implicit def parser(row: Row): Post = ???
-    """
+
+    val parser = {
+      val q"$as[..$paramTypes]($f)" = expr
+
+      val params = (paramTypes zip columnTypes).zipWithIndex.map {
+        case ((p, c), i) =>
+          q"column[$p]($i)(row).as[$c]"
+      }
+      q"def parser(row: Row): Post = $f(..$params)"
+    }
 
     val bodyParams = qParams.zip(variableTypes).map{ case (p, t) => q"param($p).as[$t]"}
-    val body = replaceCqlQuery(c)(expr, q"bind(prepared, ..$bodyParams)")
+    val body = {
+      val q1 = replaceCqlQuery(c)(expr, q"bind(prepared, ..$bodyParams)")
+      val q"$as[..$paramTypes]($f)" = q1
+      q"$as(parser)"
+    }
 
     val stats = imports ++ Seq(
       prepareStatement,
@@ -86,7 +97,7 @@ package object macros {
         findCqlQuery(c)(y)
       case q"$y.$z" =>
         findCqlQuery(c)(y)
-      case q"$y[$z]" =>
+      case q"$y[..$z]" =>
         findCqlQuery(c)(y)
     }
   }
@@ -96,15 +107,15 @@ package object macros {
     expr match {
       case q"$_.RichStringContext(scala.StringContext.apply(..$query)).cql(..$params)" =>
         replacement
-      case q"$y($z)" =>
+      case q"$y(..$z)" =>
         val replaced = replaceCqlQuery(c)(y, replacement)
-        q"$replaced($z)"
+        q"$replaced(..$z)"
       case q"$y.$z" =>
         val replaced = replaceCqlQuery(c)(y, replacement)
         q"$replaced.$z"
-      case q"$y[$z]" =>
+      case q"$y[..$z]" =>
         val replaced = replaceCqlQuery(c)(y, replacement)
-        q"$replaced[$z]"
+        q"$replaced[..$z]"
     }
   }
 

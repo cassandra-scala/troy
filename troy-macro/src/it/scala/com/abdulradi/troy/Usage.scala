@@ -40,7 +40,7 @@ class Usage extends FlatSpec with Matchers {
   val prefix = "zew"
 
   val getByTitle = troy { (title: String) =>
-    cql"SELECT post_id, author_name, post_title FROM test.posts WHERE post_title = $title;".async.all.as[Post]
+    cql"SELECT post_id, author_name, post_title FROM test.posts WHERE post_title = $title;".async.all.as(Post)
   }(session)
 
   println(Await.result(getByTitle("Title"), Duration(1, "second")))

@@ -47,19 +47,19 @@ object DriverHelpers {
   }
 
   implicit class RichSeqOfRows(val rows: java.util.List[Row]) extends AnyVal {
-    def as[T](implicit parser: Row => T): Seq[T] = rows.asScala.map(parser)
+    def as[T](parser: Row => T): Seq[T] = rows.asScala.map(parser)
   }
 
   implicit class RichFutureOfSeqOfRows(val rows: Future[Seq[Row]]) extends AnyVal {
-    def as[T](implicit parser: Row => T, executionContext: ExecutionContext): Future[Seq[T]] = rows.map(_.map(parser))
+    def as[T](parser: Row => T)(implicit executionContext: ExecutionContext): Future[Seq[T]] = rows.map(_.map(parser))
   }
 
   implicit class RichRow(val row: Row) extends AnyVal {
-    def as[T](implicit parser: Row => T): T = parser(row)
+    def as[T](parser: Row => T): T = parser(row)
   }
 
   implicit class RichFutureOfRow(val row: Future[Row]) extends AnyVal {
-    def as[T](implicit parser: Row => T, executionContext: ExecutionContext): Future[T] = row.map(parser)
+    def as[T](parser: Row => T)(implicit executionContext: ExecutionContext): Future[T] = row.map(parser)
   }
 
 }
