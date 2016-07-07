@@ -14,38 +14,100 @@
  * limitations under the License.
  */
 
-package troy
+package troy.macros
 
 import java.util.UUID
 
-import com.datastax.driver.core.{Row, Cluster, Session}
-import org.scalatest._
-import troy.driver.DriverHelpers
+import com.datastax.driver.core.{Row, ResultSet, BoundStatement}
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
-
+import scala.concurrent.Future
 
 /*
  * Very high level tests, mostly happy path
  * to highlight main usecases of the project
  */
-class Usage extends FlatSpec with Matchers {
+class Usage extends BaseSpec {
   import troy.dsl._
 
-  val cluster = Cluster.builder().addContactPoint("127.0.0.1").build()
-  implicit val session: Session = cluster.connect()
-  case class Post(id: UUID, author_name: String, title: String)
   import scala.concurrent.ExecutionContext.Implicits.global
-  val prefix = "zew"
 
-  val getByTitle = troy { (title: String) =>
-    cql"SELECT post_id, author_name, post_title FROM test.posts WHERE post_title = $title;".async.all.as(Post)
-  }(session)
+  case class Post(id: UUID, author_name: String, title: String)
 
-  println(Await.result(getByTitle("Title"), Duration(1, "second")))
-  session.close()
-  cluster.close()
+  "The Macro" should "support no params" in {
+    val getAll = troy { () =>
+      cql"SELECT post_id, author_name, post_title FROM test.posts;".async.all.as(Post)
+    }
+
+    val result: Future[Seq[Post]] = getAll()
+    result.futureValue.size shouldBe 1
+  }
+
+  it should "support single param" in {
+    val getByTitle = troy { (title: String) =>
+      cql"SELECT post_id, author_name, post_title FROM test.posts WHERE post_title = $title;".async.all.as(Post)
+    }
+    val result: Future[Seq[Post]] = getByTitle("Title")
+    result.futureValue.head.title shouldBe "Title"
+  }
+
+  "The Macro" should "support returning the BoundStatement directly with no params" in {
+    val createStatement = troy { () =>
+      cql"SELECT post_id, author_name, post_title FROM test.posts;"
+    }
+    val statement: BoundStatement = createStatement()
+    val result = session.execute(statement) // Normal Cassandra client code
+    result.all().size() shouldBe 1
+  }
+
+  "The Macro" should "support returning the BoundStatement directly with params" in {
+    val createStatement = troy { (title: String) =>
+      cql"SELECT post_id, author_name, post_title FROM test.posts WHERE post_title = $title;"
+    }
+    val statement: BoundStatement = createStatement("Title")
+    val result = session.execute(statement) // Normal Cassandra client code
+    result.all().size() shouldBe 1
+  }
+
+  it should "support returning the ResultSet" in {
+    val query = troy {() =>
+      cql"SELECT post_id, author_name, post_title FROM test.posts;".sync
+    }
+    val result: ResultSet = query()
+    result.all().size() shouldBe 1
+  }
+
+  it should "support returning the ResultSet asynchronously" in {
+    val query = troy { () =>
+      cql"SELECT post_id, author_name, post_title FROM test.posts;".async
+    }
+    val result: ResultSet = query().futureValue
+    result.all().size() shouldBe 1
+  }
+
+  it should "support returning one element" in {
+    val query = troy { () =>
+      cql"SELECT post_id, author_name, post_title FROM test.posts;".async.one
+    }
+    val result: Row = query().futureValue
+    result.getString("post_title") shouldBe "Title"
+  }
+
+  it should "support parsing one row async" in {
+    val query = troy { ()=>
+      cql"SELECT post_id, author_name, post_title FROM test.posts;".async.one.as(Post)
+    }
+    val result: Post = query().futureValue
+    result.title shouldBe "Title"
+  }
+
+  it should "support parsing one row sync" in {
+    val query = troy { ()=>
+      cql"SELECT post_id, author_name, post_title FROM test.posts;".sync.one.as(Post)
+    }
+    val result: Post = query()
+    result.title shouldBe "Title"
+  }
+
 
 //  "Schema" should "fetch fields" in {
 

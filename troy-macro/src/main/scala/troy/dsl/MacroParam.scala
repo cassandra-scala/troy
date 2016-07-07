@@ -13,6 +13,7 @@ object MacroParam {
 
   class DslResultSet(val resultSet: ResultSet) extends MacroParam[ResultSet] {
     def all: DslSeqOfRows = ???
+    def one: DslRow = ???
   }
 
   class DslFutureOfResultSet(val resultSet: Future[ResultSet]) extends MacroParam[Future[ResultSet]] {
@@ -30,10 +31,11 @@ object MacroParam {
 
   class DslRow(val row: Row) extends MacroParam[Row] {
     def as[T]: MacroParam[T] = ???
+    def as[T1, T2, T3, R](constructor: (T1, T2, T3) => R): MacroParam[R] = ???
   }
 
   class DslFutureOfRow(val row: Future[Row]) extends MacroParam[Future[Row]] {
-    def as[T](implicit ec: ExecutionContext): Future[T] = ???
+    def as[T1, T2, T3, R](constructor: (T1, T2, T3) => R): MacroParam[Future[R]] = ???
   }
 }
 

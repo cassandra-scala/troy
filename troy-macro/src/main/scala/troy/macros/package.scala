@@ -47,20 +47,22 @@ package object macros {
       val prepared = $session.prepare($rawQuery)
     """
 
-    val parser = {
-      val columns = schema(query) match {
-        case Right(columns) => columns
-        case Left(e)        => c.abort(c.enclosingPosition, e)
-      }
-      val columnTypes = columns.map(column => translateColumnType(column.dataType)(c))
-      val q"$as[..$paramTypes]($f)" = expr
-
-      val params = (paramTypes zip columnTypes).zipWithIndex.map {
-        case ((p, c), i) =>
-          q"column[$p]($i)(row).as[$c]"
-      }
-      q"def parser(row: Row): Post = $f(..$params)"
+    val parser = expr match {
+      case q"$root.as[..$paramTypes]($f)" =>
+        val columns = schema(query) match {
+          case Right(columns) => columns
+          case Left(e)        => c.abort(c.enclosingPosition, e)
+        }
+        val columnTypes = columns.map(column => translateColumnType(column.dataType)(c))
+        val params = (paramTypes zip columnTypes).zipWithIndex.map {
+          case ((p, c), i) =>
+            q"column[$p]($i)(row).as[$c]"
+        }
+        q"def parser(row: Row): Post = $f(..$params)"
+      case _ =>
+        q"" // Parser is ignored if ".as(...)" was omitted.
     }
+
 
     val body = {
       val variable = schema.extractVariables(query) match {
@@ -69,16 +71,17 @@ package object macros {
       }
       val variableTypes = variable.map(v => translateColumnType(v.dataType)(c))
       val bodyParams = qParams.zip(variableTypes).map{ case (p, t) => q"param($p).as[$t]" }
-      val q1 = replaceCqlQuery(c)(expr, q"bind(prepared, ..$bodyParams)")
-      val q"$as[..$paramTypes]($f)" = q1
-      q"$as(parser)"
+      replaceCqlQuery(c)(expr, q"bind(prepared, ..$bodyParams)") match {
+        case q"$root.as[..$paramTypes]($f)" => q"$root.as(parser)"
+        case other => other
+      }
     }
 
     val stats = imports ++ Seq(
       prepareStatement,
       parser,
       q"(..$params) => $body"
-    )
+    ).filter(!_.isEmpty)
 
     c.Expr(log(q"{ ..$stats }"))
   }
