@@ -17,17 +17,12 @@
 package troy
 
 import java.io.InputStream
-
+import scala.io.Source
+import scala.reflect.macros.blackbox.Context
 import com.datastax.driver.core.Session
 import troy.ast.CqlParser
 import troy.cql.ast.DataType
-import troy.dsl.MacroParam
 import troy.schema.Schema
-
-import scala.concurrent.ExecutionContext
-import scala.io.Source
-import scala.reflect.macros.blackbox.Context
-import scala.util.Random
 
 package object macros {
 
@@ -40,29 +35,24 @@ package object macros {
     val q"(..$params) => $expr" = code.tree
     val (qParts, qParams) = findCqlQuery(c)(expr)
     val rawQuery = qParts.map{case q"${p: String}" => p}.mkString("?")
-
     val schema = parseSchemaFromFileName("/schema.cql")(c)
     val query = parseQuery(rawQuery)
-    val variable = schema.extractVariables(query) match {
-      case Right(columns) => columns
-      case Left(e)        => c.abort(c.enclosingPosition, e)
-    }
-    val variableTypes = variable.map(v => translateColumnType(v.dataType)(c))
-    val columns = schema(query) match {
-      case Right(columns) => columns
-      case Left(e)        => c.abort(c.enclosingPosition, e)
-    }
-    val columnTypes = columns.map(column => translateColumnType(column.dataType)(c))
 
     val imports = Seq(
       q"import _root_.troy.driver.DriverHelpers._",
       q"import _root_.troy.driver.Types"
     )
+
     val prepareStatement = q"""
       val prepared = $session.prepare($rawQuery)
     """
 
     val parser = {
+      val columns = schema(query) match {
+        case Right(columns) => columns
+        case Left(e)        => c.abort(c.enclosingPosition, e)
+      }
+      val columnTypes = columns.map(column => translateColumnType(column.dataType)(c))
       val q"$as[..$paramTypes]($f)" = expr
 
       val params = (paramTypes zip columnTypes).zipWithIndex.map {
@@ -72,8 +62,13 @@ package object macros {
       q"def parser(row: Row): Post = $f(..$params)"
     }
 
-    val bodyParams = qParams.zip(variableTypes).map{ case (p, t) => q"param($p).as[$t]"}
     val body = {
+      val variable = schema.extractVariables(query) match {
+        case Right(columns) => columns
+        case Left(e)        => c.abort(c.enclosingPosition, e)
+      }
+      val variableTypes = variable.map(v => translateColumnType(v.dataType)(c))
+      val bodyParams = qParams.zip(variableTypes).map{ case (p, t) => q"param($p).as[$t]" }
       val q1 = replaceCqlQuery(c)(expr, q"bind(prepared, ..$bodyParams)")
       val q"$as[..$paramTypes]($f)" = q1
       q"$as(parser)"
