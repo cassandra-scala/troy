@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package troy.ast
+package troy.cql.ast
 
 import troy.cql.ast._
 

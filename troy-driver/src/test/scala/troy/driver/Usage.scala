@@ -33,44 +33,27 @@ object Usage extends App {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   val getByTitle = {
-    import HasCodec.codecFor
-    import DriverHelpers._
+    import _root_.troy.driver.DriverHelpers._
+    import _root_.troy.driver.Types
 
-    val prepared = implicitly[Session].prepare("SELECT post_id, author_name, post_title FROM test.posts WHERE post_title = ?;")
+    val prepared =
+      session.prepare("SELECT post_id, author_name, post_title FROM test.posts WHERE post_title = ?;")
 
-    implicit def parser(row: Row): Post =
+    def parser(row: Row): Post =
       Post(
-        row.get(0, codecFor[UUID, Types.Uuid]),
-        row.get(1, codecFor[String, Types.Text]),
-        row.get(2, codecFor[String, Types.Text])
+        column[UUID](0)(row).as[Types.Uuid],
+        column[String](1)(row).as[Types.Text],
+        column[String](2)(row).as[Types.Text]
       )
 
     (title: String) =>
-      bind(prepared, param(title).as[Types.Text]).async.all.as[Post] //: Future[Seq[Post]]
+      bind(prepared, param(title).as[Types.Text])
+        .async
+        .all
+        .as(parser)
   }
 
   println(Await.result(getByTitle("Title"), Duration(1, "second")))
   session.close()
   cluster.close()
 }
-
-/*
-executeAsync(prepared, Param[String, Cql.Text]("title", title)) { row =>
-        Post(
-          row.get(0, codecFor[UUID, Cql.UUID]),
-          row.get(1, codecFor[String, Cql.Text]),
-          row.get(2, codecFor[String, Cql.Text]))
-      }
-
-
-            //      bind(prepared, Param[String, Types.Text]("title", title)): BoundStatement
-      //      bind(prepared, Param[String, Types.Text]("title", title)).async: Future[ResultSet]
-      //      bind(prepared, Param[String, Types.Text]("title", title)).async.all: Future[Seq[Row]]
-      //      bind(prepared, Param[String, Types.Text]("title", title)).async.one.as[Post]: Future[Post]
-      //      bind(prepared, Param[String, Types.Text]("title", title)).async.one: Future[Row]
-      //      bind(prepared, Param[String, Types.Text]("title", title)).sync: ResultSet
-      //      bind(prepared, Param[String, Types.Text]("title", title)).sync.all //: Seq[Row]
-      //      bind(prepared, Param[String, Types.Text]("title", title)).sync.all.as[Post]: Seq[Post]
-      //      bind(prepared, Param[String, Types.Text]("title", title)).sync.one.as[Post]: Post
-      //      bind(prepared, Param[String, Types.Text]("title", title)).sync.one: Row
- */

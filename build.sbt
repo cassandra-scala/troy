@@ -12,6 +12,9 @@ lazy val cqlParser = project
 lazy val troySchema = project
   .in(file("troy-schema"))
   .dependsOn(cqlParser)
+  .settings(libraryDependencies ++= Vector(
+    Library.scalaTest % "test"
+  ))
 
 lazy val troyDriver = project
   .in(file("troy-driver"))
@@ -29,14 +32,6 @@ lazy val troyMacro = project
   .dependsOn(troyDriver, troySchema)
   .configs( IntegrationTest )
   .settings( Defaults.itSettings : _*)
-
-//lazy val root = (project in file(".")).
-//  aggregate(troyMacro).
-//  settings(
-//    run := {
-//      (run in troyMacro in Compile).evaluated // Enables "sbt run" on the root project
-//    }
-//  )
 
 unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value
 

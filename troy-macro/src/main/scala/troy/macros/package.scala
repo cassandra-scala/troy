@@ -20,7 +20,7 @@ import java.io.InputStream
 import scala.io.Source
 import scala.reflect.macros.blackbox.Context
 import com.datastax.driver.core.Session
-import troy.ast.CqlParser
+import troy.cql.ast.CqlParser
 import troy.cql.ast.DataType
 import troy.schema.Schema
 

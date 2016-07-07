@@ -17,7 +17,8 @@
 package troy.cql.parser
 
 import org.scalatest._
-import troy.ast._
+import troy.cql.ast._
+import troy.cql.ast.SelectStatement.WhereClause.{ Operator, Relation }
 
 class CqlParserTest extends FlatSpec with Matchers {
 

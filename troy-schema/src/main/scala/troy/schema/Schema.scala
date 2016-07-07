@@ -20,19 +20,6 @@ import troy.cql.ast._
 
 import scala.util.Left
 
-trait FieldLevel
-object FieldLevel {
-  case object Partition extends FieldLevel // Partition keys, and static columns
-  case object Row extends FieldLevel // Clustering columns, and other fields
-}
-
-case class Field(name: String, ftype: DataType, fLevel: FieldLevel)
-case class Table(partitionKeys: Seq[Field], clusteringColumns: Seq[Field], staticColumns: Seq[Field], otherColumns: Seq[Field])
-case class Keyspace(name: String, tables: Seq[Table])
-
-case class ClusteringColumn(column: Field, direction: String)
-case class PrimaryKey(partitionKeys: Seq[Field], clusteringColumns: Seq[ClusteringColumn])
-
 case class Schema(schema: Map[KeyspaceName, Seq[CreateTable]], context: Option[KeyspaceName]) {
   import Schema._
 
