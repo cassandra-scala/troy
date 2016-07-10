@@ -20,7 +20,7 @@ import java.util.UUID
 
 import com.datastax.driver.core._
 
-import scala.concurrent.{ Future, Await }
+import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 /*
@@ -33,21 +33,20 @@ object Usage extends App {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   val getByTitle = {
-    import _root_.troy.driver.DriverHelpers._
-    import _root_.troy.driver.Types
+    import InternalDsl._
+    import Codecs._
 
     val prepared =
-      session.prepare("SELECT post_id, author_name, post_title FROM test.posts WHERE post_title = ?;")
+      session.prepare("SELECT post_id, author_name, post_title FROM test.posts;")
 
-    def parser(row: Row): Post =
-      Post(
-        column[UUID](0)(row).as[Types.Uuid],
-        column[String](1)(row).as[Types.Text],
-        column[String](2)(row).as[Types.Text]
-      )
+    def parser(row: Row) = Post(
+      column[java.util.UUID](0)(row).as[CassandraDataType.Uuid],
+      column[String](1)(row).as[CassandraDataType.Text],
+      column[String](2)(row).as[CassandraDataType.Text]
+    )
 
     (title: String) =>
-      bind(prepared, param(title).as[Types.Text])
+      bind(prepared, param(title).as[CassandraDataType.Text])
         .async
         .all
         .as(parser)

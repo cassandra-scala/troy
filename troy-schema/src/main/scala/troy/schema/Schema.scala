@@ -29,6 +29,8 @@ case class Schema(schema: Map[KeyspaceName, Seq[CreateTable]], context: Option[K
         case SelectStatement.Identifier(name) => name
         case _                                => ???
       })
+    case SelectStatement(_, SelectStatement.Selection(_, SelectStatement.Asterisk), table, _, _, _, _) =>
+      getAllColumns(table.keyspace, table.table)
   }
 
   def extractVariables(statement: Cql3Statement): Result[Seq[CreateTable.Column]] = statement match {
@@ -81,6 +83,11 @@ case class Schema(schema: Map[KeyspaceName, Seq[CreateTable]], context: Option[K
       table <- getTable(keyspaceName, table).right
       columns <- getColumns(table, selectColumns).right
     } yield columns
+
+  def getAllColumns(keyspaceName: Option[KeyspaceName], table: String): Result[Seq[CreateTable.Column]] =
+    for {
+      table <- getTable(keyspaceName, table).right
+    } yield table.columns
 
   val withStatement: DataDefinition => Result[Schema] = {
     case s: CreateKeyspace => withKeyspace(s)

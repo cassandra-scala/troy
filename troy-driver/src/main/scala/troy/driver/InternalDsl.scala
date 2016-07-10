@@ -4,32 +4,27 @@ import com.datastax.driver.core._
 
 import scala.concurrent.{ Future, ExecutionContext }
 
-object DriverHelpers {
+object InternalDsl {
   import JavaConverters._
   import scala.collection.JavaConverters._
 
-  type Executer[T] = (Session, BoundStatement) => T
-  type Parser[T] = Row => T
-
   def column[S](i: Int)(implicit row: Row) = new {
-    def as[C <: Types.CassandraDataType](implicit hasCodec: HasCodec[S, C]): S =
-      row.get(i, hasCodec.codec)
+    def as[C <: CassandraDataType](implicit getter: ColumnGetter[S, C]): S =
+      getter.get(row, i)
   }
 
   def param[S](value: S) = new {
-    def as[C <: Types.CassandraDataType](implicit hasCodec: HasCodec[S, C]) =
-      Param[S, C](value)
+    def as[C <: CassandraDataType](implicit setter: VariableSetter[S, C]) =
+      Param[S, C](value, setter)
   }
 
-  case class Param[S, C <: Types.CassandraDataType](value: S)(implicit val hasCodec: HasCodec[S, C]) {
-    def withIndex(i: Int) = IndexedParam(i, value)
+  case class Param[S, C <: CassandraDataType](value: S, setter: VariableSetter[S, C]) {
+    def set(bound: BoundStatement, i: Int) = setter.set(bound, i, value)
   }
 
-  case class IndexedParam[S, C <: Types.CassandraDataType](index: Int, value: S)(implicit val hasCodec: HasCodec[S, C])
-
-  def bind(preparedStatement: com.datastax.driver.core.PreparedStatement, params: Param[_, _ <: Types.CassandraDataType]*) =
-    params.zipWithIndex.map { case (param, i) => param.withIndex(i) }.foldLeft(preparedStatement.bind()) {
-      case (stmt, param) => stmt.set(param.index, param.value, param.hasCodec.codec)
+  def bind(preparedStatement: com.datastax.driver.core.PreparedStatement, params: Param[_, _ <: CassandraDataType]*) =
+    params.zipWithIndex.foldLeft(preparedStatement.bind()) {
+      case (stmt, (param, i)) => param.set(stmt, i)
     }
 
   implicit class RichBoundStatement(val boundStatement: BoundStatement) extends AnyVal {

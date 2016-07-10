@@ -39,8 +39,9 @@ package object macros {
     val query = parseQuery(rawQuery)
 
     val imports = Seq(
-      q"import _root_.troy.driver.DriverHelpers._",
-      q"import _root_.troy.driver.Types"
+      q"import _root_.troy.driver.InternalDsl._",
+      q"import _root_.troy.driver.CassandraDataType",
+      q"import _root_.troy.driver.Codecs._"
     )
 
     val prepareStatement = q"""
@@ -58,7 +59,7 @@ package object macros {
           case ((p, c), i) =>
             q"column[$p]($i)(row).as[$c]"
         }
-        q"def parser(row: Row): Post = $f(..$params)"
+        q"def parser(row: Row) = $f(..$params)"
       case _ =>
         q"" // Parser is ignored if ".as(...)" was omitted.
     }
@@ -119,32 +120,33 @@ package object macros {
 
   private def translateColumnType(typ: DataType)(c: Context): c.universe.Tree = {
     import c.universe._
+    val cdt = q"CassandraDataType"
     typ match {
-      case DataType.ascii => tq"Types.Ascii"
-      case DataType.bigint => tq"Types.Bigint"
-      case DataType.blob => tq"Types.Blob"
-      case DataType.boolean => tq"Types.Boolean"
-      case DataType.counter => tq"Types.Counter"
-      case DataType.date => tq"Types.Date"
-      case DataType.decimal => tq"Types.Decimal"
-      case DataType.double => tq"Types.Double"
-      case DataType.float => tq"Types.Float"
-      case DataType.inet => tq"Types.Inet"
-      case DataType.int => tq"Types.Int"
-      case DataType.smallint => tq"Types.Smallint"
-      case DataType.text => tq"Types.Text"
-      case DataType.times => tq"Types.Times"
-      case DataType.timestamp => tq"Types.Timestamp"
-      case DataType.timeuuid => tq"Types.Timeuuid"
-      case DataType.tinyint => tq"Types.Tinyint"
-      case DataType.uuid => tq"Types.Uuid"
-      case DataType.varchar => tq"Types.Varchar"
-      case DataType.varint => tq"Types.Varint"
-//      case DataType.list(t: Native) => tq"Types."
-//      case DataType.set(t: Native) => tq"Types."
-//      case DataType.map(k: Native, v: Native) => tq"Types."
-//      case DataType.Tuple(ts: Seq[DataType]) => tq"Types."
-//      case DataType.Custom(javaClass: String) => tq"Types."
+      case DataType.ascii => tq"$cdt.Ascii"
+      case DataType.bigint => tq"$cdt.Bigint"
+      case DataType.blob => tq"$cdt.Blob"
+      case DataType.boolean => tq"$cdt.Boolean"
+      case DataType.counter => tq"$cdt.Counter"
+      case DataType.date => tq"$cdt.Date"
+      case DataType.decimal => tq"$cdt.Decimal"
+      case DataType.double => tq"$cdt.Double"
+      case DataType.float => tq"$cdt.Float"
+      case DataType.inet => tq"$cdt.Inet"
+      case DataType.int => tq"$cdt.Int"
+      case DataType.smallint => tq"$cdt.Smallint"
+      case DataType.text => tq"$cdt.Text"
+      case DataType.times => tq"$cdt.Times"
+      case DataType.timestamp => tq"$cdt.Timestamp"
+      case DataType.timeuuid => tq"$cdt.Timeuuid"
+      case DataType.tinyint => tq"$cdt.Tinyint"
+      case DataType.uuid => tq"$cdt.Uuid"
+      case DataType.varchar => tq"$cdt.Varchar"
+      case DataType.varint => tq"$cdt.Varint"
+//      case DataType.list(t: Native) => tq"$cdt."
+//      case DataType.set(t: Native) => tq"$cdt."
+//      case DataType.map(k: Native, v: Native) => tq"$cdt."
+//      case DataType.Tuple(ts: Seq[DataType]) => tq"$cdt."
+//      case DataType.Custom(javaClass: String) => tq"$cdt."
 
     }
   }

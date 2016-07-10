@@ -4,9 +4,8 @@ package troy.driver
  * Represents Cassandra Types
  * To be used as Type parameters, not for instantiation
  */
-object Types {
-  sealed trait CassandraDataType
-
+sealed trait CassandraDataType
+object CassandraDataType {
   sealed trait Native extends CassandraDataType
   final class Ascii private () extends Native
   final class BigInt private () extends Native

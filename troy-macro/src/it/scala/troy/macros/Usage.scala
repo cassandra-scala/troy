@@ -32,6 +32,7 @@ class Usage extends BaseSpec {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   case class Post(id: UUID, author_name: String, title: String)
+  case class AuthorAndPost(authorId: UUID, postId: UUID, authorName: String, postRating: Int, postTitle: String)
 
   "The Macro" should "support no params" in {
     val getAll = troy { () =>
@@ -108,25 +109,22 @@ class Usage extends BaseSpec {
     result.title shouldBe "Title"
   }
 
+  it should "support select * with no params" in {
+    val query = troy { ()=>
+      cql"SELECT * FROM test.posts;".sync.one
+    }
+    val result: Row = query()
+    result.getString("post_title") shouldBe "Title"
+  }
 
-//  "Schema" should "fetch fields" in {
+  it should "support parsing select * with class/function matching the whole table" in {
+    val query = troy { () =>
+      cql"SELECT * FROM test.posts;".sync.one.as(AuthorAndPost)
+    }
+    val result: AuthorAndPost = query()
+    result.postTitle shouldBe "Title"
+  }
 
-    //  @troy def getByTitle(name: String) =
-    //    cql"SELECT author_id FROM test.posts WHERE author_name = $name;".as[Post]
-
-
-//
-//    val getByTitle = Troy.execute { shawshank: String =>
-//      println("")
-//      cql("SELECT author_id FROM test.posts WHERE author_name = ?;")
-//    }
-//    getByTitle("test"): Future[ResultSet]
-
-//    val getAll = query[Post]("SELECT * FROM test1.posts;")
-//    getAll(): Future[Seq[Post]]
-//
-//    val getAll2 = query[Post](cql"SELECT * FROM test1.posts;")
-//    getAll2(): Future[Seq[Post]]
 
 //    val getByTitle0 = query[Post] { (title: String) =>
 //      cql"SELECT * FROM test1.posts WHERE title = $title LIMIT 1;"
