@@ -7,3 +7,12 @@ CREATE TABLE test.posts (
   post_title text,
   PRIMARY KEY ((author_id), post_id)
 );
+
+CREATE TABLE test.post_details (
+  author_id uuid,
+  id uuid,
+  rating int,
+  title text,
+  tags set<text>,
+  PRIMARY KEY ((author_id), id)
+);

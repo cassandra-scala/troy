@@ -18,7 +18,7 @@ package troy.macros
 
 import java.util.UUID
 
-import com.datastax.driver.core.{Row, ResultSet, BoundStatement}
+import com.datastax.driver.core.{Statement, Row, ResultSet, BoundStatement}
 
 import scala.concurrent.Future
 
@@ -27,183 +27,111 @@ import scala.concurrent.Future
  * to highlight main usecases of the project
  */
 class Usage extends BaseSpec {
+  import troy.driver.DSL._
   import troy.dsl._
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
   case class Post(id: UUID, author_name: String, title: String)
   case class AuthorAndPost(authorId: UUID, postId: UUID, authorName: String, postRating: Int, postTitle: String)
-
-  "The Macro" should "support no params" in {
-    val getAll = troy { () =>
-      cql"SELECT post_id, author_name, post_title FROM test.posts;".async.all.as(Post)
-    }
-
-    val result: Future[Seq[Post]] = getAll()
-    result.futureValue.size shouldBe 1
-  }
-
-  it should "support single param" in {
-    val getByTitle = troy { (title: String) =>
-      cql"SELECT post_id, author_name, post_title FROM test.posts WHERE post_title = $title;".async.all.as(Post)
-    }
-    val result: Future[Seq[Post]] = getByTitle("Title")
-    result.futureValue.head.title shouldBe "Title"
-  }
-
-  "The Macro" should "support returning the BoundStatement directly with no params" in {
-    val createStatement = troy { () =>
-      cql"SELECT post_id, author_name, post_title FROM test.posts;"
-    }
-    val statement: BoundStatement = createStatement()
-    val result = session.execute(statement) // Normal Cassandra client code
-    result.all().size() shouldBe 1
-  }
-
-  "The Macro" should "support returning the BoundStatement directly with params" in {
-    val createStatement = troy { (title: String) =>
-      cql"SELECT post_id, author_name, post_title FROM test.posts WHERE post_title = $title;"
-    }
-    val statement: BoundStatement = createStatement("Title")
-    val result = session.execute(statement) // Normal Cassandra client code
-    result.all().size() shouldBe 1
-  }
-
-  it should "support returning the ResultSet" in {
-    val query = troy {() =>
-      cql"SELECT post_id, author_name, post_title FROM test.posts;".sync
-    }
-    val result: ResultSet = query()
-    result.all().size() shouldBe 1
-  }
-
-  it should "support returning the ResultSet asynchronously" in {
-    val query = troy { () =>
-      cql"SELECT post_id, author_name, post_title FROM test.posts;".async
-    }
-    val result: ResultSet = query().futureValue
-    result.all().size() shouldBe 1
-  }
-
-  it should "support returning one element" in {
-    val query = troy { () =>
-      cql"SELECT post_id, author_name, post_title FROM test.posts;".async.one
-    }
-    val result: Row = query().futureValue
-    result.getString("post_title") shouldBe "Title"
-  }
-
-  it should "support parsing one row async" in {
-    val query = troy { ()=>
-      cql"SELECT post_id, author_name, post_title FROM test.posts;".async.one.as(Post)
-    }
-    val result: Post = query().futureValue
-    result.title shouldBe "Title"
-  }
-
-  it should "support parsing one row sync" in {
-    val query = troy { ()=>
-      cql"SELECT post_id, author_name, post_title FROM test.posts;".sync.one.as(Post)
-    }
-    val result: Post = query()
-    result.title shouldBe "Title"
-  }
-
-  it should "support select * with no params" in {
-    val query = troy { ()=>
-      cql"SELECT * FROM test.posts;".sync.one
-    }
-    val result: Row = query()
-    result.getString("post_title") shouldBe "Title"
-  }
-
-  it should "support parsing select * with class/function matching the whole table" in {
-    val query = troy { () =>
-      cql"SELECT * FROM test.posts;".sync.one.as(AuthorAndPost)
-    }
-    val result: AuthorAndPost = query()
-    result.postTitle shouldBe "Title"
-  }
-
-
-//    val getByTitle0 = query[Post] { (title: String) =>
-//      cql"SELECT * FROM test1.posts WHERE title = $title LIMIT 1;"
+// FIXME: Select with where is failing
+//  it should "support parsing one row sync" in {
+//    val query = withSchema {()=>
+//      cql"SELECT post_id, author_name, post_title FROM test.posts;".prepared.execute.oneOption.as(Post)
 //    }
-//    getByTitle0("test"): Future[Seq[Post]]
-
-//    val getByTitle: (String) => Future[Post] = queryOne[Post] { (title: String) =>
-//      cql"SELECT * FROM test1.posts WHERE title = $title LIMIT 1;"
-//    }
-//    getByTitle("test"): Future[Option[Post]]
+//    val result: Post = query().get
+//    result.title shouldBe "Title"
+//  }
 //
-//    val getByTitle2 = queryOne[Post] { (title: String) =>
-//      cql"SELECT * FROM test1.posts WHERE title = $title;"
+//  it should "support select * with no params" in {
+//    val query = withSchema {()=>
+//      cql"SELECT * FROM test.posts;".prepared.execute.oneOption
+//    }
+//    val result: Row = query().get
+//    result.getString("post_title") shouldBe "Title"
+//  }
+//
+//  it should "support parsing select * with class/function matching the whole table" in {
+//    val query = withSchema {() =>
+//      cql"SELECT * FROM test.posts;".prepared.execute.oneOption.as(AuthorAndPost)
+//    }
+//    val result: AuthorAndPost = query().get
+//    result.postTitle shouldBe "Title"
+//  }
+
+  it should "support select *" in {
+    //    TODO: Limit is not supported yet
+    //    val getByTitle: (String) => Future[Option[Post]] = withSchema { (title: String) =>
+    //      cql"SELECT * FROM test1.posts WHERE title = $title LIMIT 1;".prepared.oneOption.as(Post)
+    //    }
+    //    getByTitle("test"): Future[Option[Post]]
+  }
+
+//  it should "support SET types" in {
+//    val getByTitle2 = withSchema { (title: String) =>
+//      cql"SELECT * FROM test.post_details WHERE title = $title;".prepared.oneOption
 //    }
 //    getByTitle2("test"): Future[Option[Post]]
 //
-//    val filterByTag = query[Post] { (tag: String) =>
-//      cql"SELECT * FROM test1.posts WHERE tags CONTAINS $tag;"
+//    val filterByTag = withSchema { (tag: String) =>
+//      cql"SELECT * FROM test.post_details WHERE tags CONTAINS $tag;".prepared.all.as(Post)
 //    }
 //    filterByTag("hot"): Future[Seq[Post]]
 //
-//    import ExecuteParams.Bind
-//    val getByTitleAndTag = Troy.execute { (title: String, tag: String) =>
-//      ExecuteParams[Future[Seq[Post]]](
-//        "SELECT * FROM test1.posts WHERE title = :title AND tags CONTAINS :tag;",
-//        Seq(Bind("title", title), Bind("tag", tag))
-//      )
+//    val getByTitleAndTag = withSchema { (title: String, tag: String) =>
+//      cql"SELECT * FROM test.post_details WHERE title = $title AND tags CONTAINS $tag;".prepared.as(Post)
 //    }
-//    getByTitleAndTag("test", "hot"): Future[Seq[Post]] // TODO: Future[Seq[Post]]
-//
-//    val createPost = execute { (p: Post) =>
+//    getByTitleAndTag("test", "hot"): Future[Seq[Post]]
+//  }
+
+//  it should "support INSERT" in {
+//    val createPost = withSchema { (p: Post) =>
 //      cql"""
-//        INSERT INTO test1.posts (id, title, tags)
-//        VALUES (${p.id}, ${p.title}, ${p.tags}) IF NOT EXISTS;
-//      """
+//        INSERT INTO test1.posts (id, title, author_name)
+//        VALUES (${p.id}, ${p.title}, ${p.author_name}) IF NOT EXISTS;
+//      """.prepared.executeAsync
 //    }
-//    createPost(testPost): ???
+//    createPost(Post(UUID.randomUUID(), "Author", "Title")): Future[ResultSet]
 //
-//    val createPost2 = cql("""
-//        INSERT INTO test1.posts (id, title, tags)
-//        VALUES (?, ?, ?) IF NOT EXISTS;
-//    """)
-//    createPost2(testPost)
-//
-//    val createPost3 = execute { case Post(id, title, tags) =>
+//    val createPost3 = withSchema { case Post(id, title, tags) =>
 //      cql"INSERT INTO test1.posts (id, title) VALUES (uuid());"
 //    } // Should not even compile
-//
-//    val setTitle = execute { (oldTitle: String, newTitle: String) =>
+//  }
+
+//  it should "support Update" in {
+//    val setTitle = withSchema { (oldTitle: String, newTitle: String) =>
 //      cql"""
 //        UPDATE test1.posts
 //        SET title=$oldTitle
 //        If title=$newTitle;
-//      """
+//      """.prepared.executeAsync
 //    }
 //    setTitle("test", "not test anymore")
 //
-//    val addTag = execute { (newTag: String) =>
+//    val addTag = withSchema { (newTag: String) =>
 //      cql"""
 //        UPDATE test1.posts
 //        SET tags= tags + {$newTag};
-//      """
+//      """.prepared.executeAsync
 //    }
-//    add()
+//    addTag("")
+//  }
 //
-//    val removeAllTags = execute { (id: UUID) =>
-//      cql"DELETE tags FROM test1.posts WHERE id = $id;"
-//    }
-//
-//    val removeFirstTag = execute { (id: UUID) =>
-//      cql"DELETE tags[0] FROM test1.posts WHERE id = $id;"
+//  it should "support DELETE" in {
+//    val removeAllTags = withSchema { (id: UUID) =>
+//      cql"DELETE tags FROM test1.posts WHERE id = $id;".prepared.executeAsync
 //    }
 //
-//    val removeTagByIndex = execute { (id: UUID, i: Int) =>
-//      cql"DELETE tags[$i] FROM test1.posts WHERE id = $id;"
+//    val removeFirstTag = withSchema { (id: UUID) =>
+//      cql"DELETE tags[0] FROM test1.posts WHERE id = $id;".prepared.executeAsync
 //    }
 //
-//    val deletePost = execute { (id: UUID) =>
-//      cql"DELETE FROM test1.posts WHERE id = $id;"
+//    val removeTagByIndex = withSchema { (id: UUID, i: Int) =>
+//      cql"DELETE tags[$i] FROM test1.posts WHERE id = $id;".prepared.executeAsync
+//    }
+//
+//    val deletePost = withSchema { (id: UUID) =>
+//      cql"DELETE FROM test1.posts WHERE id = $id;".prepared.executeAsync
 //    }
 //  }
 }

@@ -18,6 +18,7 @@ package troy
 
 import java.io.InputStream
 import scala.io.Source
+import scala.reflect.api.Trees
 import scala.reflect.macros.blackbox.Context
 import com.datastax.driver.core.Session
 import troy.cql.ast.CqlParser
@@ -28,11 +29,13 @@ package object macros {
 
   def log[T](value: T): T = { println(value); value }
 
-  def troyImpl[F](c: Context)(code: c.Expr[F])(session: c.Expr[Session]): c.Expr[F] = {
+  def troyImpl[F](c: Context)(code: c.Expr[F]): c.Expr[F] = {
     import c.universe._
     implicit val c_ = c
 
-    val q"(..$params) => $expr" = code.tree
+    val q"(..$params) => $exprWithDsl" = code.tree
+    val expr = removeMacroDslClasses(c)(exprWithDsl)
+
     val (qParts, qParams) = findCqlQuery(c)(expr)
     val rawQuery = qParts.map{case q"${p: String}" => p}.mkString("?")
     val schema = parseSchemaFromFileName("/schema.cql")(c)
@@ -43,6 +46,8 @@ package object macros {
       q"import _root_.troy.driver.CassandraDataType",
       q"import _root_.troy.driver.Codecs._"
     )
+
+    val session = q"implicitly[com.datastax.driver.core.Session]"
 
     val prepareStatement = q"""
       val prepared = $session.prepare($rawQuery)
@@ -73,7 +78,7 @@ package object macros {
       val variableTypes = variable.map(v => translateColumnType(v.dataType)(c))
       val bodyParams = qParams.zip(variableTypes).map{ case (p, t) => q"param($p).as[$t]" }
       replaceCqlQuery(c)(expr, q"bind(prepared, ..$bodyParams)") match {
-        case q"$root.as[..$paramTypes]($f)" => q"$root.as(parser)"
+        case q"$root.as[..$paramTypes]($f)" => q"$root.parseAs(parser)"
         case other => other
       }
     }
@@ -87,24 +92,50 @@ package object macros {
     c.Expr(log(q"{ ..$stats }"))
   }
 
+  private def removeMacroDslClasses(c: Context)(expr: c.universe.Tree): c.universe.Tree = {
+    import c.universe._
+    replaceTree(c)(expr) {
+      case q"troy.dsl.`package`.MacroDsl_RichStatement($param)" =>
+        q"${removeMacroDslClasses(c)(param)}"
+      case q"troy.dsl.`package`.MacroDsl_RichFutureBoundStatement($param)" =>
+        q"${removeMacroDslClasses(c)(param)}"
+      case q"troy.dsl.`package`.MacroDsl_RichResultSet($param)" =>
+        q"${removeMacroDslClasses(c)(param)}"
+      case q"troy.dsl.`package`.MacroDsl_RichFutureOfResultSet($param)" =>
+        q"${removeMacroDslClasses(c)(param)}"
+      case q"troy.dsl.`package`.MacroDsl_RichFutureOfSeqOfRow($param)" =>
+        q"${removeMacroDslClasses(c)(param)}"
+      case q"troy.dsl.`package`.MacroDsl_RichFutureOfOptionOfRow($param)" =>
+        q"${removeMacroDslClasses(c)(param)}"
+      case q"troy.dsl.`package`.MacroDsl_RichSeqOfRow($param)" =>
+        q"${removeMacroDslClasses(c)(param)}"
+      case q"troy.dsl.`package`.MacroDsl_RichOptionOfRow($param)" =>
+        q"${removeMacroDslClasses(c)(param)}"
+      case q"troy.driver.DSL.RichFutureOfResultSet($param)" =>
+        q"${removeMacroDslClasses(c)(param)}"
+      case q"troy.driver.DSL.ExternalDSL_RichStatement($param)" =>
+        q"${removeMacroDslClasses(c)(param)}"
+    }
+  }
+
   private def findCqlQuery(c: Context)(expr: c.universe.Tree): (List[c.universe.Tree], List[c.universe.Tree]) = {
     import c.universe._
     expr match {
-      case q"$_.RichStringContext(scala.StringContext.apply(..$query)).cql(..$params)" =>
+      case q"$_.RichStringContext(scala.StringContext.apply(..$query)).cql(..$params).prepared" =>
         (query, params)
-      case q"$y($z)" =>
-        findCqlQuery(c)(y)
-      case q"$y.$z" =>
-        findCqlQuery(c)(y)
-      case q"$y[..$z]" =>
-        findCqlQuery(c)(y)
+      case q"$expr.$tname" =>
+        findCqlQuery(c)(expr)
+      case q"$expr.$func[..$tpts](...$exprss)"	=>
+        findCqlQuery(c)(expr)
+      case q"$expr.$func[..$tpts]" =>
+        findCqlQuery(c)(expr)
     }
   }
 
   private def replaceCqlQuery(c: Context)(expr: c.universe.Tree, replacement: c.universe.Tree): c.universe.Tree = {
     import c.universe._
     expr match {
-      case q"$_.RichStringContext(scala.StringContext.apply(..$query)).cql(..$params)" =>
+      case q"$_.RichStringContext(scala.StringContext.apply(..$query)).cql(..$params).prepared" =>
         replacement
       case q"$y(..$z)" =>
         val replaced = replaceCqlQuery(c)(y, replacement)
@@ -116,6 +147,27 @@ package object macros {
         val replaced = replaceCqlQuery(c)(y, replacement)
         q"$replaced[..$z]"
     }
+  }
+
+  private def replaceTree(c: Context)(original: c.universe.Tree)(handler: PartialFunction[c.universe.Tree, c.universe.Tree]): c.universe.Tree  = {
+    import c.universe._
+    def expand(input: c.universe.Tree): c.universe.Tree = {
+      handler.orElse[c.universe.Tree, c.universe.Tree] {
+        case q"$expr.$tname" =>
+          q"${expand(expr)}.$tname" // Select
+        case q"$expr.$func[..$tpts](...$exprss)"	=>
+          val expandedExprss = exprss.map(e => e.map(x => expand(x)))
+          q"${expand(expr)}.$func[..$tpts](...$expandedExprss)"
+        case q"$expr.$func[..$tpts]" =>
+          q"${expand(expr)}.$func[..$tpts]" // TypeApply
+        case q"$func(..$params) = $body" =>
+          q"$func(..$params) = ${expand(body)}" // Tree
+        case other =>
+          other
+      }(input)
+    }
+
+    expand(original)
   }
 
   private def translateColumnType(typ: DataType)(c: Context): c.universe.Tree = {

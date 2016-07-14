@@ -7,6 +7,7 @@ import scala.concurrent.{ Future, ExecutionContext }
 object InternalDsl {
   import JavaConverters._
   import scala.collection.JavaConverters._
+  import DSL._
 
   def column[S](i: Int)(implicit row: Row) = new {
     def as[C <: CassandraDataType](implicit getter: ColumnGetter[S, C]): S =
@@ -27,34 +28,40 @@ object InternalDsl {
       case (stmt, (param, i)) => param.set(stmt, i)
     }
 
-  implicit class RichBoundStatement(val boundStatement: BoundStatement) extends AnyVal {
-    def sync(implicit session: Session) = session.execute(boundStatement)
-    def async(implicit session: Session) = session.executeAsync(boundStatement).asScala
+  implicit class InternalDSL_RichStatement(val statement: Statement) extends AnyVal {
+    def parseAs[T](parser: Row => T)(implicit session: Session, executionContext: ExecutionContext): Future[Seq[T]] =
+      statement.executeAsync.parseAs(parser)
+
+    //    def preparedAync = statement
   }
 
-  implicit class RichResultSet(val resultSet: ResultSet) extends AnyVal {
-    def all = resultSet.all.asScala
+  implicit class InternalDSL_RichFutureOfResultSet(val resultSet: Future[ResultSet]) extends AnyVal {
+    def parseAs[T](parser: Row => T)(implicit executionContext: ExecutionContext): Future[Seq[T]] =
+      resultSet.map(_.parseAs(parser))
   }
 
-  implicit class RichFutureOfResultSet(val resultSet: Future[ResultSet]) extends AnyVal {
-    def all(implicit executionContext: ExecutionContext) = resultSet.map(_.all.asScala)
-    def one(implicit executionContext: ExecutionContext) = resultSet.map(_.one)
+  implicit class InternalDSL_RichResultSet(val resultSet: ResultSet) extends AnyVal {
+    def parseAs[T](parser: Row => T): Seq[T] =
+      resultSet.all.parseAs(parser)
   }
 
-  implicit class RichSeqOfRows(val rows: java.util.List[Row]) extends AnyVal {
-    def as[T](parser: Row => T): Seq[T] = rows.asScala.map(parser)
+  implicit class InternalDSL_RichSeqOfRows(val rows: java.util.List[Row]) extends AnyVal {
+    def parseAs[T](parser: Row => T): Seq[T] =
+      rows.asScala.map(parser)
   }
 
-  implicit class RichFutureOfSeqOfRows(val rows: Future[Seq[Row]]) extends AnyVal {
-    def as[T](parser: Row => T)(implicit executionContext: ExecutionContext): Future[Seq[T]] = rows.map(_.map(parser))
+  implicit class InternalDSL_RichFutureOfSeqOfRows(val rows: Future[Seq[Row]]) extends AnyVal {
+    def parseAs[T](parser: Row => T)(implicit executionContext: ExecutionContext): Future[Seq[T]] =
+      rows.map(_.map(parser))
   }
 
-  implicit class RichRow(val row: Row) extends AnyVal {
-    def as[T](parser: Row => T): T = parser(row)
+  implicit class InternalDSL_RichOptionOfRow(val row: Option[Row]) extends AnyVal {
+    def parseAs[T](parser: Row => T): Option[T] =
+      row.map(parser)
   }
 
-  implicit class RichFutureOfRow(val row: Future[Row]) extends AnyVal {
-    def as[T](parser: Row => T)(implicit executionContext: ExecutionContext): Future[T] = row.map(parser)
+  implicit class InternalDSL_RichFutureOfOptionOfRow(val row: Future[Option[Row]]) extends AnyVal {
+    def parseAs[T](parser: Row => T)(implicit executionContext: ExecutionContext): Future[Option[T]] =
+      row.map(_.map(parser))
   }
-
 }

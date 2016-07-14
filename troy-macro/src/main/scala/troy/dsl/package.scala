@@ -1,16 +1,51 @@
 package troy
 
-import com.datastax.driver.core.Session
+import com.datastax.driver.core._
 import troy.macros._
+
+import scala.concurrent.Future
 
 package object dsl {
 
   implicit class RichStringContext(val context: StringContext) extends AnyVal {
-    def cql(args: Any*): MacroParam.DslBoundStatement = ???
+    def cql(args: Any*): MacroDSL.TroyCql = ???
   }
 
-  def troy[R](code: () => MacroParam[R])(implicit session: Session): () => R = macro troyImpl[() => MacroParam[R]]
-  def troy[T, R](code: T => MacroParam[R])(implicit session: Session): T => R = macro troyImpl[T => MacroParam[R]]
-  def troy[T1, T2, R](code: (T1, T2) => MacroParam[R])(implicit session: Session): (T1, T2) => R = macro troyImpl[(T1, T2) => MacroParam[R]]
+  def withSchema[F](code: F): F = macro troyImpl[F]
 
+  implicit class MacroDsl_RichStatement(val statement: Statement) extends ParsingOps {
+    type ParseAs[R] = Future[Seq[R]]
+  }
+
+  implicit class MacroDsl_RichFutureBoundStatement(val xxx: Future[Statement]) extends ParsingOps {
+    type ParseAs[R] = Future[Seq[R]]
+  }
+
+  implicit class MacroDsl_RichResultSet(val xxx: ResultSet) extends ParsingOps {
+    type ParseAs[R] = Seq[R]
+  }
+
+  implicit class MacroDsl_RichFutureOfResultSet(val xxx: Future[ResultSet]) extends ParsingOps {
+    type ParseAs[R] = Future[Seq[R]]
+  }
+
+  implicit class MacroDsl_RichFutureOfSeqOfRow(val xxx: Future[Seq[Row]]) extends ParsingOps {
+    type ParseAs[R] = Future[Seq[R]]
+  }
+
+  implicit class MacroDsl_RichFutureOfOptionOfRow(val xxx: Future[Option[Row]]) extends ParsingOps {
+    type ParseAs[R] = Future[Option[R]]
+  }
+
+  implicit class MacroDsl_RichSeqOfRow(val xxx: Seq[Row]) extends ParsingOps {
+    type ParseAs[R] = Seq[R]
+  }
+
+  implicit class MacroDsl_RichJavaListOfRow(val xxx: java.util.List[Row]) extends ParsingOps {
+    type ParseAs[R] = Seq[R]
+  }
+
+  implicit class MacroDsl_RichOptionOfRow(val xxx: Option[Row]) extends ParsingOps {
+    type ParseAs[R] = Option[R]
+  }
 }
