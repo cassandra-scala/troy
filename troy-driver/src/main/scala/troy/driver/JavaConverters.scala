@@ -18,7 +18,7 @@ package troy.driver
 
 import com.google.common.util.concurrent.{ FutureCallback, Futures, ListenableFuture }
 
-import scala.concurrent.{ Promise, Future }
+import scala.concurrent.{ Future, Promise }
 
 object JavaConverters {
 
