@@ -19,6 +19,7 @@ package troy.driver
 import java.util.UUID
 
 import com.datastax.driver.core._
+import troy.dsl.{Codecs, InternalDsl}
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -27,6 +28,8 @@ import scala.concurrent.duration.Duration
  * Playground to test the helpers without macros
  */
 object Usage extends App {
+  import DSL._
+
   val cluster = Cluster.builder().addContactPoint("127.0.0.1").build()
   implicit val session: Session = cluster.connect()
   case class Post(id: UUID, author_name: String, title: String)
@@ -47,9 +50,9 @@ object Usage extends App {
 
     (title: String) =>
       bind(prepared, param(title).as[CassandraDataType.Text])
-        .async
+        .executeAsync
         .all
-        .as(parser)
+        .parseAs(parser)
   }
 
   println(Await.result(getByTitle("Title"), Duration(1, "second")))

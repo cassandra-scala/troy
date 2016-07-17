@@ -1,4 +1,4 @@
-package troy.driver
+package troy.dsl
 
 import java.util.UUID
 
@@ -15,4 +15,6 @@ object Codecs {
   implicit val (stringAsVarchar, ostringAsVarchar) = wrap[String, CT.VarChar](TypeCodec.varchar)
   implicit val (stringAsText, ostringAsText) = wrap[String, CT.Text](TypeCodec.varchar)
   implicit val (uuidAsUuid, ouuidAsUuid) = wrap[UUID, CT.Uuid](TypeCodec.uuid)
+
+  //  implicit val (stringAsText, ostringAsText) = wrap[String, CT.Text](TypeCodec.s)
 }

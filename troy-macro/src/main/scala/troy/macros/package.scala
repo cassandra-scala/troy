@@ -42,9 +42,9 @@ package object macros {
     val query = parseQuery(rawQuery)
 
     val imports = Seq(
-      q"import _root_.troy.driver.InternalDsl._",
+      q"import _root_.troy.dsl.InternalDsl._",
       q"import _root_.troy.driver.CassandraDataType",
-      q"import _root_.troy.driver.Codecs._"
+      q"import _root_.troy.dsl.Codecs._"
     )
 
     val session = q"implicitly[com.datastax.driver.core.Session]"
@@ -59,7 +59,7 @@ package object macros {
           case Right(columns) => columns
           case Left(e)        => c.abort(c.enclosingPosition, e)
         }
-        val columnTypes = columns.map(column => translateColumnType(column.dataType)(c))
+        val columnTypes = columns.map(column => translateColumnType(c)(column.dataType))
         val params = (paramTypes zip columnTypes).zipWithIndex.map {
           case ((p, c), i) =>
             q"column[$p]($i)(row).as[$c]"
@@ -75,7 +75,7 @@ package object macros {
         case Right(columns) => columns
         case Left(e)        => c.abort(c.enclosingPosition, e)
       }
-      val variableTypes = variable.map(v => translateColumnType(v.dataType)(c))
+      val variableTypes = variable.map(v => translateColumnType(c)(v.dataType))
       val bodyParams = qParams.zip(variableTypes).map{ case (p, t) => q"param($p).as[$t]" }
       replaceCqlQuery(c)(expr, q"bind(prepared, ..$bodyParams)") match {
         case q"$root.as[..$paramTypes]($f)" => q"$root.parseAs(parser)"
@@ -170,7 +170,27 @@ package object macros {
     expand(original)
   }
 
-  private def translateColumnType(typ: DataType)(c: Context): c.universe.Tree = {
+  private def translateColumnType(c: Context)(typ: DataType): c.universe.Tree = {
+    import c.universe._
+    typ match {
+      case t: DataType.Native => translateNativeColumnType(c)(t)
+      case t: DataType.Collection => translateCollectionColumnType(c)(t)
+    }
+  }
+
+  private def translateCollectionColumnType(c: Context)(typ: DataType): c.universe.Tree = {
+    import c.universe._
+    val cdt = q"CassandraDataType"
+    typ match {
+      //      case DataType.list(t: Native) => tq"$cdt."
+      case DataType.set(t) => tq"$cdt.Set[${translateNativeColumnType(c)(t)}]"
+      //      case DataType.map(k: Native, v: Native) => tq"$cdt."
+      //      case DataType.Tuple(ts: Seq[DataType]) => tq"$cdt."
+      //      case DataType.Custom(javaClass: String) => tq"$cdt."
+    }
+  }
+
+  private def translateNativeColumnType(c: Context)(typ: DataType): c.universe.Tree = {
     import c.universe._
     val cdt = q"CassandraDataType"
     typ match {
@@ -194,12 +214,6 @@ package object macros {
       case DataType.uuid => tq"$cdt.Uuid"
       case DataType.varchar => tq"$cdt.Varchar"
       case DataType.varint => tq"$cdt.Varint"
-//      case DataType.list(t: Native) => tq"$cdt."
-//      case DataType.set(t: Native) => tq"$cdt."
-//      case DataType.map(k: Native, v: Native) => tq"$cdt."
-//      case DataType.Tuple(ts: Seq[DataType]) => tq"$cdt."
-//      case DataType.Custom(javaClass: String) => tq"$cdt."
-
     }
   }
 
