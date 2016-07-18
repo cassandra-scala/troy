@@ -34,10 +34,10 @@ object DSL {
   }
 
   implicit class RichResultSet(val resultSet: ResultSet) extends AnyVal {
-    def all =
+    def all() =
       resultSet.all.asScala
 
-    def oneOption =
+    def oneOption() =
       Option(resultSet.one)
   }
 

@@ -1,26 +1,28 @@
-package troy.driver
+package troy.dsl
 
 import com.datastax.driver.core._
+import troy.codecs.TroyCodec
+import troy.driver._
 
-import scala.concurrent.{ Future, ExecutionContext }
+import scala.concurrent.{ ExecutionContext, Future }
 
 object InternalDsl {
-  import JavaConverters._
-  import scala.collection.JavaConverters._
   import DSL._
 
+  import scala.collection.JavaConverters._
+
   def column[S](i: Int)(implicit row: Row) = new {
-    def as[C <: CassandraDataType](implicit getter: ColumnGetter[S, C]): S =
-      getter.get(row, i)
+    def as[C <: CassandraDataType](implicit getter: TroyCodec[S, C]): S =
+      getter.getColumn(row, i)
   }
 
   def param[S](value: S) = new {
-    def as[C <: CassandraDataType](implicit setter: VariableSetter[S, C]) =
+    def as[C <: CassandraDataType](implicit setter: TroyCodec[S, C]) =
       Param[S, C](value, setter)
   }
 
-  case class Param[S, C <: CassandraDataType](value: S, setter: VariableSetter[S, C]) {
-    def set(bound: BoundStatement, i: Int) = setter.set(bound, i, value)
+  case class Param[S, C <: CassandraDataType](value: S, setter: TroyCodec[S, C]) {
+    def set(bound: BoundStatement, i: Int) = setter.setVariable(bound, i, value)
   }
 
   def bind(preparedStatement: com.datastax.driver.core.PreparedStatement, params: Param[_, _ <: CassandraDataType]*) =
