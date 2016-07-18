@@ -31,8 +31,10 @@ class TypesSpec extends BaseSpec {
 
   case class PostDetails(id: UUID, tags: Set[String])
   case class PostCommentIds(id: UUID, commentIds: Set[Int])
+  case class PostCommentUserIds(id: UUID, users: Seq[Int])
+  case class PostCommentBodies(id: UUID, bodies: Seq[String])
 
-  // INSERT INTO test.post_details (author_id, id , tags , comment_ids ) VALUES ( uuid(), uuid(), {'test1', 'test2'}, {1, 2} ) ;
+  // INSERT INTO test.post_details (author_id, id , tags , comment_ids, comment_userIds, comment_bodies ) VALUES ( uuid(), uuid(), {'test1', 'test2'}, {1, 2}, [1, 2], ['test1', 'test2']) ;
 
   "SET column" should "be selected" in {
     val q = withSchema { () =>
@@ -63,4 +65,33 @@ class TypesSpec extends BaseSpec {
 //    }
 //    q("test1").futureValue.get.tags shouldBe Set("test1", "test2")
 //  }
+
+  "LIST column" should "be selected" in {
+    val q = withSchema { () =>
+      cql"SELECT comment_bodies FROM test.post_details;".prepared.execute
+    }
+    q()
+  }
+
+  it should "be parsed" in {
+    val q = withSchema { () =>
+      cql"SELECT id, comment_bodies FROM test.post_details;".prepared.executeAsync.oneOption.as(PostCommentBodies)
+    }
+    q().futureValue.get.bodies shouldBe List("test1", "test2")
+  }
+
+  it should "be parsed (primitive)" in {
+    val q = withSchema { () =>
+      cql"SELECT id, comment_userIds FROM test.post_details;".prepared.execute.oneOption.as(PostCommentUserIds)
+    }
+    q().get.users shouldBe List(1, 2)
+  }
+
+  // TODO: Contains restriction
+  //  it should "accepted as param" in {
+  //    val q = withSchema { (userId: Int) =>
+  //      cql"SELECT id, comment_userIds FROM test.post_details where comment_userIds CONTAINS $tag;".prepared.executeAsync.oneOption.as(PostCommentUserIds)
+  //    }
+  //    q("test1").futureValue.get.tags shouldBe Set("test1", "test2")
+  //  }
 }

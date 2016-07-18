@@ -185,7 +185,7 @@ package object macros {
     import c.universe._
     val cdt = q"CassandraDataType"
     typ match {
-      //      case DataType.list(t: Native) => tq"$cdt."
+      case DataType.list(t) => tq"$cdt.List[${translateNativeColumnType(c)(t)}]"
       case DataType.set(t) => tq"$cdt.Set[${translateNativeColumnType(c)(t)}]"
       //      case DataType.map(k: Native, v: Native) => tq"$cdt."
       //      case DataType.Tuple(ts: Seq[DataType]) => tq"$cdt."

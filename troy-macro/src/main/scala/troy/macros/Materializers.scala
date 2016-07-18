@@ -19,6 +19,14 @@ object Materializers {
       scalaPrimitiveToJavaWrappers.keys.find(t.=:=).isDefined
 
     c.Expr[TroyCodec[S, C]]((c.weakTypeOf[S].dealias, c.weakTypeOf[C].dealias) match {
+      case (st, ct) if st <:< typeOf[Seq[_]] && ct <:< typeOf[CT.List[_]] && isPrimitive(st.typeArgs.head) =>
+        val ps = st.typeArgs.head
+        val pj = scalaPrimitiveToJavaWrappers(ps)
+        val pc = ct.typeArgs.head
+        q"new troy.codecs.TroyListOfPrimitivesTypeCodec[$pj, $ps, $pc](new troy.codecs.TroyListTypeCodec[$pj, $pc])"
+      case (st, ct) if st <:< typeOf[Seq[_]] && ct <:< typeOf[CT.List[_]] =>
+        q"new troy.codecs.TroyListTypeCodec[${st.typeArgs.head}, ${ct.typeArgs.head}]"
+
       case (st, ct) if st <:< typeOf[Set[_]] && ct <:< typeOf[CT.Set[_]] && isPrimitive(st.typeArgs.head) =>
         val ps = st.typeArgs.head
         val pj = scalaPrimitiveToJavaWrappers(ps)
@@ -26,6 +34,7 @@ object Materializers {
         q"new troy.codecs.TroySetOfPrimitivesTypeCodec[$pj, $ps, $pc](new troy.codecs.TroySetTypeCodec[$pj, $pc])"
       case (st, ct) if st <:< typeOf[Set[_]] && ct <:< typeOf[CT.Set[_]] =>
         q"new troy.codecs.TroySetTypeCodec[${st.typeArgs.head}, ${ct.typeArgs.head}]"
+
       case (st, ct) if !isPrimitive(st) =>
         q"troy.codecs.TroyCodec.wrap[$st, $ct]"
     })
