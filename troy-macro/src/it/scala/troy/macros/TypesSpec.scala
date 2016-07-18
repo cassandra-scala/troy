@@ -30,8 +30,9 @@ class TypesSpec extends BaseSpec {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   case class PostDetails(id: UUID, tags: Set[String])
+  case class PostCommentIds(id: UUID, commentIds: Set[Int])
 
-  // INSERT INTO test.post_details (author_id, id , tags ) VALUES ( uuid(), uuid(), {'test1', 'test2'}) ;
+  // INSERT INTO test.post_details (author_id, id , tags , comment_ids ) VALUES ( uuid(), uuid(), {'test1', 'test2'}, {1, 2} ) ;
 
   "SET column" should "be selected" in {
     val q = withSchema { () =>
@@ -47,13 +48,15 @@ class TypesSpec extends BaseSpec {
     q().futureValue.get.tags shouldBe Set("test1", "test2")
   }
 
-  it should "accepted as param" in {
-    val q = withSchema { (tags: Set[String]) =>
-      cql"SELECT id, tags FROM test.post_details where tags = $tags;".prepared.executeAsync.oneOption.as(PostDetails)
+  it should "be parsed (primitive)" in {
+    val q = withSchema { () =>
+      cql"SELECT id,  comment_ids FROM test.post_details;".prepared.execute.oneOption.as(PostCommentIds)
     }
-    q(Set("test1", "test2")).futureValue.get.tags shouldBe Set("test1", "test2")
+    val x = q()
+    x.get.commentIds shouldBe Set(1, 2)
   }
 
+// TODO: Contains restriction
 //  it should "accepted as param" in {
 //    val q = withSchema { (tag: String) =>
 //      cql"SELECT id, tags FROM test.post_details where tags CONTAINS $tag;".prepared.executeAsync.oneOption.as(PostDetails)

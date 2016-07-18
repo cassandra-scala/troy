@@ -14,5 +14,6 @@ CREATE TABLE test.post_details (
   rating int,
   title text,
   tags set<text>,
+  comment_ids set<int>,
   PRIMARY KEY ((author_id), id)
 );

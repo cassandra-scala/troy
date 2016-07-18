@@ -1,4 +1,4 @@
-package troy.dsl
+package troy.codecs
 
 import com.datastax.driver.core.{ BoundStatement, Row, TypeCodec }
 import troy.driver.{ CassandraDataType => CT }
@@ -44,12 +44,17 @@ class TroyOptionalTypeCodec[S <: AnyRef, C <: CT](inner: TroyTypeCodecWrapper[S,
   override def getColumn(row: Row, i: Int) = Option(inner.getColumn(row, i))
 }
 
-class TroySetTypeCodec[S <: AnyRef, C <: CT.Native](implicit inner: TroyTypeCodecWrapper[S, C]) extends TroyCodec[Set[S], CT.Set[C]] {
+class TroySetTypeCodec[S <: AnyRef, C <: CT.Native](implicit inner: HasTypeCodec[S, C]) extends TroyCodec[Set[S], CT.Set[C]] {
   import scala.collection.JavaConverters._
 
   val codec = TypeCodec.set(inner.typeCodec)
   override def setVariable(bound: BoundStatement, i: Int, value: Set[S]): BoundStatement = bound.set(i, value.asJava, codec)
   override def getColumn(row: Row, i: Int) = row.get(i, codec).asScala.toSet
+}
+
+class TroySetOfPrimitivesTypeCodec[J <: AnyRef, S <: AnyVal, C <: CT.Native](inner: TroySetTypeCodec[J, C])(implicit converter: PrimitivesConverter[J, S]) extends TroyCodec[Set[S], CT.Set[C]] {
+  override def setVariable(bound: BoundStatement, i: Int, value: Set[S]): BoundStatement = inner.setVariable(bound, i, value.map(converter.toJava))
+  override def getColumn(row: Row, i: Int) = inner.getColumn(row, i).map(converter.toScala)
 }
 
 object TroyCodec {
@@ -60,8 +65,6 @@ object TroyCodec {
     (codec, new TroyOptionalPrimitiveTypeCodec[S, C](codec))
   }
 
-  def wrap[S <: AnyRef, C <: CT](typeCodec: TypeCodec[S]) = {
-    val codec = new TroyTypeCodecWrapper[S, C](typeCodec)
-    (codec, new TroyOptionalTypeCodec[S, C](codec))
-  }
+  def wrap[S <: AnyRef, C <: CT](implicit hasTypeCodec: HasTypeCodec[S, C]) =
+    new TroyTypeCodecWrapper[S, C](hasTypeCodec.typeCodec)
 }

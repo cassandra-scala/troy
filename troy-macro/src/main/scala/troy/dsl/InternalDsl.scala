@@ -1,6 +1,7 @@
 package troy.dsl
 
 import com.datastax.driver.core._
+import troy.codecs.TroyCodec
 import troy.driver._
 
 import scala.concurrent.{ ExecutionContext, Future }

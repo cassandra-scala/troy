@@ -44,7 +44,8 @@ package object macros {
     val imports = Seq(
       q"import _root_.troy.dsl.InternalDsl._",
       q"import _root_.troy.driver.CassandraDataType",
-      q"import _root_.troy.dsl.Codecs._"
+      q"import _root_.troy.codecs.HasTypeCodec._",
+      q"import _root_.troy.codecs.Primitives._"
     )
 
     val session = q"implicitly[com.datastax.driver.core.Session]"
@@ -112,6 +113,8 @@ package object macros {
       case q"troy.dsl.`package`.MacroDsl_RichOptionOfRow($param)" =>
         q"${removeMacroDslClasses(c)(param)}"
       case q"troy.driver.DSL.RichFutureOfResultSet($param)" =>
+        q"${removeMacroDslClasses(c)(param)}"
+      case q"troy.driver.DSL.RichResultSet($param)" =>
         q"${removeMacroDslClasses(c)(param)}"
       case q"troy.driver.DSL.ExternalDSL_RichStatement($param)" =>
         q"${removeMacroDslClasses(c)(param)}"
