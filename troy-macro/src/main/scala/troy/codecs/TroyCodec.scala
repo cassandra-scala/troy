@@ -44,6 +44,19 @@ class TroyOptionalTypeCodec[S <: AnyRef, C <: CT](inner: TroyTypeCodecWrapper[S,
   override def getColumn(row: Row, i: Int) = Option(inner.getColumn(row, i))
 }
 
+class TroyListTypeCodec[S <: AnyRef, C <: CT.Native](implicit inner: HasTypeCodec[S, C]) extends TroyCodec[Seq[S], CT.List[C]] {
+  import scala.collection.JavaConverters._
+
+  val codec = TypeCodec.list(inner.typeCodec)
+  override def setVariable(bound: BoundStatement, i: Int, value: Seq[S]): BoundStatement = bound.set(i, value.asJava, codec)
+  override def getColumn(row: Row, i: Int) = row.get(i, codec).asScala
+}
+
+class TroyListOfPrimitivesTypeCodec[J <: AnyRef, S <: AnyVal, C <: CT.Native](inner: TroyListTypeCodec[J, C])(implicit converter: PrimitivesConverter[J, S]) extends TroyCodec[Seq[S], CT.List[C]] {
+  override def setVariable(bound: BoundStatement, i: Int, value: Seq[S]): BoundStatement = inner.setVariable(bound, i, value.map(converter.toJava))
+  override def getColumn(row: Row, i: Int) = inner.getColumn(row, i).map(converter.toScala)
+}
+
 class TroySetTypeCodec[S <: AnyRef, C <: CT.Native](implicit inner: HasTypeCodec[S, C]) extends TroyCodec[Set[S], CT.Set[C]] {
   import scala.collection.JavaConverters._
 
