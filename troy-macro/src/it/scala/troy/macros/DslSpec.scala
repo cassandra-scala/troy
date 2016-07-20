@@ -18,7 +18,7 @@ package troy.macros
 
 import java.util.UUID
 
-import com.datastax.driver.core.{Statement, BoundStatement, ResultSet, Row}
+import com.datastax.driver.core._
 
 import scala.concurrent.Future
 
@@ -86,6 +86,17 @@ class DslSpec extends BaseSpec {
       cql"SELECT post_id, author_name, post_title FROM test.posts;".prepared.executeAsync.oneOption
     }
     val res: Future[Option[Row]] = q()
+  }
+  it should "allow specifying consistency level" in {
+    withSchema { () =>
+      cql"SELECT post_id, author_name, post_title FROM test.posts;"
+        .prepared
+        .setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM)
+        .setSerialConsistencyLevel(ConsistencyLevel.LOCAL_SERIAL)
+        .executeAsync
+        .all
+        .as(Post)
+    }
   }
 // FIXME: Seems that Select without Where is causing troubles
 //  it should "support parsing one row async" in {
