@@ -3,11 +3,13 @@ package troy
 import com.datastax.driver.core._
 import troy.macros._
 
+import scala.annotation.compileTimeOnly
 import scala.concurrent.Future
 
 package object dsl {
 
   implicit class RichStringContext(val context: StringContext) extends AnyVal {
+    @compileTimeOnly("cql Strings can be used only inside troy.dsl.withSchema block")
     def cql(args: Any*): MacroDSL.TroyCql = ???
   }
 
