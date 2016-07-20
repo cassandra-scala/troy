@@ -70,6 +70,14 @@ class TroySetOfPrimitivesTypeCodec[J <: AnyRef, S <: AnyVal, C <: CT.Native](inn
   override def getColumn(row: Row, i: Int) = inner.getColumn(row, i).map(converter.toScala)
 }
 
+class TroyMapTypeCodec[KS <: AnyRef, KC <: CT.Native, VS <: AnyRef, VC <: CT.Native](implicit keyInner: HasTypeCodec[KS, KC], valueInner: HasTypeCodec[VS, VC]) extends TroyCodec[Map[KS, VS], CT.Map[KC, VC]] {
+  import scala.collection.JavaConverters._
+
+  val codec = TypeCodec.map(keyInner.typeCodec, valueInner.typeCodec)
+  override def setVariable(bound: BoundStatement, i: Int, value: Map[KS, VS]): BoundStatement = bound.set(i, value.asJava, codec)
+  override def getColumn(row: Row, i: Int) = row.get(i, codec).asScala.toMap
+}
+
 object TroyCodec {
   implicit def materializeTroyCodec[S, C <: CT]: TroyCodec[S, C] = macro Materializers.materializeTroyCodec[S, C]
 
