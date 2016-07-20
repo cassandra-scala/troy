@@ -184,10 +184,11 @@ package object macros {
   private def translateCollectionColumnType(c: Context)(typ: DataType): c.universe.Tree = {
     import c.universe._
     val cdt = q"CassandraDataType"
+    def translate(t: DataType) = translateNativeColumnType(c)(t)
     typ match {
-      case DataType.list(t) => tq"$cdt.List[${translateNativeColumnType(c)(t)}]"
-      case DataType.set(t) => tq"$cdt.Set[${translateNativeColumnType(c)(t)}]"
-      //      case DataType.map(k: Native, v: Native) => tq"$cdt."
+      case DataType.list(t) => tq"$cdt.List[${translate(t)}]"
+      case DataType.set(t) => tq"$cdt.Set[${translate(t)}]"
+      case DataType.map(k, v) => tq"$cdt.Map[${translate(k)}, ${translate(v)}]"
       //      case DataType.Tuple(ts: Seq[DataType]) => tq"$cdt."
       //      case DataType.Custom(javaClass: String) => tq"$cdt."
     }

@@ -33,8 +33,9 @@ class TypesSpec extends BaseSpec {
   case class PostCommentIds(id: UUID, commentIds: Set[Int])
   case class PostCommentUserIds(id: UUID, users: Seq[Int])
   case class PostCommentBodies(id: UUID, bodies: Seq[String])
+  case class PostComments(id: UUID, comments: Map[Integer, String])
 
-  // INSERT INTO test.post_details (author_id, id , tags , comment_ids, comment_userIds, comment_bodies ) VALUES ( uuid(), uuid(), {'test1', 'test2'}, {1, 2}, [1, 2], ['test1', 'test2']) ;
+  // INSERT INTO test.post_details (author_id, id , tags , comment_ids, comment_userIds, comment_bodies , comments) VALUES ( uuid(), uuid(), {'test1', 'test2'}, {1, 2}, [1, 2], ['test1', 'test2'], {1: 'test1', 2 : 'test2'}) ;
 
   "SET column" should "be selected" in {
     val q = withSchema { () =>
@@ -94,4 +95,18 @@ class TypesSpec extends BaseSpec {
   //    }
   //    q("test1").futureValue.get.tags shouldBe Set("test1", "test2")
   //  }
+
+  "comments column" should "be selected" in {
+    val q = withSchema { () =>
+      cql"SELECT comments FROM test.post_details;".prepared.execute
+    }
+    q()
+  }
+
+  it should "be parsed" in {
+    val q = withSchema { () =>
+      cql"SELECT id, comments FROM test.post_details;".prepared.executeAsync.oneOption.as(PostComments)
+    }
+    q().futureValue.get.comments shouldBe Map(1 -> "test1", 2 -> "test2")
+  }
 }

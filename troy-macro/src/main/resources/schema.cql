@@ -17,5 +17,6 @@ CREATE TABLE test.post_details (
   comment_ids set<int>,
   comment_userIds list<int>,
   comment_bodies list<text>,
+  comments map<int, text>,
   PRIMARY KEY ((author_id), id)
 );
