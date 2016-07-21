@@ -10,37 +10,44 @@ Schema is represented as plain old CQL data definition statements, the same as y
 ```
 CREATE KEYSPACE test WITH replication = {'class': 'SimpleStrategy' , 'replication_factor': '1'};
 CREATE TABLE test.posts (
-  author_id text,
-  author_name text static,
-  post_id text,
-  post_title text,
-  PRIMARY KEY ((author_id), post_id)
+  id uuid PRIMARY KEY,
+  title text,
+  comments list<text>,
+  comments_count int
+);
 ```
 
 Now you can write queries as plain strings, as you are used with the Native Cassandra client.
 ```
+import troy.dsl._
 val cluster = Cluster.builder().addContactPoint("127.0.0.1").build()
 implicit val session: Session = cluster.connect()
-val results = Troy.query[Post]("SELECT id, title, body, commentsCount FROM blog.posts") // returns Future[Seq[Post]]
+
+case class Post(id: UUID, title: String, comments: Seq[String], commentsCount: Option[Int])
+
+val getPost = withSchema { (id: UUID) =>
+  cql"SELECT id, title, comments, comments_coumt FROM test.posts WHERE id = id;"
+    .prepared
+    .executeAsync
+    .all
+    .as(Post)
+}
+
+val results = getPost(UUID.randomUUID)
 ```
-Given that class Post looks like
-```
-case class Post(id: UUID, title: String, body: Option[String], commentsCount: Int)
-```
-Now using Scala `macro`, Troy will 
+
+Using Scala `macro`, Troy will 
 1. Validate the Select query agains the schema, if you are asking for columns that doesn't exists, *your code won't compile*
 2. Rewrite your code something that converts from a Cassandra Row into an instance if your class
 
-## Performance
-At runtime, your code is directly using the Datastax Java client, so no performance penalties to pay.
-In fact, it uses best practices of the Java driver, like PreparedStatements and specifies Codecs (at compile time).
-### Compile-time Codec registery
+## Compile-time Codec registery
 Since Troy knows the schema at compile time, so your queires will be use lower level methods, that allow specificing the codec, looks like `row.getString(1, theCorrectCodecInstance)`, this should minimize the work to be done at runtime.
 
 Resolving of the correct codec has been done at Compile time rather that Runtime. This is also plugable, using Type Classes, you can define you own `HasCodec` instance that maps any Cassandra type to your custom classes, and the compile will pick your codec instead.
 
-## Types and Codecs
-TODO: Talk about handling `Option`s and ability to use your custom types as well!
+### Optional columns
+Since Cassandra every column is optional, even if it is part of the primary key! 
+We have built-in handling for `Option`, saving you from `null`s and `NPE`.
 
 ## CQL Syntax
 Troy currently supports CQL v3.3.1
@@ -48,18 +55,5 @@ Troy currently supports CQL v3.3.1
 ## Status
 Troy is currently is very early stage, testing, issues and contributions are very welcome.
 
-### TODO
- - [x] Parse simple select statement
- - [x] Parse create keyspace and table statements
- - [x] Load and parse schema.cql file into in memory data structure
- - [x] Macro to generate compile error if Select statement doesn't match Schema
- - [x] Macro to replace the CQL string to actual query using Cassandra's Java client.
- - [x] Better error reporting in case of selecting wrong fields
- - [x] Better error reporting if your case classes doesn't match the type of selected columns
- - [ ] Validate where clause of select statement
- - [ ] Support insert, update and delete statement
- - [ ] Support ALTER TABLE statement (for Schema migration purposes)
-
 ## License ##
-
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").
