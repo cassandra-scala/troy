@@ -18,7 +18,7 @@ package troy.macros
 
 import java.util.UUID
 
-import com.datastax.driver.core.{ResultSet, Row, Statement}
+import com.datastax.driver.core.{ ResultSet, Row, Statement }
 
 import scala.concurrent.Future
 
@@ -59,13 +59,13 @@ class TypesSpec extends BaseSpec {
     x.get.commentIds shouldBe Set(1, 2)
   }
 
-// TODO: Contains restriction
-//  it should "accepted as param" in {
-//    val q = withSchema { (tag: String) =>
-//      cql"SELECT id, tags FROM test.post_details where tags CONTAINS $tag;".prepared.executeAsync.oneOption.as(PostDetails)
-//    }
-//    q("test1").futureValue.get.tags shouldBe Set("test1", "test2")
-//  }
+  // TODO: Contains restriction
+  //  it should "accepted as param" in {
+  //    val q = withSchema { (tag: String) =>
+  //      cql"SELECT id, tags FROM test.post_details where tags CONTAINS $tag;".prepared.executeAsync.oneOption.as(PostDetails)
+  //    }
+  //    q("test1").futureValue.get.tags shouldBe Set("test1", "test2")
+  //  }
 
   "LIST column" should "be selected" in {
     val q = withSchema { () =>

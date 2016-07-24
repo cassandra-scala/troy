@@ -27,13 +27,13 @@ lazy val troyMacro = project
   .in(file("troy-macro"))
   .settings(libraryDependencies ++= Vector(
     Library.scalaReflect,
-    Library.scalaTest % "test, it"
+    Library.scalaTest % "test"
   ))
   .dependsOn(troyDriver, troySchema)
   .configs( IntegrationTest )
-  .settings( Defaults.itSettings : _*)
-
-unmanagedClasspath in Compile ++= (unmanagedResources in Compile).value
+  .settings((Defaults.coreDefaultSettings ++ Seq(
+    unmanagedClasspath in Test ++= (unmanagedResources in Test).value
+  )) : _*)
 
 scalacOptions ++= Seq("-unchecked", "-deprecation")
 
