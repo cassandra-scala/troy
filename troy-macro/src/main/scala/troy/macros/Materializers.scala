@@ -38,6 +38,9 @@ object Materializers {
       case (st, ct) if st <:< typeOf[Map[_, _]] && ct <:< typeOf[CT.Map[_, _]] =>
         q"new troy.codecs.TroyMapTypeCodec[${st.typeArgs(0)}, ${ct.typeArgs(0)}, ${st.typeArgs(1)}, ${ct.typeArgs(1)}]"
 
+      case (st, ct) if st <:< typeOf[Option[_]] =>
+        q"troy.codecs.TroyCodec.optional[${st.typeArgs(0)}, $ct]"
+
       case (st, ct) if !isPrimitive(st) =>
         q"troy.codecs.TroyCodec.wrap[$st, $ct]"
     })
