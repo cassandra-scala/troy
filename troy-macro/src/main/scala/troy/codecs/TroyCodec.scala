@@ -1,6 +1,7 @@
 package troy.codecs
 
 import com.datastax.driver.core.{ BoundStatement, Row, TypeCodec }
+import troy.driver.codecs.{ OptionHasTypeCodec, HasTypeCodec }
 import troy.driver.{ CassandraDataType => CT }
 import troy.macros.Materializers
 
