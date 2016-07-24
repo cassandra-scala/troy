@@ -19,7 +19,7 @@ package troy.driver
 import java.util.UUID
 
 import com.datastax.driver.core._
-import troy.dsl.{Codecs, InternalDsl}
+import troy.dsl.{ Codecs, InternalDsl }
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration

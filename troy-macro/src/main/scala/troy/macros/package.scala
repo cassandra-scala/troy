@@ -199,7 +199,7 @@ package object macros {
     val cdt = q"CassandraDataType"
     typ match {
       case DataType.ascii => tq"$cdt.Ascii"
-      case DataType.bigint => tq"$cdt.Bigint"
+      case DataType.bigint => tq"$cdt.BigInt"
       case DataType.blob => tq"$cdt.Blob"
       case DataType.boolean => tq"$cdt.Boolean"
       case DataType.counter => tq"$cdt.Counter"
@@ -209,15 +209,15 @@ package object macros {
       case DataType.float => tq"$cdt.Float"
       case DataType.inet => tq"$cdt.Inet"
       case DataType.int => tq"$cdt.Int"
-      case DataType.smallint => tq"$cdt.Smallint"
+      case DataType.smallint => tq"$cdt.SmallInt"
       case DataType.text => tq"$cdt.Text"
-      case DataType.times => tq"$cdt.Times"
+      case DataType.times => tq"$cdt.Time"
       case DataType.timestamp => tq"$cdt.Timestamp"
-      case DataType.timeuuid => tq"$cdt.Timeuuid"
-      case DataType.tinyint => tq"$cdt.Tinyint"
+      case DataType.timeuuid => tq"$cdt.TimeUuid"
+      case DataType.tinyint => tq"$cdt.TinyInt"
       case DataType.uuid => tq"$cdt.Uuid"
-      case DataType.varchar => tq"$cdt.Varchar"
-      case DataType.varint => tq"$cdt.Varint"
+      case DataType.varchar => tq"$cdt.VarChar"
+      case DataType.varint => tq"$cdt.VarInt"
     }
   }
 
