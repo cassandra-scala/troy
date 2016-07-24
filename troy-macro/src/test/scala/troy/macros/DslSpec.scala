@@ -67,7 +67,7 @@ class DslSpec extends BaseSpec {
   }
 
   it should "support returning the ResultSet" in {
-    val query = withSchema {() =>
+    val query = withSchema { () =>
       cql"SELECT post_id, author_name, post_title FROM test.posts;".prepared.execute
     }
     val result: ResultSet = query()
@@ -98,32 +98,32 @@ class DslSpec extends BaseSpec {
         .as(Post)
     }
   }
-// FIXME: Seems that Select without Where is causing troubles
-//  it should "support parsing one row async" in {
-//    val q = withSchema { () =>
-//      cql"SELECT post_id, author_name, post_title FROM test.posts;".prepared.executeAsync.oneOption.as(Post)
-//    }
-//    val res: Future[Option[Post]] = q()
-//  }
-//
-//  it should "support parsing one row sync" in {
-//    val q = withSchema { ()=>
-//      cql"SELECT post_id, author_name, post_title FROM test.posts;".prepared.execute.oneOption.as(Post)
-//    }
-//    val res: Option[Post] = q()
-//  }
-//
-//  it should "support select * with no params" in {
-//    val q = withSchema { () =>
-//      cql"SELECT * FROM test.posts;".prepared.execute.oneOption
-//    }
-//    val res: Option[Row] = q()
-//  }
-//
-//  it should "support parsing select * with class/function matching the whole table" in {
-//    val q = withSchema { () =>
-//      cql"SELECT * FROM test.posts;".prepared.execute.all.as(AuthorAndPost)
-//    }
-//    val res: Seq[AuthorAndPost] = q()
-//  }
+  // FIXME: Seems that Select without Where is causing troubles
+  //  it should "support parsing one row async" in {
+  //    val q = withSchema { () =>
+  //      cql"SELECT post_id, author_name, post_title FROM test.posts;".prepared.executeAsync.oneOption.as(Post)
+  //    }
+  //    val res: Future[Option[Post]] = q()
+  //  }
+  //
+  //  it should "support parsing one row sync" in {
+  //    val q = withSchema { ()=>
+  //      cql"SELECT post_id, author_name, post_title FROM test.posts;".prepared.execute.oneOption.as(Post)
+  //    }
+  //    val res: Option[Post] = q()
+  //  }
+  //
+  //  it should "support select * with no params" in {
+  //    val q = withSchema { () =>
+  //      cql"SELECT * FROM test.posts;".prepared.execute.oneOption
+  //    }
+  //    val res: Option[Row] = q()
+  //  }
+  //
+  //  it should "support parsing select * with class/function matching the whole table" in {
+  //    val q = withSchema { () =>
+  //      cql"SELECT * FROM test.posts;".prepared.execute.all.as(AuthorAndPost)
+  //    }
+  //    val res: Seq[AuthorAndPost] = q()
+  //  }
 }
