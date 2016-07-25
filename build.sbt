@@ -4,7 +4,7 @@ lazy val cqlAst = project
 lazy val cqlParser = project
   .in(file("cql-parser"))
   .settings(libraryDependencies ++= Vector(
-    Library.scalaTest % "test",
+    Library.scalaTest % Test,
     Library.scalaParserCombinators
   ))
   .dependsOn(cqlAst)
@@ -13,13 +13,13 @@ lazy val troySchema = project
   .in(file("troy-schema"))
   .dependsOn(cqlParser)
   .settings(libraryDependencies ++= Vector(
-    Library.scalaTest % "test"
+    Library.scalaTest % Test
   ))
 
 lazy val troyDriver = project
   .in(file("troy-driver"))
   .settings(libraryDependencies ++= Vector(
-    Library.scalaTest % "test",
+    Library.scalaTest % Test,
     Library.cassandraDriverCore
   ))
 
@@ -27,10 +27,10 @@ lazy val troyMacro = project
   .in(file("troy-macro"))
   .settings(libraryDependencies ++= Vector(
     Library.scalaReflect,
-    Library.scalaTest % "test"
+    Library.scalaTest % Test,
+    Library.cassandraUnit % Test
   ))
   .dependsOn(troyDriver, troySchema)
-  .configs( IntegrationTest )
   .settings((Defaults.coreDefaultSettings ++ Seq(
     unmanagedClasspath in Test ++= (unmanagedResources in Test).value
   )) : _*)
