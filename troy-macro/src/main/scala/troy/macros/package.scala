@@ -18,9 +18,7 @@ package troy
 
 import java.io.InputStream
 import scala.io.Source
-import scala.reflect.api.Trees
 import scala.reflect.macros.blackbox.Context
-import com.datastax.driver.core.Session
 import troy.cql.ast.CqlParser
 import troy.cql.ast.DataType
 import troy.schema.Schema
@@ -44,7 +42,7 @@ package object macros {
     val imports = Seq(
       q"import _root_.troy.dsl.InternalDsl._",
       q"import _root_.troy.driver.CassandraDataType",
-      q"import _root_.troy.codecs.HasTypeCodec._",
+      q"import _root_.troy.driver.codecs.HasTypeCodec._",
       q"import _root_.troy.codecs.Primitives._"
     )
 
