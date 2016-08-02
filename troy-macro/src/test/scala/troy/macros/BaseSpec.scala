@@ -1,7 +1,10 @@
 package troy.macros
 
+import java.util
+
 import com.datastax.driver.core.{ Session, Cluster }
 import org.cassandraunit.CQLDataLoader
+import org.cassandraunit.dataset.CQLDataSet
 import org.cassandraunit.dataset.cql.ClassPathCQLDataSet
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper
 import org.scalatest.concurrent.ScalaFutures
@@ -12,38 +15,49 @@ trait BaseSpec extends FlatSpec with BeforeAndAfterAll with BeforeAndAfterEach w
   def port: Int = 9142
   def host: String = "127.0.0.1"
 
-  EmbeddedCassandraServerHelper.startEmbeddedCassandra(1.minute.toMillis)
-  private val cluster = new Cluster.Builder().addContactPoints(host).withPort(port).build()
-  implicit val session: Session = cluster.connect()
+  private lazy val cluster = new Cluster.Builder().addContactPoints(host).withPort(port).build()
+  implicit lazy val session: Session = cluster.connect()
   implicit val patienceTimeout = org.scalatest.concurrent.PatienceConfiguration.Timeout(10.seconds)
 
-  def cassandraDataFixtures: String = ""
+  def testDataFixtures: String = ""
+  private lazy val fixtures = StringCQLDataSet(testDataFixtures)
+  private lazy val schema = new ClassPathCQLDataSet("schema.cql")
 
-  override protected def beforeEach(): Unit = {
-    EmbeddedCassandraServerHelper.cleanEmbeddedCassandra()
-    loadSchema()
-    loadData()
+  override protected def beforeAll(): Unit = {
+    EmbeddedCassandraServerHelper.startEmbeddedCassandra(1.minute.toMillis)
+    loadClean()
     super.beforeEach()
   }
 
   override protected def afterAll(): Unit = {
+    EmbeddedCassandraServerHelper.cleanEmbeddedCassandra()
     session.close()
     cluster.close()
     super.afterAll()
   }
 
-  def loadSchema() =
-    new CQLDataLoader(session).load(new ClassPathCQLDataSet("schema.cql"))
+  def loadClean() = {
+    EmbeddedCassandraServerHelper.cleanEmbeddedCassandra()
+    loadData(schema, fixtures)
+  }
 
-  def loadData() =
-    execAll(cassandraDataFixtures)
+  def loadData(datasets: CQLDataSet*) = {
+    val loader = new CQLDataLoader(session)
+    datasets.foreach(loader.load)
+  }
+}
 
-  def execAll(statements: String): Unit =
-    execAll(splitStatements(statements))
-
-  def execAll(statements: Seq[String]): Unit =
-    statements.foreach(session.execute)
-
+object Helpers {
   def splitStatements(statements: String) =
     statements.split(";").map(_.trim).filter(!_.isEmpty)
+}
+
+case class StringCQLDataSet(
+    cqlStatements: String,
+    isKeyspaceCreation: Boolean = false,
+    isKeyspaceDeletion: Boolean = false,
+    getKeyspaceName: String = null // Java ¯\_(ツ)_/¯
+) extends CQLDataSet {
+  lazy val getCQLStatements = util.Arrays.asList(Helpers.splitStatements(cqlStatements): _*)
+
 }

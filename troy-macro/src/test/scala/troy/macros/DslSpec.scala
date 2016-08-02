@@ -28,7 +28,7 @@ class DslSpec extends BaseSpec {
   import troy.dsl._
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  override val cassandraDataFixtures =
+  override val testDataFixtures =
     """
       INSERT INTO test.post_details (author_id, id , tags , comment_ids, comment_userIds, comment_bodies , comments)
       VALUES ( uuid(), uuid(), {'test1', 'test2'}, {1, 2}, [1, 2], ['test1', 'test2'], {1: 'test1', 2 : 'test2'}) ;
