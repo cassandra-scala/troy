@@ -1,3 +1,5 @@
+import sbt.Keys._
+
 lazy val cqlAst = project
   .in(file("cql-ast"))
 
@@ -32,7 +34,8 @@ lazy val troyMacro = project
   ))
   .dependsOn(troyDriver, troySchema)
   .settings((Defaults.coreDefaultSettings ++ Seq(
-    unmanagedClasspath in Test ++= (unmanagedResources in Test).value
+    unmanagedClasspath in Test ++= (unmanagedResources in Test).value,
+    parallelExecution in Test := false
   )) : _*)
 
 scalacOptions ++= Seq("-unchecked", "-deprecation")

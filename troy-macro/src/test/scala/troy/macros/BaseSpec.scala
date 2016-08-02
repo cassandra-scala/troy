@@ -20,7 +20,7 @@ trait BaseSpec extends FlatSpec with BeforeAndAfterAll with BeforeAndAfterEach w
   implicit val patienceTimeout = org.scalatest.concurrent.PatienceConfiguration.Timeout(10.seconds)
 
   def testDataFixtures: String = ""
-  private lazy val fixtures = StringCQLDataSet(testDataFixtures)
+  private lazy val fixtures = StringCQLDataSet(testDataFixtures, false, false, "test")
   private lazy val schema = new ClassPathCQLDataSet("schema.cql")
 
   override protected def beforeAll(): Unit = {
@@ -30,7 +30,6 @@ trait BaseSpec extends FlatSpec with BeforeAndAfterAll with BeforeAndAfterEach w
   }
 
   override protected def afterAll(): Unit = {
-    EmbeddedCassandraServerHelper.cleanEmbeddedCassandra()
     session.close()
     cluster.close()
     super.afterAll()
@@ -54,9 +53,9 @@ object Helpers {
 
 case class StringCQLDataSet(
     cqlStatements: String,
-    isKeyspaceCreation: Boolean = false,
-    isKeyspaceDeletion: Boolean = false,
-    getKeyspaceName: String = null // Java ¯\_(ツ)_/¯
+    isKeyspaceCreation: Boolean,
+    isKeyspaceDeletion: Boolean,
+    getKeyspaceName: String
 ) extends CQLDataSet {
   lazy val getCQLStatements = util.Arrays.asList(Helpers.splitStatements(cqlStatements): _*)
 
