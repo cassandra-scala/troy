@@ -38,7 +38,9 @@ lazy val troyMacro = project
     parallelExecution in Test := false
   )) : _*)
 
-scalacOptions ++= Seq("-unchecked", "-deprecation")
+lazy val root = project.in(file("."))
+  .settings(name := "troy-root", publishArtifact := false, publish := {}, publishLocal := {})
+  .aggregate(troyMacro, troyDriver, troySchema, cqlParser, cqlAst)
 
 initialCommands := """import java.util.UUID
                      |import troy.Troy
