@@ -38,6 +38,19 @@ lazy val troyMacro = project
     parallelExecution in Test := false
   )) : _*)
 
+lazy val troyMeta= project
+  .in(file("troy-meta"))
+  .settings(libraryDependencies ++= Vector(
+    Library.scalaMeta,
+    Library.scalaTest % Test,
+    Library.cassandraUnit % Test
+  ))
+  .dependsOn(troyDriver, troySchema)
+//  .settings((Defaults.coreDefaultSettings ++ Seq(
+//    unmanagedClasspath in Test ++= (unmanagedResources in Test).value,
+//    parallelExecution in Test := false
+//  )) : _*)
+
 lazy val root = project.in(file("."))
   .settings(name := "troy-root", publishArtifact := false, publish := {}, publishLocal := {})
   .aggregate(troyMacro, troyDriver, troySchema, cqlParser, cqlAst)
