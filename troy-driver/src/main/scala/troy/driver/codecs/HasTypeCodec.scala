@@ -1,8 +1,9 @@
-package troy.codecs
+package troy.driver.codecs
 
 import java.net.InetAddress
 import java.nio.ByteBuffer
-import java.util.{ UUID, Date }
+import java.util.{ Date, UUID }
+
 import com.datastax.driver.core.{ LocalDate, TypeCodec }
 import troy.driver.{ CassandraDataType => CT }
 
