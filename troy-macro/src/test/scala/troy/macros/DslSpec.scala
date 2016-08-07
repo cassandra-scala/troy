@@ -30,6 +30,9 @@ class DslSpec extends BaseSpec {
 
   override val testDataFixtures =
     """
+      INSERT INTO test.posts (author_id, post_id , author_name , post_rating, post_title)
+      VALUES ( uuid(), uuid(), 'test author', 5, 'test post') ;
+
       INSERT INTO test.post_details (author_id, id , tags , comment_ids, comment_userIds, comment_bodies , comments)
       VALUES ( uuid(), uuid(), {'test1', 'test2'}, {1, 2}, [1, 2], ['test1', 'test2'], {1: 'test1', 2 : 'test2'}) ;
     """
@@ -51,7 +54,7 @@ class DslSpec extends BaseSpec {
     val res: Future[Seq[Post]] = q()
   }
 
-  //  TODO: Index support
+  //  TODO: Index support https://github.com/tabdulradi/troy/issues/35
   //  it should "support single param" in {
   //    val q = withSchema { (title: String) =>
   //      cql"SELECT post_id, author_name, post_title FROM test.posts WHERE post_title = $title;".prepared.executeAsync.all.as(Post)
@@ -66,7 +69,7 @@ class DslSpec extends BaseSpec {
     val res: Statement = q()
   }
 
-  //  TODO: Index support
+  //  TODO: Index support https://github.com/tabdulradi/troy/issues/35
   //  "The Macro" should "support returning the BoundStatement directly with params" in {
   //    val q = withSchema { (title: String) =>
   //      cql"SELECT post_id, author_name, post_title FROM test.posts WHERE post_title = $title;".prepared
@@ -79,7 +82,7 @@ class DslSpec extends BaseSpec {
       cql"SELECT post_id, author_name, post_title FROM test.posts;".prepared.execute
     }
     val result: ResultSet = query()
-    result.all().size() shouldBe 0
+    result.all().size() shouldBe 1
   }
 
   it should "support returning the ResultSet asynchronously" in {
@@ -106,28 +109,28 @@ class DslSpec extends BaseSpec {
         .as(Post)
     }
   }
-  // FIXME: Seems that Select without Where is causing troubles
-  //  it should "support parsing one row async" in {
-  //    val q = withSchema { () =>
-  //      cql"SELECT post_id, author_name, post_title FROM test.posts;".prepared.executeAsync.oneOption.as(Post)
-  //    }
-  //    val res: Future[Option[Post]] = q()
-  //  }
-  //
-  //  it should "support parsing one row sync" in {
-  //    val q = withSchema { ()=>
-  //      cql"SELECT post_id, author_name, post_title FROM test.posts;".prepared.execute.oneOption.as(Post)
-  //    }
-  //    val res: Option[Post] = q()
-  //  }
-  //
-  //  it should "support select * with no params" in {
-  //    val q = withSchema { () =>
-  //      cql"SELECT * FROM test.posts;".prepared.execute.oneOption
-  //    }
-  //    val res: Option[Row] = q()
-  //  }
-  //
+
+  it should "support parsing one row async" in {
+    val q = withSchema { () =>
+      cql"SELECT post_id, author_name, post_title FROM test.posts;".prepared.executeAsync.oneOption.as(Post)
+    }
+    val res: Future[Option[Post]] = q()
+  }
+
+  it should "support parsing one row sync" in {
+    val q = withSchema { () =>
+      cql"SELECT post_id, author_name, post_title FROM test.posts;".prepared.execute.oneOption.as(Post)
+    }
+    val res: Option[Post] = q()
+  }
+
+  it should "support select * with no params" in {
+    val q = withSchema { () =>
+      cql"SELECT * FROM test.posts;".prepared.execute.oneOption
+    }
+    val res: Option[Row] = q()
+  }
+  //    TODO https://github.com/tabdulradi/troy/issues/37
   //  it should "support parsing select * with class/function matching the whole table" in {
   //    val q = withSchema { () =>
   //      cql"SELECT * FROM test.posts;".prepared.execute.all.as(AuthorAndPost)
