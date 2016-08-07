@@ -55,5 +55,18 @@ Troy currently supports CQL v3.3.1
 ## Status
 Troy is currently is very early stage, testing, issues and contributions are very welcome.
 
+### Scala Meta
+Troy has a proof-of-concept implementation using ScalaMeta, as show below
+```
+@withSchema def get(authorId: UUID, postId: UUID) =
+      cql"SELECT post_id, author_name, post_title, post_rating FROM test.posts where author_id = $authorId AND post_id = $postId;"
+        .prepared
+        .executeAsync
+        .all
+        .as[UUID, String, String, Int, Post](Post)
+```
+The biggest limitation now is that you have to specify the type params for `as` function, since we can't access the
+inferred types.
+
 ## License ##
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").
