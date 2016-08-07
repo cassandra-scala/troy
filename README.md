@@ -26,7 +26,7 @@ implicit val session: Session = cluster.connect()
 case class Post(id: UUID, title: String, comments: Seq[String], commentsCount: Option[Int])
 
 val getPost = withSchema { (id: UUID) =>
-  cql"SELECT id, title, comments, comments_count FROM test.posts WHERE id = id;"
+  cql"SELECT id, title, comments, comments_count FROM test.posts WHERE id = $id;"
     .prepared
     .executeAsync
     .all
