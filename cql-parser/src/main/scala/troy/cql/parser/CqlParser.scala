@@ -170,7 +170,7 @@ object CqlParser extends JavaTokenParsers with Helpers {
       "WHERE".i ~> rep1sep(relation, "AND".i) ^^ WhereClause.apply
     }
 
-    def limit = "LIMIT" ~> """([1-9]\d+)""".r ^^ { _.toInt }
+    def limit = "LIMIT".i ~> positiveNumber ^^ { _.toInt }
 
     // TODO
     val SelectStatementWithDefaults = SelectStatement(_: Boolean, _: SelectStatement.SelectClause, _: TableName, _: Option[WhereClause], None, _: Option[Int], false)
@@ -253,6 +253,8 @@ object CqlParser extends JavaTokenParsers with Helpers {
   }
 
   def keyspaceName: Parser[KeyspaceName] = identifier ^^ KeyspaceName
+
+  def positiveNumber = """([1-9]+)""".r
 
   /*
    * <tablename> ::= (<identifier> '.')? <identifier>

@@ -67,10 +67,10 @@ class Usage extends BaseSpec {
 
   it should "support select *" in {
     //    TODO: Limit is not supported yet
-    //    val getByTitle: (String) => Future[Option[Post]] = withSchema { (title: String) =>
-    //      cql"SELECT * FROM test1.posts WHERE title = $title LIMIT 1;".prepared.oneOption.as(Post)
-    //    }
-    //    getByTitle("test"): Future[Option[Post]]
+    val getByTitle: (String) => Future[Option[Post]] = withSchema { (title: String) =>
+      cql"SELECT * FROM test1.posts WHERE title = $title LIMIT 1;".prepared.oneOption.as(Post)
+    }
+    getByTitle("test"): Future[Option[Post]]
   }
 
   // TODO: https://github.com/tabdulradi/troy/issues/5
