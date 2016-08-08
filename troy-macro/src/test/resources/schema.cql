@@ -9,6 +9,8 @@ CREATE TABLE test.posts (
   PRIMARY KEY ((author_id), post_id)
 );
 
+CREATE INDEX ON test.posts (post_title);
+
 CREATE TABLE test.post_details (
   author_id uuid,
   id uuid,

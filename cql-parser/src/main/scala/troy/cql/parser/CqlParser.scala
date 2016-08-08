@@ -16,11 +16,12 @@
 
 package troy.cql.ast
 
+import troy.cql.ast.CreateIndex.IndexIdentifier
 import troy.cql.ast._
 
 import scala.util.parsing.combinator._
 
-// Based on CQLv3.3.1: https://cassandra.apache.org/doc/cql3/CQL.html
+// Based on CQLv3.4.3: https://cassandra.apache.org/doc/latest/cql/index.html
 object CqlParser extends JavaTokenParsers with Helpers {
   def parseSchema(input: String): ParseResult[Seq[DataDefinition]] =
     parse(phrase(rep(dataDefinition <~ semicolon)), input)
@@ -30,7 +31,7 @@ object CqlParser extends JavaTokenParsers with Helpers {
 
   ////////////////////////////////////////// Data Definition
   def dataDefinition: Parser[DataDefinition] =
-    createKeyspace | createTable // | selectStatement
+    createKeyspace | createTable | createIndex
 
   def createKeyspace: Parser[CreateKeyspace] = {
     import CreateKeyspace._
@@ -79,6 +80,33 @@ object CqlParser extends JavaTokenParsers with Helpers {
       ("," ~> primaryKeyDefinition).? ~
       (")" ~> withOptions) ^^^^ CreateTable.apply
   }
+
+  def createIndex: Parser[CreateIndex] = {
+    import CreateIndex._
+
+    def indexName = identifier.?
+    def onTable = "ON".i ~> tableName
+    def indexIdentifier: Parser[IndexIdentifier] = {
+      val keys = "keys(" ~> (identifier <~ ")") ^^ Keys
+      val ident = identifier ^^ Identifier
+      "(" ~> ((keys | ident) <~ ")")
+    }
+    def using = {
+      def withOptions =
+        "WITH".i ~> "OPTIONS".i ~> "=" ~> Literals.map
+
+      "using".i ~> Constants.string ~ withOptions.? ^^^^ Using
+    }.?
+
+    "CREATE".i ~>
+      ("CUSTOM".flag <~ "INDEX".i) ~
+      ifNotExists ~
+      indexName ~
+      onTable ~
+      indexIdentifier ~
+      using ^^^^ CreateIndex.apply
+  }
+
   ///////////////////////////////////// Queries
   def selectStatement: Parser[SelectStatement] = {
     import SelectStatement._
@@ -186,18 +214,29 @@ object CqlParser extends JavaTokenParsers with Helpers {
   /*
    * <identifier> ::= any quoted or unquoted identifier, excluding reserved keywords
    */
-  def identifier: Parser[String] = "[a-zA-Z0-9_]+".r
+  def identifier: Parser[String] = "[a-zA-Z0-9_]+".r.filter(k => !Keywords.contains(k))
+
+  object Constants {
+    def string = "'".r ~> """[^']*""".r <~ "'"
+    def integer = wholeNumber
+    def float = floatingPointNumber
+    def number = integer | float
+    def uuid = "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}".r
+    def boolean = "true".i | "false".i
+  }
+
+  object Literals {
+    def map: Parser[Map[Term, Term]] = {
+      val pair = term ~ (':' ~> term) ^^ { case key ~ value => key -> value }
+      val mapBody = repsep(pair, ",") ^^ { case pairs => Map(pairs: _*) }
+      "{" ~> mapBody <~ "}"
+    }
+  }
 
   def term: Parser[Term] = {
     import Term._
     def constant: Parser[Constant] = {
-      def string = "'".r ~> """\w*""".r <~ "'"
-      def integer = wholeNumber
-      def float = floatingPointNumber
-      def number = integer | float
-      def uuid = "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}".r
-      def boolean = "true".i | "false".i
-
+      import Constants._
       (string | number | uuid | boolean) ^^ Term.Constant // | hex // TODO
     }
 
@@ -262,6 +301,64 @@ object CqlParser extends JavaTokenParsers with Helpers {
 
     def flag: Parser[Boolean] = (str.i ^^^ true) orElse false
   }
+
+  val Keywords = Set(
+    "ADD",
+    "ALLOW",
+    "ALTER",
+    "AND",
+    "APPLY",
+    "ASC",
+    "AUTHORIZE",
+    "BATCH",
+    "BEGIN",
+    "BY",
+    "COLUMNFAMILY",
+    "CREATE",
+    "DELETE",
+    "DESC",
+    "DESCRIBE",
+    "DROP",
+    "ENTRIES",
+    "EXECUTE",
+    "FROM",
+    "FULL",
+    "GRANT",
+    "IF",
+    "IN",
+    "INDEX",
+    "INFINITY",
+    "INSERT",
+    "INTO",
+    "KEYSPACE",
+    "LIMIT",
+    "MODIFY",
+    "NAN",
+    "NORECURSIVE",
+    "NOT",
+    "NULL",
+    "OF",
+    "ON",
+    "OR",
+    "ORDER",
+    "PRIMARY",
+    "RENAME",
+    "REPLACE",
+    "REVOKE",
+    "SCHEMA",
+    "SELECT",
+    "SET",
+    "TABLE",
+    "TO",
+    "TOKEN",
+    "TRUNCATE",
+    "UNLOGGED",
+    "UPDATE",
+    "USE",
+    "USING",
+    "WHERE",
+    "WITH"
+  )
 }
 
 trait Helpers { this: JavaTokenParsers =>
