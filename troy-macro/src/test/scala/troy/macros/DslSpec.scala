@@ -54,13 +54,12 @@ class DslSpec extends BaseSpec {
     val res: Future[Seq[Post]] = q()
   }
 
-  //  TODO: Index support https://github.com/tabdulradi/troy/issues/35
-  //  it should "support single param" in {
-  //    val q = withSchema { (title: String) =>
-  //      cql"SELECT post_id, author_name, post_title FROM test.posts WHERE post_title = $title;".prepared.executeAsync.all.as(Post)
-  //    }
-  //    val res: Future[Seq[Post]] = q("")
-  //  }
+  it should "support single param" in {
+    val q = withSchema { (title: String) =>
+      cql"SELECT post_id, author_name, post_title FROM test.posts WHERE post_title = $title;".prepared.executeAsync.all.as(Post)
+    }
+    val res: Future[Seq[Post]] = q("")
+  }
 
   "The Macro" should "support returning the BoundStatement directly with no params" in {
     val q = withSchema { () =>
@@ -69,13 +68,12 @@ class DslSpec extends BaseSpec {
     val res: Statement = q()
   }
 
-  //  TODO: Index support https://github.com/tabdulradi/troy/issues/35
-  //  "The Macro" should "support returning the BoundStatement directly with params" in {
-  //    val q = withSchema { (title: String) =>
-  //      cql"SELECT post_id, author_name, post_title FROM test.posts WHERE post_title = $title;".prepared
-  //    }
-  //    val res: Statement = q("")
-  //  }
+  "The Macro" should "support returning the BoundStatement directly with params" in {
+    val q = withSchema { (title: String) =>
+      cql"SELECT post_id, author_name, post_title FROM test.posts WHERE post_title = $title;".prepared
+    }
+    val res: Statement = q("")
+  }
 
   it should "support returning the ResultSet" in {
     val query = withSchema { () =>

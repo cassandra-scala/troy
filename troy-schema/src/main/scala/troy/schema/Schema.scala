@@ -92,6 +92,7 @@ case class Schema(schema: Map[KeyspaceName, Seq[CreateTable]], context: Option[K
   val withStatement: DataDefinition => Result[Schema] = {
     case s: CreateKeyspace => withKeyspace(s)
     case s: CreateTable    => withTable(s)
+    case s: CreateIndex    => success(this) // Indexes are ignored for now. TODO: https://github.com/tabdulradi/troy/issues/36
     case _                 => ???
   }
 

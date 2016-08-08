@@ -50,6 +50,24 @@ object CreateTable {
   case object CompactStorage extends CreateTableOption
   case object ClusteringOrder extends CreateTableOption
 }
+
+case class CreateIndex(
+  isCustom: Boolean,
+  ifNotExists: Boolean,
+  indexName: Option[String],
+  tableName: TableName,
+  identifier: CreateIndex.IndexIdentifier,
+  using: Option[CreateIndex.Using]
+) extends DataDefinition
+
+object CreateIndex {
+  case class Using(using: String, options: Option[Literals.CqlMap])
+
+  trait IndexIdentifier
+  case class Identifier(value: String) extends IndexIdentifier
+  case class Keys(of: String) extends IndexIdentifier
+}
+
 //
 //case class KeyspaceReplication(`class`: String, replicationFactor: Int)
 //case class CreateKeyspaceStatement(name: String, replication: KeyspaceReplication) extends SchemaAlteringStatement
@@ -157,4 +175,8 @@ object Term {
     case object Anonymous extends Variable
     case class Named(name: String) extends Variable
   }
+}
+
+object Literals {
+  type CqlMap = Map[Term, Term]
 }
