@@ -33,10 +33,25 @@ lazy val troyMacro = project
     Library.cassandraUnit % Test
   ))
   .dependsOn(troyDriver, troySchema)
-  .settings((Defaults.coreDefaultSettings ++ Seq(
+  .settings(Defaults.coreDefaultSettings ++ Seq(
     unmanagedClasspath in Test ++= (unmanagedResources in Test).value,
     parallelExecution in Test := false
-  )) : _*)
+  ): _*)
+
+lazy val troyMeta = project
+  .in(file("troy-meta"))
+  .settings(libraryDependencies ++= Vector(
+    Library.scalaMeta,
+    Library.scalaTest % Test,
+    Library.cassandraUnit % Test
+  ))
+  .dependsOn(troyDriver, troySchema)
+  .settings(Defaults.coreDefaultSettings ++ Seq(
+    unmanagedClasspath in Test ++= (unmanagedResources in Test).value,
+    parallelExecution in Test := false,
+    resolvers += Resolver.sonatypeRepo("snapshots"),
+    addCompilerPlugin(Library.macroParadise)
+  ): _*)
 
 lazy val root = project.in(file("."))
   .settings(name := "troy-root", publishArtifact := false, publish := {}, publishLocal := {})
