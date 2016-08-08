@@ -63,12 +63,17 @@ class TypesSpec extends BaseSpec {
     x.get.commentIds shouldBe Set(1, 2)
   }
 
-  // TODO: Contains restriction
+  // TODO: Contains restriction: https://github.com/tabdulradi/troy/issues/14
   //  it should "accepted as param" in {
-  //    val q = withSchema { (tag: String) =>
+  //    val filterByTag = withSchema { (tag: String) =>
   //      cql"SELECT id, tags FROM test.post_details where tags CONTAINS $tag;".prepared.executeAsync.oneOption.as(PostDetails)
   //    }
-  //    q("test1").futureValue.get.tags shouldBe Set("test1", "test2")
+  //    filterByTag("test1").futureValue.get.tags shouldBe Set("test1", "test2")
+  //
+  //  val getByTitleAndTag = withSchema { (title: String, tag: String) =>
+  //    cql"SELECT * FROM test.post_details WHERE title = $title AND tags CONTAINS $tag;".prepared.as(Post)
+  //  }
+  //  getByTitleAndTag("test", "hot"): Future[Seq[Post]]
   //  }
 
   "LIST column" should "be selected" in {
@@ -92,7 +97,7 @@ class TypesSpec extends BaseSpec {
     q().get.users shouldBe List(1, 2)
   }
 
-  // TODO: Contains restriction
+  // TODO: Contains restriction: https://github.com/tabdulradi/troy/issues/14
   //  it should "accepted as param" in {
   //    val q = withSchema { (userId: Int) =>
   //      cql"SELECT id, comment_userIds FROM test.post_details where comment_userIds CONTAINS $tag;".prepared.executeAsync.oneOption.as(PostCommentUserIds)
