@@ -50,7 +50,7 @@ Since Cassandra every column is optional, even if it is part of the primary key!
 We have built-in handling for `Option`, saving you from `null`s and `NPE`.
 
 ## CQL Syntax
-Troy currently supports CQL v3.3.1
+Troy targets (but not fully implements) CQL v3.4.3
 
 ## Status
 Troy is currently is very early stage, testing, issues and contributions are very welcome.
