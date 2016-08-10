@@ -171,7 +171,7 @@ class withSchema extends scala.annotation.StaticAnnotation {
     }
 
     val replacedExpr = {
-      val variable = schema.extractVariables(query) match {
+      val variable = schema.extractVariableTypes(query) match {
         case Right(columns) => columns
         case Left(e)        => abort(e)
       }
