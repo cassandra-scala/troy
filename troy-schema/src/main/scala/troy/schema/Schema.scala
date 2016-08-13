@@ -54,7 +54,7 @@ case class Schema(schema: Map[KeyspaceName, Seq[CreateTable]], context: Option[K
           dt <- column.operandType(op).toRight(s"Operator $op doesn't support column type ${column.dataType}").right
         } yield Seq(dt)
       case SelectStatement.WhereClause.Relation.Tupled(identifiers, _, _)       => ???
-      case SelectStatement.WhereClause.Relation.WithToken(_, identifiers, _, _) => ???
+      case SelectStatement.WhereClause.Relation.Token(_, identifiers, _) => ???
     })
 
   def apply(table: TableName, columns: Seq[String]): Result[Seq[CreateTable.Column]] =

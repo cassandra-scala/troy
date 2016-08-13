@@ -112,8 +112,6 @@ object SelectStatement {
   object WhereClause {
     type TermTuple = Seq[Term]
 
-    trait Token
-
     trait Operator
     object Operator {
       case object Equals extends Operator
@@ -131,7 +129,7 @@ object SelectStatement {
     object Relation {
       case class Simple(columnName: ColumnName, operator: Operator, term: Term) extends Relation
       case class Tupled(columnNames: Seq[ColumnName], operator: Operator, term: TermTuple) extends Relation
-      case class WithToken(token: Token, columnNames: Seq[ColumnName], operator: Operator, term: Term) extends Relation
+      case class Token(columnNames: Seq[ColumnName], operator: Operator, term: Term) extends Relation
     }
 
   }
@@ -165,8 +163,14 @@ case class TableName(keyspace: Option[KeyspaceName], table: String)
 case class FunctionName(keyspace: Option[KeyspaceName], table: String)
 
 sealed trait Term
+//TODO
+//term          ::=  constant | literal | function_call | type_hint | bind_marker
+//literal       ::=  collection_literal | udt_literal | tuple_literal
+//function_call ::=  identifier '(' [ term (',' term)* ] ')'
+//type_hint     ::=  '(' cql_type `)` term
+//bind_marker   ::=  '?' | ':' identifier
 object Term {
-  case class Constant(raw: String) extends Term // TODO
+  case class Constant(raw: String) extends Term
 
   sealed trait BindMarker extends Term
   object BindMarker {
