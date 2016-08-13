@@ -114,16 +114,16 @@ object CqlParser extends JavaTokenParsers with Helpers {
     def json = "JSON".flag
 
     def select: Parser[SelectClause] = {
-      def count: Parser[Count] = {
+      def count = {
         val count = "COUNT".i ~> "(" ~> ("*" | "1") <~ ")"
         val as = "AS".i ~> identifier
-        count ~ as.? ^^^^ Count
+        count ~ as.? ^^^ Count
       }
 
       def selection = {
         def asterisk = "*" ^^^ Asterisk
-        def selector = identifier ^^ Identifier // TODO
-        def selectionItem = selector ~ ("as".i ~> identifier).? ^^^^ SelectionItem
+        def selector = identifier ^^ ColumnName // TODO
+        def selectionItem = selector ~ ("as".i ~> identifier).? ^^^^ SelectionClauseItem
         def selectionItems = rep1sep(selectionItem, ",") ^^ SelectionItems
         def selectionList = selectionItems | asterisk
         "DISTINCT".flag ~ selectionList ^^^^ Selection
@@ -240,8 +240,8 @@ object CqlParser extends JavaTokenParsers with Helpers {
       (string | number | uuid | boolean) ^^ Term.Constant // | hex // TODO
     }
 
-    def variable: Parser[Variable] = {
-      import Variable._
+    def variable: Parser[BindMarker] = {
+      import BindMarker._
       def anonymous = """\?""".r ^^^ Anonymous
       def named = ":" ~> identifier ^^ Named
 

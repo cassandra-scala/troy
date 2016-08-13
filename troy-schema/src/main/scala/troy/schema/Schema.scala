@@ -24,19 +24,19 @@ case class Schema(schema: Map[KeyspaceName, Seq[CreateTable]], context: Option[K
   import Schema._
 
   def apply(query: SelectStatement): Result[Seq[CreateTable.Column]] = query match {
-    case SelectStatement(_, SelectStatement.Selection(_, SelectStatement.SelectionItems(selection)), table, _, _, _, _) =>
-      apply(table, selection.map(_.selector).map {
-        case SelectStatement.Identifier(name) => name
+    case SelectStatement(_, SelectStatement.SelectClause(items), table, _, _, _, _, _) =>
+      apply(table, items.map(_.selector).map {
+        case SelectStatement.ColumnName(name) => name
         case _                                => ???
       })
-    case SelectStatement(_, SelectStatement.Selection(_, SelectStatement.Asterisk), table, _, _, _, _) =>
+    case SelectStatement(_, SelectStatement.Asterisk, table, _, _, _, _, _) =>
       getAllColumns(table.keyspace, table.table)
   }
 
   def extractVariableTypes(statement: Cql3Statement): Result[Seq[DataType]] = statement match {
-    case SelectStatement(_, _, from, Some(where), _, _, _) => extractVariableTypes(from, where)
-    case SelectStatement(_, _, from, None, _, _, _)        => success(Seq.empty)
-    case _                                                 => ???
+    case SelectStatement(_, _, from, Some(where), _, _, _, _) => extractVariableTypes(from, where)
+    case SelectStatement(_, _, from, None, _, _, _, _)        => success(Seq.empty)
+    case _                                                    => ???
   }
 
   def extractVariableTypes(table: TableName, where: SelectStatement.WhereClause): Result[Seq[DataType]] =
@@ -47,16 +47,14 @@ case class Schema(schema: Map[KeyspaceName, Seq[CreateTable]], context: Option[K
 
   def extractVariableTypes(table: CreateTable, where: SelectStatement.WhereClause): Result[Seq[DataType]] =
     Result.flattenSeq(where.relations.map {
-      case SelectStatement.WhereClause.Relation.Simple(identifier, op, Term.Variable.Anonymous) =>
+      case SelectStatement.WhereClause.Relation.Simple(columnName, op, Term.BindMarker.Anonymous) =>
         import ColumnOps.Operations
         for {
-          column <- getColumn(table, identifier).right
+          column <- getColumn(table, columnName).right
           dt <- column.operandType(op).toRight(s"Operator $op doesn't support column type ${column.dataType}").right
         } yield Seq(dt)
-      case SelectStatement.WhereClause.Relation.Tupled(identifiers, _, _)        => ???
-      case SelectStatement.WhereClause.Relation.MultiValue(identifier, _)        => ???
-      case SelectStatement.WhereClause.Relation.TupledMultiValue(identifiers, _) => ???
-      case SelectStatement.WhereClause.Relation.WithToken(_, identifiers, _, _)  => ???
+      case SelectStatement.WhereClause.Relation.Tupled(identifiers, _, _)       => ???
+      case SelectStatement.WhereClause.Relation.WithToken(_, identifiers, _, _) => ???
     })
 
   def apply(table: TableName, columns: Seq[String]): Result[Seq[CreateTable.Column]] =
@@ -85,6 +83,9 @@ case class Schema(schema: Map[KeyspaceName, Seq[CreateTable]], context: Option[K
       tables <- getKeyspace(keyspaceName).right
       table <- getTable(tables, tableName).right
     } yield table
+
+  private def getColumn(table: CreateTable, columnName: SelectStatement.ColumnName): Result[CreateTable.Column] =
+    getColumn(table, columnName.name)
 
   private def getColumn(table: CreateTable, columnName: String): Result[CreateTable.Column] =
     table.columns.find(_.name == columnName).toRight(s"Column $columnName not found")

@@ -16,6 +16,8 @@
 
 package troy.cql.ast
 
+import troy.cql.ast.Term.BindMarker
+
 trait Cql3Statement
 trait DataDefinition
 trait Manipulation
@@ -80,43 +82,33 @@ object CreateIndex {
 //case class Delete extends ModificationStatement
 
 case class SelectStatement(
-  isJson: Boolean,
-  selection: SelectStatement.SelectClause,
+  mod: Option[SelectStatement.Mod],
+  selection: SelectStatement.Selection,
   from: TableName,
   where: Option[SelectStatement.WhereClause],
   orderBy: Option[SelectStatement.OrderBy],
-  limit: Option[Int],
+  perPartitionLimit: Option[SelectStatement.LimitParam],
+  limit: Option[SelectStatement.LimitParam],
   allowFiltering: Boolean
 ) extends Cql3Statement
 object SelectStatement {
-  trait SelectClause
-  case class Count(str: String, as: Option[String]) extends SelectClause
-  case class Selection(isDistinct: Boolean, selectionList: SelectionList) extends SelectClause
+  sealed trait Mod
+  case object Json extends Mod
+  case object Distinct extends Mod
 
-  trait SelectionList
-  case object Asterisk extends SelectionList
-  case class SelectionItems(items: Seq[SelectionItem]) extends SelectionList
+  sealed trait Selection
+  case object Asterisk extends Selection
+  case class SelectClause(items: Seq[SelectionClauseItem]) extends Selection
+  case class SelectionClauseItem(selector: Selector, as: Option[Identifier])
 
-  case class SelectionItem(selector: Selector, as: Option[String])
   sealed trait Selector
-  case class Identifier(name: String) extends Selector
-  case class WriteTime(identifier: Identifier) extends Selector
-  case class Ttl(identifier: Identifier) extends Selector
-  case class Function(name: String, params: Seq[Selector]) extends Selector // Non empty
+  case class ColumnName(name: Identifier) extends Selector
+  case class SelectTerm(term: Term) extends Selector
+  case class Cast(selector: Selector, as: DataType) extends Selector
+  case class Function(functionName: FunctionName, params: Seq[Selector]) extends Selector // Non empty
+  case object Count extends Selector
 
   case class WhereClause(relations: Seq[WhereClause.Relation])
-  /*
-<relation> ::= <identifier> <op> <term>
-             | '(' <identifier> (',' <identifier>)* ')' <op> <term-tuple>
-             | <identifier> IN '(' ( <term> ( ',' <term>)* )? ')'
-             | '(' <identifier> (',' <identifier>)* ')' IN '(' ( <term-tuple> ( ',' <term-tuple>)* )? ')'
-             | TOKEN '(' <identifier> ( ',' <identifer>)* ')' <op> <term>
-
-<op> ::= '=' | '<' | '>' | '<=' | '>=' | CONTAINS | CONTAINS KEY
-<order-by> ::= <ordering> ( ',' <odering> )*
-<ordering> ::= <identifer> ( ASC | DESC )?
-<term-tuple> ::= '(' <term> (',' <term>)* ')
-   */
   object WhereClause {
     type TermTuple = Seq[Term]
 
@@ -129,19 +121,24 @@ object SelectStatement {
       case object GreaterThan extends Operator
       case object LessThanOrEqual extends Operator
       case object GreaterThanOrEqual extends Operator
+      case object NotEquals extends Operator
+      case object In extends Operator
       case object Contains extends Operator
       case object ContainsKey extends Operator
     }
 
     trait Relation
     object Relation {
-      case class Simple(identifier: String, operator: Operator, term: Term) extends Relation
-      case class Tupled(identifiers: Seq[String], operator: Operator, term: TermTuple) extends Relation
-      case class MultiValue(identifier: String, term: Seq[Term]) extends Relation
-      case class TupledMultiValue(identifiers: Seq[String], term: Seq[TermTuple]) extends Relation
-      case class WithToken(token: Token, identifiers: Seq[String], operator: Operator, term: Seq[TermTuple]) extends Relation
+      case class Simple(columnName: ColumnName, operator: Operator, term: Term) extends Relation
+      case class Tupled(columnNames: Seq[ColumnName], operator: Operator, term: TermTuple) extends Relation
+      case class WithToken(token: Token, columnNames: Seq[ColumnName], operator: Operator, term: Term) extends Relation
     }
+
   }
+
+  sealed trait LimitParam
+  case class LimitValue(integer: Integer) extends LimitParam
+  case class LimitVariable(bindMarker: BindMarker) extends LimitParam
 
   case class OrderBy(orderings: Seq[OrderBy.Ordering])
   object OrderBy {
@@ -149,7 +146,7 @@ object SelectStatement {
     case object Ascending
     case object Descending
 
-    case class Ordering(identifier: String, direction: Option[Direction])
+    case class Ordering(columnName: ColumnName, direction: Option[Direction])
   }
 }
 
@@ -165,15 +162,16 @@ object ConsistencyLevel {
 
 case class KeyspaceName(name: String)
 case class TableName(keyspace: Option[KeyspaceName], table: String)
+case class FunctionName(keyspace: Option[KeyspaceName], table: String)
 
 sealed trait Term
 object Term {
   case class Constant(raw: String) extends Term // TODO
 
-  sealed trait Variable extends Term
-  object Variable {
-    case object Anonymous extends Variable
-    case class Named(name: String) extends Variable
+  sealed trait BindMarker extends Term
+  object BindMarker {
+    case object Anonymous extends BindMarker
+    case class Named(name: Identifier) extends BindMarker
   }
 }
 

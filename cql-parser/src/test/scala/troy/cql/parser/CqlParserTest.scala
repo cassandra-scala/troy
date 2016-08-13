@@ -37,10 +37,10 @@ class CqlParserTest extends FlatSpec with Matchers {
 
     val selectionList = selection.selectionList.asInstanceOf[SelectStatement.SelectionItems].items
     selectionList.size shouldBe 4
-    selectionList(0).selector shouldBe SelectStatement.Identifier("author_id")
-    selectionList(1).selector shouldBe SelectStatement.Identifier("author_name")
-    selectionList(2).selector shouldBe SelectStatement.Identifier("post_id")
-    selectionList(3).selector shouldBe SelectStatement.Identifier("post_title")
+    selectionList(0).selector shouldBe SelectStatement.ColumnName("author_id")
+    selectionList(1).selector shouldBe SelectStatement.ColumnName("author_name")
+    selectionList(2).selector shouldBe SelectStatement.ColumnName("post_id")
+    selectionList(3).selector shouldBe SelectStatement.ColumnName("post_title")
     selectionList.map(_.as).forall(_.isEmpty) shouldBe true
   }
 
@@ -63,7 +63,7 @@ class CqlParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 1
     relations(0).asInstanceOf[Relation.Simple].identifier shouldBe "author_name"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
-    relations(0).asInstanceOf[Relation.Simple].term shouldBe Term.Variable.Anonymous
+    relations(0).asInstanceOf[Relation.Simple].term shouldBe Term.BindMarker.Anonymous
   }
 
   it should "select statements with where clause containing named variables" in {
@@ -74,7 +74,7 @@ class CqlParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 1
     relations(0).asInstanceOf[Relation.Simple].identifier shouldBe "author_name"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
-    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Term.Variable.Named].name shouldBe "x"
+    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Term.BindMarker.Named].name shouldBe "x"
   }
 
   it should "parse create keyspace" in {
