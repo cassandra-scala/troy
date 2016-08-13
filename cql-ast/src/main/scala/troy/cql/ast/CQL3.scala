@@ -134,14 +134,14 @@ object SelectStatement {
   }
 
   sealed trait LimitParam
-  case class LimitValue(integer: Integer) extends LimitParam
+  case class LimitValue(value: String) extends LimitParam
   case class LimitVariable(bindMarker: BindMarker) extends LimitParam
 
   case class OrderBy(orderings: Seq[OrderBy.Ordering])
   object OrderBy {
     trait Direction
-    case object Ascending
-    case object Descending
+    case object Ascending extends Direction
+    case object Descending extends Direction
 
     case class Ordering(columnName: ColumnName, direction: Option[Direction])
   }

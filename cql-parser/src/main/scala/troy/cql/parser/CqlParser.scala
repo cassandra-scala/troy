@@ -17,6 +17,7 @@
 package troy.cql.ast
 
 import troy.cql.ast.CreateIndex.IndexIdentifier
+import troy.cql.ast.Term.{ BindMarker, SetLiteral, TupleLiteral }
 import troy.cql.ast._
 
 import scala.util.parsing.combinator._
@@ -111,30 +112,35 @@ object CqlParser extends JavaTokenParsers with Helpers {
   def selectStatement: Parser[SelectStatement] = {
     import SelectStatement._
 
-    def json = "JSON".flag
+    def mod: Parser[Mod] = {
+      def json = "JSON".i ^^^ SelectStatement.Json
+      def distinct = "DISTINCT".i ^^^ SelectStatement.Distinct
+      json | distinct
+    }
+    def select: Parser[Selection] = {
+      def asterisk = "*" ^^^ Asterisk
+      def select_clause: Parser[SelectClause] = {
+        def select_clause_item: Parser[SelectionClauseItem] = {
+          def selector: Parser[Selector] = {
+            def count = "COUNT".i ~ "(*)" ^^^ SelectStatement.Count
+            def term_selector = term ^^ SelectStatement.SelectTerm
+            def cast = "CAST".i ~> "(" ~> selector ~ ("AS".i ~> dataType) <~ ")" ^^^^ SelectStatement.Cast
+            def column_name = identifier ^^ ColumnName
+            term_selector | cast | count | column_name
+          }
 
-    def select: Parser[SelectClause] = {
-      def count = {
-        val count = "COUNT".i ~> "(" ~> ("*" | "1") <~ ")"
-        val as = "AS".i ~> identifier
-        count ~ as.? ^^^ Count
+          selector ~ ("AS".i ~> identifier).? ^^^^ SelectStatement.SelectionClauseItem
+        }
+
+        rep1sep(select_clause_item, ",") ^^ SelectClause
       }
 
-      def selection = {
-        def asterisk = "*" ^^^ Asterisk
-        def selector = identifier ^^ ColumnName // TODO
-        def selectionItem = selector ~ ("as".i ~> identifier).? ^^^^ SelectionClauseItem
-        def selectionItems = rep1sep(selectionItem, ",") ^^ SelectionItems
-        def selectionList = selectionItems | asterisk
-        "DISTINCT".flag ~ selectionList ^^^^ Selection
-      }
-
-      selection | count
+      select_clause | asterisk
     }
 
     def from = "FROM" ~> tableName
 
-    def where = {
+    def where: Parser[WhereClause] = {
       import WhereClause._
       def relation: Parser[Relation] = {
         import Relation._
@@ -146,36 +152,64 @@ object CqlParser extends JavaTokenParsers with Helpers {
           def gt = ">".r ^^^ GreaterThan
           def lte = "<=".r ^^^ LessThanOrEqual
           def gte = ">=".r ^^^ GreaterThanOrEqual
+          def noteq = "!=".r ^^^ NotEquals
+          def in = "IN".r ^^^ In
           def contains = "CONTAINS".i ^^^ Contains
           def containsKey = "CONTAINS KEY".i ^^^ ContainsKey
 
-          eq | lt | gt | lte | gte | containsKey | contains
+          lte | gte | eq | lt | gt | noteq | in | containsKey | contains
         }
 
-        def termList = "(" ~> repsep(term, ",") <~ ")"
-        def termTuple = "(" ~> rep1sep(term, ",") <~ ")" // Appears at least once
-        def termTupleList = "(" ~> repsep(termTuple, ",") <~ ")"
+        def columnName = identifier ^^ ColumnName
+        def columnNames = "(" ~> rep1sep(columnName, ",") <~ ")"
 
-        def identifierTuple = "(" ~> rep1sep(identifier, ",") <~ ")"
+        def simple = columnName ~ op ~ term ^^^^ Simple
+        def tupled = columnNames ~ op ~ Literals.tupleLiteral ^^^^ Tupled
+        def token = "TOKEN".i ~> columnNames ~ op ~ term ^^^^ Token
 
-        def simple = identifier ~ op ~ term ^^^^ Simple
-        def tupled = identifierTuple ~ op ~ termTuple ^^^^ Tupled
-        def multivalue = identifier ~ termList ^^^^ MultiValue
-        // TODO' '(' <identifier> (',' <identifier>)* ')' IN '(' ( <term-tuple> ( ',' <term-tuple>)* )? ')'
-        // TODO: TOKEN '(' <identifier> ( ',' <identifer>)* ')' <op> <term>
-
-        simple | tupled | multivalue
+        simple | tupled | token
       }
 
       "WHERE".i ~> rep1sep(relation, "AND".i) ^^ WhereClause.apply
     }
 
-    def limit = "LIMIT".i ~> positiveNumber ^^ { _.toInt }
+    def limitParam: Parser[SelectStatement.LimitParam] = {
+      def limitValue = Constants.integer ^^ LimitValue
+      def limitVariable = bindMarker ^^ LimitVariable
 
-    // TODO
-    val SelectStatementWithDefaults = SelectStatement(_: Boolean, _: SelectStatement.SelectClause, _: TableName, _: Option[WhereClause], None, _: Option[Int], false)
+      limitValue | limitVariable
+    }
 
-    "SELECT".i ~> json ~ select ~ from ~ where.? ~ limit.? ^^^^ SelectStatementWithDefaults
+    def limit = "LIMIT".i ~> limitParam
+    def perPartitionLimit = "PER PARTITION LIMIT".i ~> limitParam
+
+    def allowFiltering = "ALLOW FILTERING".flag
+
+    def orderBy: Parser[OrderBy] = {
+      import OrderBy._
+      def direction: Parser[Direction] = {
+        def asc = "ASC".i ^^^ Ascending
+        def des = "DESC".i ^^^ Descending
+
+        asc | des
+      }
+
+      def ordering: Parser[Ordering] = {
+        def column_name = identifier ^^ ColumnName
+        column_name ~ direction.? ^^^^ Ordering
+      }
+      rep1sep(ordering, ",") ^^ OrderBy.apply
+    }
+
+    "SELECT".i ~>
+      mod.? ~
+      select ~
+      from ~
+      where.? ~
+      orderBy.? ~
+      perPartitionLimit.? ~
+      limit.? ~
+      allowFiltering ^^^^ SelectStatement.apply
   }
 
   ///////////////////////////////////// Data Manipulation
@@ -183,9 +217,13 @@ object CqlParser extends JavaTokenParsers with Helpers {
     insertStatement | updateStatement | batchStatement | deleteStatement | truncateStatement
 
   def insertStatement: Parser[Cql3Statement] = ???
+
   def updateStatement: Parser[Cql3Statement] = ???
+
   def batchStatement: Parser[Cql3Statement] = ???
+
   def deleteStatement: Parser[Cql3Statement] = ???
+
   def truncateStatement: Parser[Cql3Statement] = ???
 
   //  def schemaChangeStatement: Parser[Cql3Statement] =
@@ -193,10 +231,15 @@ object CqlParser extends JavaTokenParsers with Helpers {
   //      dropColumnFamilyStatement | dropIndexStatement | alterTableStatement
 
   def createColumnFamilyStatement: Parser[Cql3Statement] = ???
+
   def createIndexStatement: Parser[Cql3Statement] = ???
+
   def dropKeyspaceStatement: Parser[Cql3Statement] = ???
+
   def dropColumnFamilyStatement: Parser[Cql3Statement] = ???
+
   def dropIndexStatement: Parser[Cql3Statement] = ???
+
   def alterTableStatement: Parser[Cql3Statement] = ???
 
   def usingConsistencyLevelClause: Parser[ConsistencyLevel] = {
