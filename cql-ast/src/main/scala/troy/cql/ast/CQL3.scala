@@ -16,7 +16,7 @@
 
 package troy.cql.ast
 
-import troy.cql.ast.Term.BindMarker
+import troy.cql.ast.Term.{ BindMarker, TupleLiteral }
 
 trait Cql3Statement
 trait DataDefinition
@@ -63,7 +63,7 @@ case class CreateIndex(
 ) extends DataDefinition
 
 object CreateIndex {
-  case class Using(using: String, options: Option[Literals.CqlMap])
+  case class Using(using: String, options: Option[Term.MapLiteral])
 
   trait IndexIdentifier
   case class Identifier(value: String) extends IndexIdentifier
@@ -110,7 +110,6 @@ object SelectStatement {
 
   case class WhereClause(relations: Seq[WhereClause.Relation])
   object WhereClause {
-    type TermTuple = Seq[Term]
 
     trait Operator
     object Operator {
@@ -128,7 +127,7 @@ object SelectStatement {
     trait Relation
     object Relation {
       case class Simple(columnName: ColumnName, operator: Operator, term: Term) extends Relation
-      case class Tupled(columnNames: Seq[ColumnName], operator: Operator, term: TermTuple) extends Relation
+      case class Tupled(columnNames: Seq[ColumnName], operator: Operator, term: TupleLiteral) extends Relation
       case class Token(columnNames: Seq[ColumnName], operator: Operator, term: Term) extends Relation
     }
 
@@ -163,22 +162,23 @@ case class TableName(keyspace: Option[KeyspaceName], table: String)
 case class FunctionName(keyspace: Option[KeyspaceName], table: String)
 
 sealed trait Term
-//TODO
-//term          ::=  constant | literal | function_call | type_hint | bind_marker
-//literal       ::=  collection_literal | udt_literal | tuple_literal
-//function_call ::=  identifier '(' [ term (',' term)* ] ')'
-//type_hint     ::=  '(' cql_type `)` term
-//bind_marker   ::=  '?' | ':' identifier
+
 object Term {
   case class Constant(raw: String) extends Term
+  sealed trait Literal extends Term
+  sealed trait CollectionLiteral extends Literal
+  case class MapLiteral(pairs: Seq[(Term, Term)]) extends CollectionLiteral
+  case class SetLiteral(values: Seq[Term]) extends CollectionLiteral
+  case class ListLiteral(values: Seq[Term]) extends CollectionLiteral
 
+  case class UdtLiteral(members: Seq[(Identifier, Term)]) extends Literal
+  case class TupleLiteral(values: Seq[Term]) extends Literal
+
+  case class FunctionCall(functionName: Identifier, params: Seq[Term]) extends Term
+  case class TypeHint(cqlType: DataType, term: Term) extends Term
   sealed trait BindMarker extends Term
   object BindMarker {
     case object Anonymous extends BindMarker
     case class Named(name: Identifier) extends BindMarker
   }
-}
-
-object Literals {
-  type CqlMap = Map[Term, Term]
 }
