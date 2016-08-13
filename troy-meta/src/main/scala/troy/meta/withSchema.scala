@@ -171,12 +171,10 @@ class withSchema extends scala.annotation.StaticAnnotation {
     }
 
     val replacedExpr = {
-      val variable = schema.extractVariableTypes(query) match {
-        case Right(columns) => columns
+      val variableTypes = schema.extractVariableTypes(query) match {
+        case Right(columns) => columns.map(translateColumnType)
         case Left(e)        => abort(e)
       }
-
-      val variableTypes = variable.map(v => translateColumnType(v.dataType))
 
       val bodyParams =
         qParams.zip(variableTypes).map{ case (p, t) => arg"param($p).as[$t]": Term.Arg}

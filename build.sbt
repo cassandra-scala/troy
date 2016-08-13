@@ -55,7 +55,7 @@ lazy val troyMeta = project
 
 lazy val root = project.in(file("."))
   .settings(name := "troy-root", publishArtifact := false, publish := {}, publishLocal := {})
-  .aggregate(troyMacro, troyDriver, troySchema, cqlParser, cqlAst)
+  .aggregate(troyMeta, troyMacro, troyDriver, troySchema, cqlParser, cqlAst)
 
 initialCommands := """import java.util.UUID
                      |import troy.Troy
