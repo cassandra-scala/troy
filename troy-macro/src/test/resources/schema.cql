@@ -23,3 +23,9 @@ CREATE TABLE test.post_details (
   comments map<int, text>,
   PRIMARY KEY ((author_id), id)
 );
+
+CREATE INDEX ON test.post_details (title);
+CREATE INDEX ON test.post_details (tags);
+CREATE INDEX ON test.post_details (comment_userIds);
+CREATE INDEX ON test.post_details (comments);
+CREATE INDEX ON test.post_details (KEYS(comments));

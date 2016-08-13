@@ -57,24 +57,22 @@ class TypesSpec extends BaseSpec {
 
   it should "be parsed (primitive)" in {
     val q = withSchema { () =>
-      cql"SELECT id,  comment_ids FROM test.post_details;".prepared.execute.oneOption.as(PostCommentIds)
+      cql"SELECT id, comment_ids FROM test.post_details;".prepared.execute.oneOption.as(PostCommentIds)
     }
     val x = q()
     x.get.commentIds shouldBe Set(1, 2)
   }
 
-  // TODO: Contains restriction: https://github.com/tabdulradi/troy/issues/14
-  //  it should "accepted as param" in {
-  //    val filterByTag = withSchema { (tag: String) =>
-  //      cql"SELECT id, tags FROM test.post_details where tags CONTAINS $tag;".prepared.executeAsync.oneOption.as(PostDetails)
-  //    }
-  //    filterByTag("test1").futureValue.get.tags shouldBe Set("test1", "test2")
-  //
-  //  val getByTitleAndTag = withSchema { (title: String, tag: String) =>
-  //    cql"SELECT * FROM test.post_details WHERE title = $title AND tags CONTAINS $tag;".prepared.as(Post)
-  //  }
-  //  getByTitleAndTag("test", "hot"): Future[Seq[Post]]
-  //  }
+  it should "accepted as param" in {
+    val filterByTag = withSchema { (tag: String) =>
+      cql"SELECT id, tags FROM test.post_details where tags CONTAINS $tag;"
+        .prepared
+        .executeAsync
+        .oneOption
+        .as(PostDetails)
+    }
+    filterByTag("test1").futureValue.get.tags shouldBe Set("test1", "test2")
+  }
 
   "LIST column" should "be selected" in {
     val q = withSchema { () =>
@@ -97,13 +95,23 @@ class TypesSpec extends BaseSpec {
     q().get.users shouldBe List(1, 2)
   }
 
-  // TODO: Contains restriction: https://github.com/tabdulradi/troy/issues/14
-  //  it should "accepted as param" in {
-  //    val q = withSchema { (userId: Int) =>
-  //      cql"SELECT id, comment_userIds FROM test.post_details where comment_userIds CONTAINS $tag;".prepared.executeAsync.oneOption.as(PostCommentUserIds)
-  //    }
-  //    q("test1").futureValue.get.tags shouldBe Set("test1", "test2")
-  //  }
+  it should "be queries via contains" in {
+    val q = withSchema { (userId: Int) =>
+      cql"SELECT id, comment_userIds FROM test.post_details where comment_userIds CONTAINS $userId;".prepared.executeAsync.oneOption.as(PostCommentUserIds)
+    }
+
+    q(1).futureValue.get.users shouldBe List(1, 2)
+  }
+
+  it should "fail to query using =" in {
+    assertTypeError(
+      """
+        |  withSchema { (userIds: Seq[Int]) =>
+        |    cql"SELECT id, comment_userIds FROM test.post_details where comment_userIds = $userIds;".prepared.executeAsync.oneOption.as(PostCommentUserIds)
+        |  }
+      """.stripMargin
+    )
+  }
 
   "MAP column" should "be selected" in {
     val q = withSchema { () =>
@@ -117,5 +125,21 @@ class TypesSpec extends BaseSpec {
       cql"SELECT id, comments FROM test.post_details;".prepared.executeAsync.oneOption.as(PostComments)
     }
     q().futureValue.get.comments shouldBe Map(1 -> "test1", 2 -> "test2")
+  }
+
+  it should "support CONTAINS KEY" in {
+    val q = withSchema { (userId: Int) =>
+      cql"SELECT id, comments FROM test.post_details where comments CONTAINS KEY $userId;".prepared.executeAsync.oneOption.as(PostComments)
+    }
+
+    q(1).futureValue.get.comments shouldBe Map(1 -> "test1", 2 -> "test2")
+  }
+
+  it should "support CONTAINS" in {
+    val q = withSchema { (comment: String) =>
+      cql"SELECT id, comments FROM test.post_details where comments CONTAINS $comment;".prepared.executeAsync.oneOption.as(PostComments)
+    }
+
+    q("test1").futureValue.get.comments shouldBe Map(1 -> "test1", 2 -> "test2")
   }
 }

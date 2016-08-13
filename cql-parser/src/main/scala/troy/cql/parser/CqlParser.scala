@@ -149,7 +149,7 @@ object CqlParser extends JavaTokenParsers with Helpers {
           def contains = "CONTAINS".i ^^^ Contains
           def containsKey = "CONTAINS KEY".i ^^^ ContainsKey
 
-          eq | lt | gt | lte | gte | contains | containsKey
+          eq | lt | gt | lte | gte | containsKey | contains
         }
 
         def termList = "(" ~> repsep(term, ",") <~ ")"
