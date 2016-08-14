@@ -18,11 +18,14 @@ package troy.cql.ast
 
 import troy.cql.ast.CreateIndex.IndexIdentifier
 import troy.cql.ast._
+import troy.cql.ast.dml.SelectStatement
+import troy.cql.parser.{ Helpers, TermParser }
+import troy.cql.parser.dml.SelectStatementParser
 
 import scala.util.parsing.combinator._
 
 // Based on CQLv3.4.3: https://cassandra.apache.org/doc/latest/cql/index.html
-object CqlParser extends JavaTokenParsers with Helpers {
+object CqlParser extends JavaTokenParsers with Helpers with TermParser with SelectStatementParser {
   def parseSchema(input: String): ParseResult[Seq[DataDefinition]] =
     parse(phrase(rep(dataDefinition <~ semicolon)), input)
 
@@ -38,7 +41,7 @@ object CqlParser extends JavaTokenParsers with Helpers {
     val mapKey: Parser[String] = "'" ~> identifier <~ "'"
     val mapValue: Parser[String] = "'" ~> identifier <~ "'"
     val mapKeyValue = mapKey ~ (":" ~> mapValue) ^^ { case k ~ v => k -> v }
-    val map: Parser[Seq[(String, String)]] = "{" ~> repsep(mapKeyValue, ",") <~ "}"
+    val map: Parser[Seq[(String, String)]] = curlyBraces(repsep(mapKeyValue, ","))
     def option: Parser[KeyspaceOption] = ("replication".i ~> "=" ~> map) ^^ Replication
     def withOptions: Parser[Seq[KeyspaceOption]] = ("WITH".i ~> rep1sep(option, "AND".i)) orEmpty
 
@@ -63,11 +66,11 @@ object CqlParser extends JavaTokenParsers with Helpers {
 
     def primaryKeyDefinition: Parser[PrimaryKey] = {
       def simplePartitionKey = identifier.asSeq
-      def compositePartitionKey = "(" ~> rep1sep(identifier, ",") <~ ")"
+      def compositePartitionKey = parenthesis(rep1sep(identifier, ","))
       def partitionKeys: Parser[Seq[String]] = simplePartitionKey | compositePartitionKey
       def clusteringColumns: Parser[Seq[String]] = ("," ~> rep1sep(identifier, ",")) orEmpty
 
-      "PRIMARY KEY".i ~> "(" ~> partitionKeys ~ clusteringColumns <~ ")" ^^^^ PrimaryKey
+      "PRIMARY KEY".i ~> parenthesis(partitionKeys ~ clusteringColumns) ^^^^ PrimaryKey
     }
 
     def option: Parser[CreateTableOption] = ??? // <property> | COMPACT STORAGE | CLUSTERING ORDER
@@ -87,13 +90,13 @@ object CqlParser extends JavaTokenParsers with Helpers {
     def indexName = identifier.?
     def onTable = "ON".i ~> tableName
     def indexIdentifier: Parser[IndexIdentifier] = {
-      val keys = "KEYS".i ~> "(" ~> identifier <~ ")" ^^ Keys
+      val keys = "KEYS".i ~> parenthesis(identifier) ^^ Keys
       val ident = identifier ^^ Identifier
-      "(" ~> ((keys | ident) <~ ")")
+      parenthesis(((keys | ident)))
     }
     def using = {
       def withOptions =
-        "WITH".i ~> "OPTIONS".i ~> "=" ~> Literals.map
+        "WITH".i ~> "OPTIONS".i ~> "=" ~> mapLiteral
 
       "using".i ~> Constants.string ~ withOptions.? ^^^^ Using
     }.?
@@ -108,82 +111,19 @@ object CqlParser extends JavaTokenParsers with Helpers {
   }
 
   ///////////////////////////////////// Queries
-  def selectStatement: Parser[SelectStatement] = {
-    import SelectStatement._
-
-    def json = "JSON".flag
-
-    def select: Parser[SelectClause] = {
-      def count: Parser[Count] = {
-        val count = "COUNT".i ~> "(" ~> ("*" | "1") <~ ")"
-        val as = "AS".i ~> identifier
-        count ~ as.? ^^^^ Count
-      }
-
-      def selection = {
-        def asterisk = "*" ^^^ Asterisk
-        def selector = identifier ^^ Identifier // TODO
-        def selectionItem = selector ~ ("as".i ~> identifier).? ^^^^ SelectionItem
-        def selectionItems = rep1sep(selectionItem, ",") ^^ SelectionItems
-        def selectionList = selectionItems | asterisk
-        "DISTINCT".flag ~ selectionList ^^^^ Selection
-      }
-
-      selection | count
-    }
-
-    def from = "FROM" ~> tableName
-
-    def where = {
-      import WhereClause._
-      def relation: Parser[Relation] = {
-        import Relation._
-
-        def op: Parser[Operator] = {
-          import Operator._
-          def eq = "=".r ^^^ Equals
-          def lt = "<".r ^^^ LessThan
-          def gt = ">".r ^^^ GreaterThan
-          def lte = "<=".r ^^^ LessThanOrEqual
-          def gte = ">=".r ^^^ GreaterThanOrEqual
-          def contains = "CONTAINS".i ^^^ Contains
-          def containsKey = "CONTAINS KEY".i ^^^ ContainsKey
-
-          eq | lt | gt | lte | gte | containsKey | contains
-        }
-
-        def termList = "(" ~> repsep(term, ",") <~ ")"
-        def termTuple = "(" ~> rep1sep(term, ",") <~ ")" // Appears at least once
-        def termTupleList = "(" ~> repsep(termTuple, ",") <~ ")"
-
-        def identifierTuple = "(" ~> rep1sep(identifier, ",") <~ ")"
-
-        def simple = identifier ~ op ~ term ^^^^ Simple
-        def tupled = identifierTuple ~ op ~ termTuple ^^^^ Tupled
-        def multivalue = identifier ~ termList ^^^^ MultiValue
-        // TODO' '(' <identifier> (',' <identifier>)* ')' IN '(' ( <term-tuple> ( ',' <term-tuple>)* )? ')'
-        // TODO: TOKEN '(' <identifier> ( ',' <identifer>)* ')' <op> <term>
-
-        simple | tupled | multivalue
-      }
-
-      "WHERE".i ~> rep1sep(relation, "AND".i) ^^ WhereClause.apply
-    }
-
-    // TODO
-    val SelectStatementWithDefaults = SelectStatement(_: Boolean, _: SelectStatement.SelectClause, _: TableName, _: Option[WhereClause], None, None, false)
-
-    "SELECT".i ~> json ~ select ~ from ~ where.? ^^^^ SelectStatementWithDefaults
-  }
 
   ///////////////////////////////////// Data Manipulation
   def dataChangeStatement: Parser[Cql3Statement] =
     insertStatement | updateStatement | batchStatement | deleteStatement | truncateStatement
 
   def insertStatement: Parser[Cql3Statement] = ???
+
   def updateStatement: Parser[Cql3Statement] = ???
+
   def batchStatement: Parser[Cql3Statement] = ???
+
   def deleteStatement: Parser[Cql3Statement] = ???
+
   def truncateStatement: Parser[Cql3Statement] = ???
 
   //  def schemaChangeStatement: Parser[Cql3Statement] =
@@ -191,10 +131,15 @@ object CqlParser extends JavaTokenParsers with Helpers {
   //      dropColumnFamilyStatement | dropIndexStatement | alterTableStatement
 
   def createColumnFamilyStatement: Parser[Cql3Statement] = ???
+
   def createIndexStatement: Parser[Cql3Statement] = ???
+
   def dropKeyspaceStatement: Parser[Cql3Statement] = ???
+
   def dropColumnFamilyStatement: Parser[Cql3Statement] = ???
+
   def dropIndexStatement: Parser[Cql3Statement] = ???
+
   def alterTableStatement: Parser[Cql3Statement] = ???
 
   def usingConsistencyLevelClause: Parser[ConsistencyLevel] = {
@@ -214,43 +159,25 @@ object CqlParser extends JavaTokenParsers with Helpers {
   /*
    * <identifier> ::= any quoted or unquoted identifier, excluding reserved keywords
    */
-  def identifier: Parser[String] = "[a-zA-Z0-9_]+".r.filter(k => !Keywords.contains(k))
+  def identifier: Parser[Identifier] = "[a-zA-Z0-9_]+".r.filter(k => !Keywords.contains(k.toUpperCase))
 
   object Constants {
     def string = "'".r ~> """[^']*""".r <~ "'"
+
     def integer = wholeNumber
+
     def float = floatingPointNumber
+
     def number = integer | float
+
     def uuid = "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}".r
+
     def boolean = "true".i | "false".i
   }
 
-  object Literals {
-    def map: Parser[Map[Term, Term]] = {
-      val pair = term ~ (':' ~> term) ^^ { case key ~ value => key -> value }
-      val mapBody = repsep(pair, ",") ^^ { case pairs => Map(pairs: _*) }
-      "{" ~> mapBody <~ "}"
-    }
-  }
-
-  def term: Parser[Term] = {
-    import Term._
-    def constant: Parser[Constant] = {
-      import Constants._
-      (string | number | uuid | boolean) ^^ Term.Constant // | hex // TODO
-    }
-
-    def variable: Parser[Variable] = {
-      import Variable._
-      def anonymous = """\?""".r ^^^ Anonymous
-      def named = ":" ~> identifier ^^ Named
-
-      anonymous | named
-    }
-    constant | variable // | collectionLiteral | functionCall
-  }
-
   def keyspaceName: Parser[KeyspaceName] = identifier ^^ KeyspaceName
+
+  def positiveNumber = """([1-9]+)""".r
 
   /*
    * <tablename> ::= (<identifier> '.')? <identifier>
@@ -350,7 +277,7 @@ object CqlParser extends JavaTokenParsers with Helpers {
     "SET",
     "TABLE",
     "TO",
-    "TOKEN",
+    //    "TOKEN",
     "TRUNCATE",
     "UNLOGGED",
     "UPDATE",
@@ -361,14 +288,3 @@ object CqlParser extends JavaTokenParsers with Helpers {
   )
 }
 
-trait Helpers { this: JavaTokenParsers =>
-  implicit class orElse[A](p: Parser[A]) { def orElse[B >: A](default: => B): Parser[B] = p.? ^^ (_ getOrElse default) }
-  implicit class orEmpty[A](p: Parser[Seq[A]]) { def orEmpty: Parser[Seq[A]] = p orElse Seq.empty }
-  implicit class asSeq[A](p: Parser[A]) { def asSeq: Parser[Seq[A]] = p ^^ { case x => Seq(x) } }
-
-  implicit class as2[A, B](t: Parser[A ~ B]) { def ^^^^[T](co: (A, B) => T) = t map { tt => val (a ~ b) = tt; co(a, b) } }
-  implicit class as3[A, B, C](t: Parser[A ~ B ~ C]) { def ^^^^[T](co: (A, B, C) => T) = t map { tt => val (a ~ b ~ c) = tt; co(a, b, c) } }
-  implicit class as4[A, B, C, D](t: Parser[A ~ B ~ C ~ D]) { def ^^^^[T](co: (A, B, C, D) => T) = t map { tt => val (a ~ b ~ c ~ d) = tt; co(a, b, c, d) } }
-  implicit class as5[A, B, C, D, E](t: Parser[A ~ B ~ C ~ D ~ E]) { def ^^^^[T](co: (A, B, C, D, E) => T) = t map { tt => val (a ~ b ~ c ~ d ~ e) = tt; co(a, b, c, d, e) } }
-  implicit class as6[A, B, C, D, E, F](t: Parser[A ~ B ~ C ~ D ~ E ~ F]) { def ^^^^[T](co: (A, B, C, D, E, F) => T) = t map { tt => val (a ~ b ~ c ~ d ~ e ~ f) = tt; co(a, b, c, d, e, f) } }
-}

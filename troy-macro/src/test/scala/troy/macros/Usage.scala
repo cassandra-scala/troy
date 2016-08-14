@@ -65,12 +65,12 @@ class Usage extends BaseSpec {
     result.postTitle shouldBe "Title"
   }
 
-  it should "support select *" in {
-    //    TODO: Limit is not supported yet
-    //    val getByTitle: (String) => Future[Option[Post]] = withSchema { (title: String) =>
-    //      cql"SELECT * FROM test1.posts WHERE title = $title LIMIT 1;".prepared.oneOption.as(Post)
-    //    }
-    //    getByTitle("test"): Future[Option[Post]]
+  it should "support limit clause" in {
+    val query = withSchema { () =>
+      cql"SELECT post_id, author_name, post_title FROM test.posts limit 1;".prepared.execute.oneOption.as(Post)
+    }
+    val result: Post = query().get
+    result.title shouldBe "Title"
   }
 
   // TODO: https://github.com/tabdulradi/troy/issues/5

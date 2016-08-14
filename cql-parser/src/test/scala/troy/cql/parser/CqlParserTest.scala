@@ -18,66 +18,10 @@ package troy.cql.parser
 
 import org.scalatest._
 import troy.cql.ast._
-import troy.cql.ast.SelectStatement.WhereClause.{ Operator, Relation }
 
 class CqlParserTest extends FlatSpec with Matchers {
 
-  "Cql Parser" should "parse simple select statements" in {
-    val statement = parseQuery("SELECT author_id, author_name, post_id, post_title FROM test.posts;")
-    statement.isJson shouldBe false
-    statement.from.keyspace.get.name shouldBe "test"
-    statement.from.table shouldBe "posts"
-    statement.where shouldBe None
-    statement.orderBy shouldBe None
-    statement.limit shouldBe None
-    statement.allowFiltering shouldBe false
-
-    val selection = statement.selection.asInstanceOf[SelectStatement.Selection]
-    selection.isDistinct shouldBe false
-
-    val selectionList = selection.selectionList.asInstanceOf[SelectStatement.SelectionItems].items
-    selectionList.size shouldBe 4
-    selectionList(0).selector shouldBe SelectStatement.Identifier("author_id")
-    selectionList(1).selector shouldBe SelectStatement.Identifier("author_name")
-    selectionList(2).selector shouldBe SelectStatement.Identifier("post_id")
-    selectionList(3).selector shouldBe SelectStatement.Identifier("post_title")
-    selectionList.map(_.as).forall(_.isEmpty) shouldBe true
-  }
-
-  it should "select statements with simple where clause" in {
-    val statement = parseQuery("SELECT author_id FROM test.posts WHERE author_name = 'test';")
-
-    statement.where.isDefined shouldBe true
-    val relations = statement.where.get.relations
-    relations.size shouldBe 1
-    relations(0).asInstanceOf[Relation.Simple].identifier shouldBe "author_name"
-    relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
-    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Term.Constant].raw shouldBe "test"
-  }
-
-  it should "select statements with where clause containing anonymous variables" in {
-    val statement = parseQuery("SELECT author_id FROM test.posts WHERE author_name = ?;")
-
-    statement.where.isDefined shouldBe true
-    val relations = statement.where.get.relations
-    relations.size shouldBe 1
-    relations(0).asInstanceOf[Relation.Simple].identifier shouldBe "author_name"
-    relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
-    relations(0).asInstanceOf[Relation.Simple].term shouldBe Term.Variable.Anonymous
-  }
-
-  it should "select statements with where clause containing named variables" in {
-    val statement = parseQuery("SELECT author_id FROM test.posts WHERE author_name = :x;")
-
-    statement.where.isDefined shouldBe true
-    val relations = statement.where.get.relations
-    relations.size shouldBe 1
-    relations(0).asInstanceOf[Relation.Simple].identifier shouldBe "author_name"
-    relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
-    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Term.Variable.Named].name shouldBe "x"
-  }
-
-  it should "parse create keyspace" in {
+  "Cql Parser" should "parse create keyspace" in {
     val statement = parseSchemaAs[CreateKeyspace]("create KEYSPACE test WITH replication = {'class': 'SimpleStrategy' , 'replication_factor': '1'}; ")
 
     statement.ifNotExists shouldBe false
@@ -143,8 +87,8 @@ class CqlParserTest extends FlatSpec with Matchers {
     stmt5.tableName.table shouldBe "users"
     stmt5.identifier.asInstanceOf[CreateIndex.Identifier].value shouldBe "email"
     stmt5.using.get.using shouldBe "path.to.the.IndexClass"
-    stmt5.using.get.options.get.size shouldBe 1
-    // TODO: Map-Literal
+    stmt5.using.get.options.get.pairs.size shouldBe 1
+    stmt5.using.get.options.get.pairs(0) shouldBe Constant("storage") -> Constant("/mnt/ssd/indexes/")
   }
 
   it should "parse multiline create table" in {
