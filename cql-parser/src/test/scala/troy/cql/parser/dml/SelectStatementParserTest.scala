@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package troy.cql.parser
+package troy.cql.parser.dml
 
 import org.scalatest._
+import troy.cql.ast._
+import troy.cql.ast.dml.SelectStatement
 import troy.cql.ast.dml.SelectStatement.WhereClause.Relation.{ Simple, Token, Tupled }
 import troy.cql.ast.dml.SelectStatement.WhereClause.{ Operator, Relation }
-import troy.cql.ast.dml.SelectStatement
-import troy.cql.ast._
 
-class SelectParserTest extends FlatSpec with Matchers {
+class SelectStatementParserTest extends FlatSpec with Matchers {
   // SELECT name, occupation FROM users
   // SELECT name, occupation FROM test.users
   // SELECT JSON name, occupation FROM users
