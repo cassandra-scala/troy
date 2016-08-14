@@ -19,12 +19,12 @@ package troy.cql.ast
 import troy.cql.ast.CreateIndex.IndexIdentifier
 import troy.cql.ast._
 import troy.cql.ast.dml.SelectStatement
-import troy.cql.parser.Helpers
+import troy.cql.parser.{ Helpers, TermParser }
 
 import scala.util.parsing.combinator._
 
 // Based on CQLv3.4.3: https://cassandra.apache.org/doc/latest/cql/index.html
-object CqlParser extends JavaTokenParsers with Helpers {
+object CqlParser extends JavaTokenParsers with Helpers with TermParser {
   def parseSchema(input: String): ParseResult[Seq[DataDefinition]] =
     parse(phrase(rep(dataDefinition <~ semicolon)), input)
 
@@ -95,7 +95,7 @@ object CqlParser extends JavaTokenParsers with Helpers {
     }
     def using = {
       def withOptions =
-        "WITH".i ~> "OPTIONS".i ~> "=" ~> Literals.map
+        "WITH".i ~> "OPTIONS".i ~> "=" ~> mapLiteral
 
       "using".i ~> Constants.string ~ withOptions.? ^^^^ Using
     }.?
@@ -165,7 +165,7 @@ object CqlParser extends JavaTokenParsers with Helpers {
         def columnNames = parenthesis(rep1sep(columnName, ","))
 
         def simple = columnName ~ op ~ term ^^^^ Simple
-        def tupled = columnNames ~ op ~ Literals.tupleLiteral ^^^^ Tupled
+        def tupled = columnNames ~ op ~ tupleLiteral ^^^^ Tupled
         def token = "TOKEN".i ~> columnNames ~ op ~ term ^^^^ Token
 
         simple | tupled | token
@@ -276,60 +276,9 @@ object CqlParser extends JavaTokenParsers with Helpers {
     def boolean = "true".i | "false".i
   }
 
-  object Literals {
-
-    def map: Parser[MapLiteral] = {
-      val pair = term ~ (':' ~> term) ^^ { case key ~ value => key -> value }
-      val mapBody = repsep(pair, ",") ^^ MapLiteral
-      curlyBraces(mapBody)
-    }
-
-    def set: Parser[SetLiteral] =
-      curlyBraces(repsep(term, ",")) ^^ SetLiteral
-
-    def list: Parser[ListLiteral] =
-      squareBrackets(repsep(term, ",")) ^^ ListLiteral
-
-    def collectionLiteral: Parser[CollectionLiteral] = map | set | list
-
-    def udtLiteral: Parser[UdtLiteral] = {
-      val member = identifier ~ (':' ~> term) ^^ { case key ~ value => key -> value }
-      val udtBody = rep1sep(member, ",") ^^ UdtLiteral
-      curlyBraces(udtBody)
-    }
-
-    def tupleLiteral: Parser[TupleLiteral] =
-      parenthesis(rep1sep(term, ",")) ^^ TupleLiteral
-
-    def literal: Parser[Literal] = collectionLiteral | udtLiteral | tupleLiteral
-  }
-
-  def term: Parser[Term] = {
-    def constant: Parser[Constant] = {
-      import Constants._
-      (string | number | uuid | boolean) ^^ Constant // | hex // TODO
-    }
-
-    def functionCall: Parser[FunctionCall] =
-      identifier ~ parenthesis(repsep(term, ",")) ^^^^ FunctionCall
-
-    def typeHint: Parser[TypeHint] =
-      parenthesis(dataType) ~ term ^^^^ TypeHint
-
-    constant | Literals.literal | functionCall | typeHint | bindMarker
-  }
-
   def keyspaceName: Parser[KeyspaceName] = identifier ^^ KeyspaceName
 
   def positiveNumber = """([1-9]+)""".r
-
-  def bindMarker: Parser[BindMarker] = {
-    import BindMarker._
-    def anonymous = """\?""".r ^^^ Anonymous
-    def named = ":" ~> identifier ^^ Named
-
-    anonymous | named
-  }
 
   /*
    * <tablename> ::= (<identifier> '.')? <identifier>
