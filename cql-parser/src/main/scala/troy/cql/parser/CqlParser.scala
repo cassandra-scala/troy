@@ -18,6 +18,7 @@ package troy.cql.ast
 
 import troy.cql.ast.CreateIndex.IndexIdentifier
 import troy.cql.ast._
+import troy.cql.ast.dml.SelectStatement
 import scala.util.parsing.combinator._
 
 // Based on CQLv3.4.3: https://cassandra.apache.org/doc/latest/cql/index.html
