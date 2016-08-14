@@ -88,7 +88,7 @@ class CqlParserTest extends FlatSpec with Matchers {
     stmt5.identifier.asInstanceOf[CreateIndex.Identifier].value shouldBe "email"
     stmt5.using.get.using shouldBe "path.to.the.IndexClass"
     stmt5.using.get.options.get.pairs.size shouldBe 1
-    stmt5.using.get.options.get.pairs(0) shouldBe Term.Constant("storage") -> Term.Constant("/mnt/ssd/indexes/")
+    stmt5.using.get.options.get.pairs(0) shouldBe Constant("storage") -> Constant("/mnt/ssd/indexes/")
   }
 
   it should "parse multiline create table" in {

@@ -19,7 +19,6 @@ package troy.cql.ast
 import troy.cql.ast.CreateIndex.IndexIdentifier
 import troy.cql.ast._
 import scala.util.parsing.combinator._
-import Term.{ BindMarker, SetLiteral, TupleLiteral }
 
 // Based on CQLv3.4.3: https://cassandra.apache.org/doc/latest/cql/index.html
 object CqlParser extends JavaTokenParsers with Helpers {
@@ -276,8 +275,6 @@ object CqlParser extends JavaTokenParsers with Helpers {
 
   object Literals {
 
-    import Term._
-
     def map: Parser[MapLiteral] = {
       val pair = term ~ (':' ~> term) ^^ { case key ~ value => key -> value }
       val mapBody = repsep(pair, ",") ^^ MapLiteral
@@ -305,10 +302,9 @@ object CqlParser extends JavaTokenParsers with Helpers {
   }
 
   def term: Parser[Term] = {
-    import Term._
     def constant: Parser[Constant] = {
       import Constants._
-      (string | number | uuid | boolean) ^^ Term.Constant // | hex // TODO
+      (string | number | uuid | boolean) ^^ Constant // | hex // TODO
     }
 
     def functionCall: Parser[FunctionCall] =

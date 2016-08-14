@@ -61,7 +61,7 @@ case class CreateIndex(
 ) extends DataDefinition
 
 object CreateIndex {
-  case class Using(using: String, options: Option[Term.MapLiteral])
+  case class Using(using: String, options: Option[MapLiteral])
 
   trait IndexIdentifier
   case class Identifier(value: String) extends IndexIdentifier
@@ -125,7 +125,7 @@ object SelectStatement {
     trait Relation
     object Relation {
       case class Simple(columnName: ColumnName, operator: Operator, term: Term) extends Relation
-      case class Tupled(columnNames: Seq[ColumnName], operator: Operator, term: Term.TupleLiteral) extends Relation
+      case class Tupled(columnNames: Seq[ColumnName], operator: Operator, term: TupleLiteral) extends Relation
       case class Token(columnNames: Seq[ColumnName], operator: Operator, term: Term) extends Relation
     }
 
@@ -133,7 +133,7 @@ object SelectStatement {
 
   sealed trait LimitParam
   case class LimitValue(value: String) extends LimitParam
-  case class LimitVariable(bindMarker: Term.BindMarker) extends LimitParam
+  case class LimitVariable(bindMarker: BindMarker) extends LimitParam
 
   case class OrderBy(orderings: Seq[OrderBy.Ordering])
   object OrderBy {
