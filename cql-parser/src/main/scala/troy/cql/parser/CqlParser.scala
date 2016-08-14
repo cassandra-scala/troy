@@ -20,17 +20,20 @@ import troy.cql.ast.CreateIndex.IndexIdentifier
 import troy.cql.ast._
 import troy.cql.ast.dml.SelectStatement
 import troy.cql.parser.{ Helpers, TermParser }
-import troy.cql.parser.dml.SelectStatementParser
+import troy.cql.parser.dml.{ SelectStatementParser, InsertStatementParser }
 
 import scala.util.parsing.combinator._
 
 // Based on CQLv3.4.3: https://cassandra.apache.org/doc/latest/cql/index.html
-object CqlParser extends JavaTokenParsers with Helpers with TermParser with SelectStatementParser {
+object CqlParser extends JavaTokenParsers with Helpers with TermParser with SelectStatementParser with InsertStatementParser {
   def parseSchema(input: String): ParseResult[Seq[DataDefinition]] =
     parse(phrase(rep(dataDefinition <~ semicolon)), input)
 
   def parseQuery(input: String): ParseResult[SelectStatement] =
     parse(phrase(selectStatement <~ semicolon.?), input)
+
+  def parseDML(input: String): ParseResult[Cql3Statement] =
+    parse(phrase(dmlDefinition <~ semicolon.?), input)
 
   ////////////////////////////////////////// Data Definition
   def dataDefinition: Parser[DataDefinition] =
@@ -111,12 +114,12 @@ object CqlParser extends JavaTokenParsers with Helpers with TermParser with Sele
   }
 
   ///////////////////////////////////// Queries
+  def dmlDefinition: Parser[Cql3Statement] =
+    selectStatement | insertStatement
 
   ///////////////////////////////////// Data Manipulation
   def dataChangeStatement: Parser[Cql3Statement] =
     insertStatement | updateStatement | batchStatement | deleteStatement | truncateStatement
-
-  def insertStatement: Parser[Cql3Statement] = ???
 
   def updateStatement: Parser[Cql3Statement] = ???
 
