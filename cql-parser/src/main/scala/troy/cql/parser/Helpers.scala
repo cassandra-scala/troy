@@ -2,9 +2,6 @@ package troy.cql.parser
 
 import scala.util.parsing.combinator.JavaTokenParsers
 
-/**
- * Created by ohelmi on 14/08/2016.
- */
 trait Helpers {
   this: JavaTokenParsers =>
 
