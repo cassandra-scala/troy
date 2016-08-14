@@ -40,7 +40,7 @@ object CqlParser extends JavaTokenParsers with Helpers {
     val mapKey: Parser[String] = "'" ~> identifier <~ "'"
     val mapValue: Parser[String] = "'" ~> identifier <~ "'"
     val mapKeyValue = mapKey ~ (":" ~> mapValue) ^^ { case k ~ v => k -> v }
-    val map: Parser[Seq[(String, String)]] = "{" ~> repsep(mapKeyValue, ",") <~ "}"
+    val map: Parser[Seq[(String, String)]] = curlyBraces(repsep(mapKeyValue, ","))
     def option: Parser[KeyspaceOption] = ("replication".i ~> "=" ~> map) ^^ Replication
     def withOptions: Parser[Seq[KeyspaceOption]] = ("WITH".i ~> rep1sep(option, "AND".i)) orEmpty
 
@@ -65,11 +65,11 @@ object CqlParser extends JavaTokenParsers with Helpers {
 
     def primaryKeyDefinition: Parser[PrimaryKey] = {
       def simplePartitionKey = identifier.asSeq
-      def compositePartitionKey = "(" ~> rep1sep(identifier, ",") <~ ")"
+      def compositePartitionKey = parenthesis(rep1sep(identifier, ","))
       def partitionKeys: Parser[Seq[String]] = simplePartitionKey | compositePartitionKey
       def clusteringColumns: Parser[Seq[String]] = ("," ~> rep1sep(identifier, ",")) orEmpty
 
-      "PRIMARY KEY".i ~> "(" ~> partitionKeys ~ clusteringColumns <~ ")" ^^^^ PrimaryKey
+      "PRIMARY KEY".i ~> parenthesis(partitionKeys ~ clusteringColumns) ^^^^ PrimaryKey
     }
 
     def option: Parser[CreateTableOption] = ??? // <property> | COMPACT STORAGE | CLUSTERING ORDER
@@ -89,9 +89,9 @@ object CqlParser extends JavaTokenParsers with Helpers {
     def indexName = identifier.?
     def onTable = "ON".i ~> tableName
     def indexIdentifier: Parser[IndexIdentifier] = {
-      val keys = "KEYS".i ~> "(" ~> identifier <~ ")" ^^ Keys
+      val keys = "KEYS".i ~> parenthesis(identifier) ^^ Keys
       val ident = identifier ^^ Identifier
-      "(" ~> ((keys | ident) <~ ")")
+      parenthesis(((keys | ident)))
     }
     def using = {
       def withOptions =
@@ -125,7 +125,7 @@ object CqlParser extends JavaTokenParsers with Helpers {
           def selector: Parser[Selector] = {
             def count = "COUNT".i ~ "(*)" ^^^ SelectStatement.Count
             def term_selector = term ^^ SelectStatement.SelectTerm
-            def cast = "CAST".i ~> "(" ~> selector ~ ("AS".i ~> dataType) <~ ")" ^^^^ SelectStatement.Cast
+            def cast = "CAST".i ~> parenthesis(selector ~ ("AS".i ~> dataType)) ^^^^ SelectStatement.Cast
             def column_name = identifier ^^ ColumnName
             term_selector | cast | count | column_name
           }
@@ -162,7 +162,7 @@ object CqlParser extends JavaTokenParsers with Helpers {
         }
 
         def columnName = identifier ^^ ColumnName
-        def columnNames = "(" ~> rep1sep(columnName, ",") <~ ")"
+        def columnNames = parenthesis(rep1sep(columnName, ","))
 
         def simple = columnName ~ op ~ term ^^^^ Simple
         def tupled = columnNames ~ op ~ Literals.tupleLiteral ^^^^ Tupled
@@ -281,25 +281,25 @@ object CqlParser extends JavaTokenParsers with Helpers {
     def map: Parser[MapLiteral] = {
       val pair = term ~ (':' ~> term) ^^ { case key ~ value => key -> value }
       val mapBody = repsep(pair, ",") ^^ MapLiteral
-      "{".i ~> mapBody <~ "}"
+      curlyBraces(mapBody)
     }
 
     def set: Parser[SetLiteral] =
-      "{".i ~> repsep(term, ",") <~ "}" ^^ SetLiteral
+      curlyBraces(repsep(term, ",")) ^^ SetLiteral
 
     def list: Parser[ListLiteral] =
-      "[".i ~> repsep(term, ",") <~ "]" ^^ ListLiteral
+      squareBrackets(repsep(term, ",")) ^^ ListLiteral
 
     def collectionLiteral: Parser[CollectionLiteral] = map | set | list
 
     def udtLiteral: Parser[UdtLiteral] = {
       val member = identifier ~ (':' ~> term) ^^ { case key ~ value => key -> value }
       val udtBody = rep1sep(member, ",") ^^ UdtLiteral
-      "{".i ~> udtBody <~ "}"
+      curlyBraces(udtBody)
     }
 
     def tupleLiteral: Parser[TupleLiteral] =
-      "(".i ~> rep1sep(term, ",") <~ ")" ^^ TupleLiteral
+      parenthesis(rep1sep(term, ",")) ^^ TupleLiteral
 
     def literal: Parser[Literal] = collectionLiteral | udtLiteral | tupleLiteral
   }
