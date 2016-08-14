@@ -16,8 +16,6 @@
 
 package troy.cql.ast
 
-import troy.cql.ast.Term.{ BindMarker, TupleLiteral }
-
 trait Cql3Statement
 trait DataDefinition
 trait Manipulation
@@ -127,7 +125,7 @@ object SelectStatement {
     trait Relation
     object Relation {
       case class Simple(columnName: ColumnName, operator: Operator, term: Term) extends Relation
-      case class Tupled(columnNames: Seq[ColumnName], operator: Operator, term: TupleLiteral) extends Relation
+      case class Tupled(columnNames: Seq[ColumnName], operator: Operator, term: Term.TupleLiteral) extends Relation
       case class Token(columnNames: Seq[ColumnName], operator: Operator, term: Term) extends Relation
     }
 
@@ -135,7 +133,7 @@ object SelectStatement {
 
   sealed trait LimitParam
   case class LimitValue(value: String) extends LimitParam
-  case class LimitVariable(bindMarker: BindMarker) extends LimitParam
+  case class LimitVariable(bindMarker: Term.BindMarker) extends LimitParam
 
   case class OrderBy(orderings: Seq[OrderBy.Ordering])
   object OrderBy {
@@ -160,25 +158,3 @@ object ConsistencyLevel {
 case class KeyspaceName(name: String)
 case class TableName(keyspace: Option[KeyspaceName], table: String)
 case class FunctionName(keyspace: Option[KeyspaceName], table: String)
-
-sealed trait Term
-
-object Term {
-  case class Constant(raw: String) extends Term
-  sealed trait Literal extends Term
-  sealed trait CollectionLiteral extends Literal
-  case class MapLiteral(pairs: Seq[(Term, Term)]) extends CollectionLiteral
-  case class SetLiteral(values: Seq[Term]) extends CollectionLiteral
-  case class ListLiteral(values: Seq[Term]) extends CollectionLiteral
-
-  case class UdtLiteral(members: Seq[(Identifier, Term)]) extends Literal
-  case class TupleLiteral(values: Seq[Term]) extends Literal
-
-  case class FunctionCall(functionName: Identifier, params: Seq[Term]) extends Term
-  case class TypeHint(cqlType: DataType, term: Term) extends Term
-  sealed trait BindMarker extends Term
-  object BindMarker {
-    case object Anonymous extends BindMarker
-    case class Named(name: Identifier) extends BindMarker
-  }
-}

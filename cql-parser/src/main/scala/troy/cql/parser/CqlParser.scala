@@ -17,10 +17,9 @@
 package troy.cql.ast
 
 import troy.cql.ast.CreateIndex.IndexIdentifier
-import troy.cql.ast.Term.{ BindMarker, SetLiteral, TupleLiteral }
 import troy.cql.ast._
-
 import scala.util.parsing.combinator._
+import Term.{ BindMarker, SetLiteral, TupleLiteral }
 
 // Based on CQLv3.4.3: https://cassandra.apache.org/doc/latest/cql/index.html
 object CqlParser extends JavaTokenParsers with Helpers {

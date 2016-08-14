@@ -19,8 +19,8 @@ package troy.cql.parser
 import org.scalatest._
 import troy.cql.ast.SelectStatement.WhereClause.Relation.{ Simple, Token, Tupled }
 import troy.cql.ast.SelectStatement.WhereClause.{ Operator, Relation }
-import troy.cql.ast.Term.TupleLiteral
-import troy.cql.ast._
+import troy.cql.ast.{ Term, _ }
+import Term.TupleLiteral
 
 class SelectParserTest extends FlatSpec with Matchers {
   // SELECT name, occupation FROM users
