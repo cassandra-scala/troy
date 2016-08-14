@@ -23,16 +23,6 @@ import troy.cql.ast.dml.SelectStatement.WhereClause.Relation.{ Simple, Token, Tu
 import troy.cql.ast.dml.SelectStatement.WhereClause.{ Operator, Relation }
 
 class SelectStatementParserTest extends FlatSpec with Matchers {
-  // SELECT name, occupation FROM users
-  // SELECT name, occupation FROM test.users
-  // SELECT JSON name, occupation FROM users
-  // SELECT DISTINCT name, occupation FROM users
-  // SELECT * FROM users;
-  // SELECT COUNT (*) AS user_count FROM users;
-  // SELECT intAsBlob(4) FROM t;
-  // SELECT intAsBlob(4) AS four FROM t;
-  // SELECT name AS user_name, occupation AS user_occupation FROM users;
-
   "Select Parser" should "parse simple select statements" in {
     val statement = parseQuery("SELECT name, occupation FROM users;")
     statement.mod.isEmpty shouldBe true
@@ -219,31 +209,6 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     statement.selection.asInstanceOf[SelectStatement.SelectClause].items.size shouldBe 2
   }
 
-  // SELECT JSON name, occupation FROM users WHERE userid = 199;
-  // SELECT name, occupation FROM users WHERE userid IN (199, 200, 207);
-
-  // SELECT time, value FROM events
-  //    WHERE event_type = 'myEvent'
-  //        AND time > '2011-02-03'
-  //        AND time <= '2012-01-01'
-
-  // SELECT entry_title, content FROM posts
-  //    WHERE userid = 'john doe'
-  //      AND blog_title!='Spam'
-  //      AND posted_at >= '2012-01-01' AND posted_at < '2012-01-31'
-
-  // SELECT * FROM posts
-  //    WHERE token(userid) > token('tom') AND token(userid) < token('bob')
-
-  // SELECT * FROM posts
-  //    WHERE userid = 'john doe'
-  //      AND (blog_title, posted_at) > ('John''s Blog', '2012-01-01')
-
-  // SELECT time, value FROM events
-  //    WHERE event_type = 'myEvent'
-  //      AND time > '2011-02-03'
-  //      AND time <= '2012-01-01'
-  //    ALLOW FILTERING
   it should "parse select statements with simple where clause" in {
     val statement = parseQuery("SELECT JSON name, occupation FROM users WHERE userid = 199;")
 
