@@ -65,13 +65,13 @@ class Usage extends BaseSpec {
     result.postTitle shouldBe "Title"
   }
 
-  //  it should "support limit clause" in {
-  //    val query = withSchema { () =>
-  //      cql"SELECT post_id, author_name, post_title FROM test.posts limit 1;".prepared.execute.oneOption.as(Post)
-  //    }
-  //    val result: Post = query().get
-  //    result.title shouldBe "Title"
-  //  }
+  it should "support limit clause" in {
+    val query = withSchema { () =>
+      cql"SELECT post_id, author_name, post_title FROM test.posts limit 1;".prepared.execute.oneOption.as(Post)
+    }
+    val result: Post = query().get
+    result.title shouldBe "Title"
+  }
 
   // TODO: https://github.com/tabdulradi/troy/issues/5
   //  it should "support INSERT" in {
