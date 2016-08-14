@@ -259,7 +259,7 @@ object CqlParser extends JavaTokenParsers with Helpers {
   /*
    * <identifier> ::= any quoted or unquoted identifier, excluding reserved keywords
    */
-  def identifier: Parser[Identifier] = "[a-zA-Z0-9_]+".r.filter(k => !Keywords.contains(k))
+  def identifier: Parser[Identifier] = "[a-zA-Z0-9_]+".r.filter(k => !Keywords.contains(k.toUpperCase))
 
   object Constants {
     def string = "'".r ~> """[^']*""".r <~ "'"
@@ -431,7 +431,7 @@ object CqlParser extends JavaTokenParsers with Helpers {
     "SET",
     "TABLE",
     "TO",
-    "TOKEN",
+    //    "TOKEN",
     "TRUNCATE",
     "UNLOGGED",
     "UPDATE",

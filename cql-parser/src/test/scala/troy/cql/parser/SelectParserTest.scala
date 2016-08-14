@@ -74,7 +74,7 @@ class SelectParserTest extends FlatSpec with Matchers {
     selection.items(1).as.isEmpty shouldBe true
   }
 
-  it should "parse simple select statements with JOSN" in {
+  it should "parse simple select statements with JSON" in {
     val statement = parseQuery("SELECT JSON name, occupation FROM users;")
     statement.from.table shouldBe "users"
     statement.mod.get shouldBe SelectStatement.Json
@@ -203,6 +203,20 @@ class SelectParserTest extends FlatSpec with Matchers {
     val params = selector.params.asInstanceOf[SelectStatement.SelectTerm]
     params shouldBe Term.Constant("4") //TODO: Term Constant need refactor
     selection.items(0).as.get shouldBe "four"
+  }
+
+  it should "parse simple LIMIT clause" in {
+    val statement = parseQuery("SELECT name, occupation FROM users LIMIT 1;")
+    statement.limit.get shouldBe SelectStatement.LimitValue("1")
+    statement.allowFiltering shouldBe false
+    statement.selection.asInstanceOf[SelectStatement.SelectClause].items.size shouldBe 2
+  }
+
+  it should "parse simple limit (lowercase) clause" in {
+    val statement = parseQuery("SELECT name, occupation FROM users limit 1;")
+    statement.limit.get shouldBe SelectStatement.LimitValue("1")
+    statement.allowFiltering shouldBe false
+    statement.selection.asInstanceOf[SelectStatement.SelectClause].items.size shouldBe 2
   }
 
   // SELECT JSON name, occupation FROM users WHERE userid = 199;
