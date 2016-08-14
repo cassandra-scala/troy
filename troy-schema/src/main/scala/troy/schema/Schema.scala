@@ -17,6 +17,7 @@
 package troy.schema
 
 import troy.cql.ast._
+import troy.cql.ast.dml._
 
 import scala.util.Left
 
@@ -47,7 +48,7 @@ case class Schema(schema: Map[KeyspaceName, Seq[CreateTable]], context: Option[K
 
   def extractVariableTypes(table: CreateTable, where: SelectStatement.WhereClause): Result[Seq[DataType]] =
     Result.flattenSeq(where.relations.map {
-      case SelectStatement.WhereClause.Relation.Simple(columnName, op, Term.BindMarker.Anonymous) =>
+      case SelectStatement.WhereClause.Relation.Simple(columnName, op, BindMarker.Anonymous) =>
         import ColumnOps.Operations
         for {
           column <- getColumn(table, columnName).right
