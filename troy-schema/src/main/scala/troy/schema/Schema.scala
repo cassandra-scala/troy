@@ -33,19 +33,30 @@ case class Schema(schema: Map[KeyspaceName, Seq[CreateTable]], context: Option[K
       getAllColumns(table.keyspace, table.table)
   }
 
-  def extractVariables(statement: Cql3Statement): Result[Seq[CreateTable.Column]] = statement match {
-    case SelectStatement(_, _, from, Some(where), _, _, _) => extractVariables(from, where)
+  def extractVariableTypes(statement: Cql3Statement): Result[Seq[DataType]] = statement match {
+    case SelectStatement(_, _, from, Some(where), _, _, _) => extractVariableTypes(from, where)
     case SelectStatement(_, _, from, None, _, _, _)        => success(Seq.empty)
     case _                                                 => ???
   }
 
-  def extractVariables(table: TableName, where: SelectStatement.WhereClause): Result[Seq[CreateTable.Column]] =
-    apply(table, where.relations.flatMap {
-      case SelectStatement.WhereClause.Relation.Simple(identifier, _, Term.Variable.Anonymous) => Seq(identifier)
-      case SelectStatement.WhereClause.Relation.Tupled(identifiers, _, _)                      => ???
-      case SelectStatement.WhereClause.Relation.MultiValue(identifier, _)                      => ???
-      case SelectStatement.WhereClause.Relation.TupledMultiValue(identifiers, _)               => ???
-      case SelectStatement.WhereClause.Relation.WithToken(_, identifiers, _, _)                => ???
+  def extractVariableTypes(table: TableName, where: SelectStatement.WhereClause): Result[Seq[DataType]] =
+    for {
+      table <- getTable(table).right
+      dts <- extractVariableTypes(table, where).right
+    } yield dts
+
+  def extractVariableTypes(table: CreateTable, where: SelectStatement.WhereClause): Result[Seq[DataType]] =
+    Result.flattenSeq(where.relations.map {
+      case SelectStatement.WhereClause.Relation.Simple(identifier, op, Term.Variable.Anonymous) =>
+        import ColumnOps.Operations
+        for {
+          column <- getColumn(table, identifier).right
+          dt <- column.operandType(op).toRight(s"Operator $op doesn't support column type ${column.dataType}").right
+        } yield Seq(dt)
+      case SelectStatement.WhereClause.Relation.Tupled(identifiers, _, _)        => ???
+      case SelectStatement.WhereClause.Relation.MultiValue(identifier, _)        => ???
+      case SelectStatement.WhereClause.Relation.TupledMultiValue(identifiers, _) => ???
+      case SelectStatement.WhereClause.Relation.WithToken(_, identifiers, _, _)  => ???
     })
 
   def apply(table: TableName, columns: Seq[String]): Result[Seq[CreateTable.Column]] =
@@ -65,6 +76,9 @@ case class Schema(schema: Map[KeyspaceName, Seq[CreateTable]], context: Option[K
 
   private def getTable(keyspace: Seq[CreateTable], table: String): Result[CreateTable] =
     keyspace.find(_.tableName.table == table).toRight(s"Table '$table' not found")
+
+  private def getTable(fullTableName: TableName): Result[CreateTable] =
+    getTable(fullTableName.keyspace, fullTableName.table)
 
   private def getTable(keyspaceName: Option[KeyspaceName], tableName: String): Result[CreateTable] =
     for {
@@ -132,6 +146,11 @@ object Schema {
       results.collectFirst {
         case Left(e) => fail(e)
       }.getOrElse(success(results.map(_.right.get)))
+
+    def flattenSeq[T](results: Seq[Result[Seq[T]]]): Result[Seq[T]] =
+      for {
+        s <- seq(results).right
+      } yield s.flatten
   }
 
   val empty: Schema = Schema(Map.empty, None)

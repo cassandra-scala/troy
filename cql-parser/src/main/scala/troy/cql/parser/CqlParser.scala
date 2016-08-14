@@ -87,7 +87,7 @@ object CqlParser extends JavaTokenParsers with Helpers {
     def indexName = identifier.?
     def onTable = "ON".i ~> tableName
     def indexIdentifier: Parser[IndexIdentifier] = {
-      val keys = "keys(" ~> (identifier <~ ")") ^^ Keys
+      val keys = "KEYS".i ~> "(" ~> identifier <~ ")" ^^ Keys
       val ident = identifier ^^ Identifier
       "(" ~> ((keys | ident) <~ ")")
     }
@@ -149,7 +149,7 @@ object CqlParser extends JavaTokenParsers with Helpers {
           def contains = "CONTAINS".i ^^^ Contains
           def containsKey = "CONTAINS KEY".i ^^^ ContainsKey
 
-          eq | lt | gt | lte | gte | contains | containsKey
+          eq | lt | gt | lte | gte | containsKey | contains
         }
 
         def termList = "(" ~> repsep(term, ",") <~ ")"

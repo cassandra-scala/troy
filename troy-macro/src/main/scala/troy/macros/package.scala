@@ -70,12 +70,12 @@ package object macros {
 
 
     val body = {
-      val variable = schema.extractVariables(query) match {
+      val variableDataTypes = schema.extractVariableTypes(query) match {
         case Right(columns) => columns
         case Left(e)        => c.abort(c.enclosingPosition, e)
       }
-      val variableTypes = variable.map(v => translateColumnType(c)(v.dataType))
-      val bodyParams = qParams.zip(variableTypes).map{ case (p, t) => q"param($p).as[$t]" }
+      val translatedVariableTypes = variableDataTypes.map(dt => translateColumnType(c)(dt))
+      val bodyParams = qParams.zip(translatedVariableTypes).map{ case (p, t) => q"param($p).as[$t]" }
       replaceCqlQuery(c)(expr, q"bind(prepared, ..$bodyParams)") match {
         case q"$root.as[..$paramTypes]($f)" => q"$root.parseAs(parser)"
         case other => other
