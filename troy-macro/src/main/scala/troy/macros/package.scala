@@ -59,6 +59,7 @@ package object macros {
     val parser = expr match {
       case q"$root.as[..$paramTypes]($f)" =>
         val columnTypes = translateColumnTypes(c)(rowType match {
+          case Schema.Asterisk(_) => c.abort(c.enclosingPosition, "Troy doesn't support using .as with Select * queries")
           case Schema.Columns(types) => types
         })
         val params = (paramTypes zip columnTypes).zipWithIndex.map {

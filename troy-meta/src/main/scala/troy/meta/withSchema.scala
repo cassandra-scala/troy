@@ -159,6 +159,7 @@ class withSchema extends scala.annotation.StaticAnnotation {
     val parser = expr match {
       case q"$root.as[..$paramTypes](${f: Term.Name})" =>
         val columnTypes = translateColumnTypes(rowType match {
+          case Schema.Asterisk(_) => abort("Troy doesn't support using .as with Select * queries")
           case Schema.Columns(types) => types
         }).toSeq
 
