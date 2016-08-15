@@ -38,7 +38,7 @@ class Usage extends BaseSpec {
       VALUES ( uuid(), uuid(), 'test author', 5, 'Title') ;
     """
 
-  case class Post(id: UUID, author_name: String, title: String)
+  case class Post(id: UUID, authorName: String, title: String)
   case class AuthorAndPost(authorId: UUID, postId: UUID, authorName: String, postRating: Int, postTitle: String)
 
   it should "support parsing one row sync" in {
@@ -80,17 +80,26 @@ class Usage extends BaseSpec {
     result.title shouldBe "Title"
   }
 
-  // TODO: https://github.com/tabdulradi/troy/issues/5
-  //  it should "support INSERT" in {
-  //    val createPost = withSchema { (p: Post) =>
-  //      cql"""
-  //        INSERT INTO test1.posts (id, title, author_name)
-  //        VALUES (${p.id}, ${p.title}, ${p.author_name}) IF NOT EXISTS;
-  //      """.prepared.executeAsync
-  //    }
-  //    createPost(Post(UUID.randomUUID(), "Author", "Title")): Future[ResultSet]
-  //
-  //  }
+  it should "support INSERT" in {
+    val createPost = withSchema { (p: AuthorAndPost) =>
+      cql"""
+        INSERT INTO test.posts (author_id, post_id , author_name , post_rating, post_title)
+        VALUES ( ${p.authorId}, ${p.postId}, ${p.authorName}, ${p.postRating}, ${p.postTitle}) ;
+      """.prepared.executeAsync
+    }
+    createPost(AuthorAndPost(UUID.randomUUID(), UUID.randomUUID(), "Author", 5, "Title")).futureValue
+  }
+
+  it should "support INSERT with if not exists flat" in {
+    val createPost = withSchema { (p: AuthorAndPost) =>
+      cql"""
+        INSERT INTO test.posts (author_id, post_id , author_name , post_rating, post_title)
+        VALUES ( ${p.authorId}, ${p.postId}, ${p.authorName}, ${p.postRating}, ${p.postTitle})
+        IF NOT EXISTS;
+      """.prepared.execute.oneOption.as(identity[Boolean] _)
+    }
+    createPost(AuthorAndPost(UUID.randomUUID(), UUID.randomUUID(), "Author", 5, "Title")).get shouldBe true
+  }
 
   // TODO: https://github.com/tabdulradi/troy/issues/34
   //  it should "support Update" in {

@@ -39,8 +39,10 @@ case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Opti
     } yield (rowType, variableTypes)
 
   private def extractRowType(query: DataManipulation): Result[RowType] = query match {
-    case select: SelectStatement =>
-      extractRowType(select)
+    case stmt: SelectStatement =>
+      extractRowType(stmt)
+    case stmt: InsertStatement =>
+      extractRowType(stmt)
     case _ =>
       success(Columns(Seq.empty)) // TODO: Statements with If Not exists should return a row with a single boolean [applied flat]
   }
@@ -57,10 +59,20 @@ case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Opti
       }).right.map(RowType.fromColumns)
   }
 
+  private def extractRowType(query: InsertStatement): Result[RowType] =
+    success(Columns(
+      if (query.ifNotExists)
+        Seq(DataType.boolean)
+      else
+        Seq.empty
+    ))
+
   private def extractVariableTypes(statement: DataManipulation): Result[Seq[DataType]] = statement match {
-    case SelectStatement(_, _, from, Some(where), _, _, _, _) => extractVariableTypes(from, where)
-    case SelectStatement(_, _, from, None, _, _, _, _)        => success(Seq.empty)
-    case _                                                    => ???
+    case SelectStatement(_, _, from, Some(where), _, _, _, _)              => extractVariableTypes(from, where)
+    case SelectStatement(_, _, from, None, _, _, _, _)                     => success(Seq.empty)
+    case InsertStatement(table, clause: InsertStatement.NamesValues, _, _) => extractVariableTypes(table, clause)
+    case InsertStatement(table, clause: InsertStatement.JsonClause, _, _)  => success(Seq.empty)
+    case _                                                                 => ???
   }
 
   private def extractVariableTypes(table: TableName, where: SelectStatement.WhereClause): Result[Seq[DataType]] =
@@ -80,6 +92,17 @@ case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Opti
       case SelectStatement.WhereClause.Relation.Tupled(identifiers, _, _) => ???
       case SelectStatement.WhereClause.Relation.Token(_, identifiers, _)  => ???
     })
+
+  private def extractVariableTypes(table: TableName, insertClause: InsertStatement.NamesValues): Result[Seq[DataType]] =
+    for {
+      table <- getTable(table).right
+      bindableColumns <- getColumns(
+        table,
+        (insertClause.columnNames zip insertClause.values.values).collect {
+          case (identifier, _: BindMarker) => identifier
+        }
+      ).right
+    } yield bindableColumns.map(_.dataType)
 
   private def apply(table: TableName, columns: Seq[String]): Result[Seq[CreateTable.Column]] =
     getColumns(table.keyspace, table.table, columns)
