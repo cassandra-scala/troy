@@ -11,7 +11,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest._
 import scala.concurrent.duration._
 
-trait BaseSpec extends FlatSpec with BeforeAndAfterAll with BeforeAndAfterEach with ScalaFutures with Matchers {
+trait CassandraSpec extends FlatSpec with BeforeAndAfterAll with BeforeAndAfterEach with ScalaFutures with Matchers {
   def port: Int = 9142
   def host: String = "127.0.0.1"
 

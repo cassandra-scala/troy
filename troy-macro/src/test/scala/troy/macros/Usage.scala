@@ -26,7 +26,7 @@ import scala.concurrent.Future
  * Very high level tests, mostly happy path
  * to highlight main usecases of the project
  */
-class Usage extends BaseSpec {
+class Usage extends CassandraSpec {
   import troy.driver.DSL._
   import troy.dsl._
 

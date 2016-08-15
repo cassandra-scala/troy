@@ -22,7 +22,7 @@ import com.datastax.driver.core._
 
 import scala.concurrent.Future
 
-class DslSpec extends BaseSpec {
+class DslSpec extends CassandraSpec {
 
   import troy.driver.DSL._
   import troy.dsl._

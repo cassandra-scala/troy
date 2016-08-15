@@ -22,7 +22,7 @@ import com.datastax.driver.core.{ ResultSet, Row, Statement }
 
 import scala.concurrent.Future
 
-class TypesSpec extends BaseSpec {
+class TypesSpec extends CassandraSpec {
 
   import troy.driver.DSL._
   import troy.dsl._
