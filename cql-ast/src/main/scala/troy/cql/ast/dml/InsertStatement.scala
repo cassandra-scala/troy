@@ -7,7 +7,7 @@ case class InsertStatement(
   insertClause: InsertStatement.InsertClause,
   ifNotExists: Boolean,
   using: Option[Seq[InsertStatement.UpdateParam]]
-) extends Cql3Statement
+) extends DataManipulation
 object InsertStatement {
   sealed trait InsertClause
   case class NamesValues(columnNames: Seq[Identifier], values: TupleLiteral) extends InsertClause

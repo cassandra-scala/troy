@@ -38,6 +38,10 @@ package object macros {
     val rawQuery = qParts.map{case q"${p: String}" => p}.mkString("?")
     val schema = parseSchemaFromFileName("/schema.cql")(c)
     val query = parseQuery(rawQuery)
+    val (rowType, variableDataTypes) = schema(query) match {
+      case Right(data) => data
+      case Left(e)     => c.abort(c.enclosingPosition, e)
+    }
 
     val imports = Seq(
       q"import _root_.troy.dsl.InternalDsl._",
@@ -54,11 +58,10 @@ package object macros {
 
     val parser = expr match {
       case q"$root.as[..$paramTypes]($f)" =>
-        val columns = schema(query) match {
-          case Right(columns) => columns
-          case Left(e)        => c.abort(c.enclosingPosition, e)
-        }
-        val columnTypes = columns.map(column => translateColumnType(c)(column.dataType))
+        val columnTypes = translateColumnTypes(c)(rowType match {
+          case Schema.Asterisk(_) => c.abort(c.enclosingPosition, "Troy doesn't support using .as with Select * queries")
+          case Schema.Columns(types) => types
+        })
         val params = (paramTypes zip columnTypes).zipWithIndex.map {
           case ((p, c), i) =>
             q"column[$p]($i)(row).as[$c]"
@@ -70,11 +73,7 @@ package object macros {
 
 
     val body = {
-      val variableDataTypes = schema.extractVariableTypes(query) match {
-        case Right(columns) => columns
-        case Left(e)        => c.abort(c.enclosingPosition, e)
-      }
-      val translatedVariableTypes = variableDataTypes.map(dt => translateColumnType(c)(dt))
+      val translatedVariableTypes = translateColumnTypes(c)(variableDataTypes)
       val bodyParams = qParams.zip(translatedVariableTypes).map{ case (p, t) => q"param($p).as[$t]" }
       replaceCqlQuery(c)(expr, q"bind(prepared, ..$bodyParams)") match {
         case q"$root.as[..$paramTypes]($f)" => q"$root.parseAs(parser)"
@@ -171,9 +170,9 @@ package object macros {
     expand(original)
   }
 
-  private def translateColumnType(c: Context)(typ: DataType): c.universe.Tree = {
+  private def translateColumnTypes(c: Context)(types: Seq[DataType]) = {
     import c.universe._
-    typ match {
+    types map {
       case t: DataType.Native => translateNativeColumnType(c)(t)
       case t: DataType.Collection => translateCollectionColumnType(c)(t)
     }
@@ -246,7 +245,7 @@ package object macros {
         c.abort(c.universe.NoPosition, s"Failure during parsing the schema. Error ($msg) near line ${next.pos.line}, column ${next.pos.column}")
     }
 
-  def parseQuery(queryString: String)(implicit c: Context) = CqlParser.parseQuery(queryString) match {
+  def parseQuery(queryString: String)(implicit c: Context) = CqlParser.parseDML(queryString) match {
     case CqlParser.Success(result, _) =>
       result
     case CqlParser.Failure(msg, _) =>

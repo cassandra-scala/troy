@@ -18,6 +18,7 @@ package troy.cql.parser
 
 import org.scalatest._
 import troy.cql.ast._
+import troy.cql.ast.dml.SelectStatement
 
 class CqlParserTest extends FlatSpec with Matchers {
 
@@ -198,8 +199,11 @@ class CqlParserTest extends FlatSpec with Matchers {
 
   def parseQuery(statement: String) =
     CqlParser
-      .parseQuery(statement)
-      .get
+      .parseQuery(statement) match {
+        case CqlParser.Success(res: SelectStatement, _) => res
+        case CqlParser.Success(res, _)                  => fail(s"$res is not SelectStatement")
+        case CqlParser.Failure(msg, next)               => fail(s"Parse Failure: $msg, line = ${next.pos.line}, column = ${next.pos.column}")
+      }
 
   def parseSchema(statement: String) =
     CqlParser.parseSchema(statement) match {

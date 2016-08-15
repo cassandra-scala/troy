@@ -55,14 +55,21 @@ class Usage extends BaseSpec {
     }
     val result: Row = query().get
     result.getString("post_title") shouldBe "Title"
+
+    assertTypeError( // But fails to compile if parsing is needed
+      """
+        withSchema { () =>
+          cql"SELECT * FROM test.posts;".prepared.execute.oneOption.as(Post)
+        }
+      """.stripMargin
+    )
   }
 
-  it should "support parsing select * with class/function matching the whole table" in {
+  it should "support parsing select * without parsing" in {
     val query = withSchema { () =>
-      cql"SELECT * FROM test.posts;".prepared.execute.oneOption.as(AuthorAndPost)
+      cql"SELECT * FROM test.posts;".prepared.execute.oneOption
     }
-    val result: AuthorAndPost = query().get
-    result.postTitle shouldBe "Title"
+    query().get.getString("post_title") shouldBe "Title"
   }
 
   it should "support limit clause" in {

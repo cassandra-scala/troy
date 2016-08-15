@@ -16,9 +16,9 @@
 
 package troy.schema
 
-import troy.cql.ast.CreateTable.Column
 import troy.cql.ast._
 import org.scalatest._
+import troy.cql.ast.dml.SelectStatement
 
 class SchemaValidationTest extends FlatSpec with Matchers {
 
@@ -41,8 +41,17 @@ class SchemaValidationTest extends FlatSpec with Matchers {
       ), Some(CreateTable.PrimaryKey(Seq("author_id"), Seq("post_id"))), Nil)
     )).right.get
 
-    schema.getColumns(Some(KeyspaceName("test")), "posts", Seq(
-      "author_id", "author_name", "author_age", "post_id", "post_title"
-    )).right.get shouldBe Seq(authorId, authorName, authorAge, postId, postTitle)
+    schema(select(table("test", "posts"), "author_id", "author_name", "author_age", "post_id", "post_title"))
+      .right.get._1 shouldBe types(authorId, authorName, authorAge, postId, postTitle)
   }
+
+  def table(keyspace: String, table: String) = TableName(Some(KeyspaceName(keyspace)), table)
+
+  def select(table: TableName, columnNames: String*): SelectStatement = {
+    import SelectStatement._
+    val sci = columnNames.map(n => SelectionClauseItem(ColumnName(n), None))
+    SelectStatement(None, SelectClause(sci), table, None, None, None, None, false)
+  }
+
+  def types(columns: CreateTable.Column*) = Schema.Columns(columns.map(_.dataType))
 }

@@ -33,8 +33,8 @@ class withSchema extends scala.annotation.StaticAnnotation {
       }
     }
 
-    def translateColumnType(typ: DataType) = {
-      typ match {
+    def translateColumnTypes(types: Iterable[DataType]) = {
+      types map {
         case t: DataType.Native => translateNativeColumnType(t)
         case t: DataType.Collection => translateCollectionColumnType(t)
       }
@@ -102,7 +102,7 @@ class withSchema extends scala.annotation.StaticAnnotation {
           abort(s"Failure during parsing the schema. Error ($msg) near line ${next.pos.line}, column ${next.pos.column}")
       }
 
-    def parseQuery(queryString: String) = CqlParser.parseQuery(queryString) match {
+    def parseQuery(queryString: String) = CqlParser.parseDML(queryString) match {
       case CqlParser.Success(result, _) =>
         result
       case CqlParser.Failure(msg, _) =>
@@ -151,14 +151,17 @@ class withSchema extends scala.annotation.StaticAnnotation {
 
     val query = parseQuery(rawQuery)
 
+    val (rowType, variableDataTypes) = schema(query) match {
+      case Right(data) => data
+      case Left(e)     => abort(e)
+    }
+
     val parser = expr match {
       case q"$root.as[..$paramTypes](${f: Term.Name})" =>
-        val columns = schema(query) match {
-          case Right(columns) => columns
-          case Left(e)        => abort(e)
-        }
-
-        val columnTypes = columns.map(column => translateColumnType(column.dataType))
+        val columnTypes = translateColumnTypes(rowType match {
+          case Schema.Asterisk(_) => abort("Troy doesn't support using .as with Select * queries")
+          case Schema.Columns(types) => types
+        }).toSeq
 
         val params = (paramTypes zip columnTypes).zipWithIndex.map {
           case ((p, c), i) =>
@@ -171,10 +174,7 @@ class withSchema extends scala.annotation.StaticAnnotation {
     }
 
     val replacedExpr = {
-      val variableTypes = schema.extractVariableTypes(query) match {
-        case Right(columns) => columns.map(translateColumnType)
-        case Left(e)        => abort(e)
-      }
+      val variableTypes = translateColumnTypes(variableDataTypes)
 
       val bodyParams =
         qParams.zip(variableTypes).map{ case (p, t) => arg"param($p).as[$t]": Term.Arg}
