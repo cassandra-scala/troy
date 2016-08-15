@@ -11,7 +11,7 @@ case class SelectStatement(
   perPartitionLimit: Option[SelectStatement.LimitParam],
   limit: Option[SelectStatement.LimitParam],
   allowFiltering: Boolean
-) extends Cql3Statement
+) extends DataManipulation
 object SelectStatement {
   sealed trait Mod
   case object Json extends Mod

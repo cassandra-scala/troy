@@ -18,7 +18,7 @@ package troy.cql.ast
 
 trait Cql3Statement
 trait DataDefinition
-trait Manipulation
+trait DataManipulation
 
 case class CreateKeyspace(
   ifNotExists: Boolean,

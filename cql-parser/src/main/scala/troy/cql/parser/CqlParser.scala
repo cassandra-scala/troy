@@ -32,7 +32,7 @@ object CqlParser extends JavaTokenParsers with Helpers with TermParser with Sele
   def parseQuery(input: String): ParseResult[SelectStatement] =
     parse(phrase(selectStatement <~ semicolon.?), input)
 
-  def parseDML(input: String): ParseResult[Cql3Statement] =
+  def parseDML(input: String): ParseResult[DataManipulation] =
     parse(phrase(dmlDefinition <~ semicolon.?), input)
 
   ////////////////////////////////////////// Data Definition
@@ -113,13 +113,9 @@ object CqlParser extends JavaTokenParsers with Helpers with TermParser with Sele
       using ^^^^ CreateIndex.apply
   }
 
-  ///////////////////////////////////// Queries
-  def dmlDefinition: Parser[Cql3Statement] =
-    selectStatement | insertStatement
-
   ///////////////////////////////////// Data Manipulation
-  def dataChangeStatement: Parser[Cql3Statement] =
-    insertStatement | updateStatement | batchStatement | deleteStatement | truncateStatement
+  def dmlDefinition: Parser[DataManipulation] =
+    selectStatement | insertStatement // updateStatement | batchStatement | deleteStatement | truncateStatement
 
   def updateStatement: Parser[Cql3Statement] = ???
 
