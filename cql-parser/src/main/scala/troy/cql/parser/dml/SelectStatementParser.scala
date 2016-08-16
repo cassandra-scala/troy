@@ -1,10 +1,9 @@
 package troy.cql.parser.dml
 import troy.cql.ast.CqlParser._
-import troy.cql.ast.dml.SelectStatement
+import troy.cql.ast.dml.{ Operator, SelectStatement, WhereClause }
 import troy.cql.ast.dml.SelectStatement.OrderBy.{ Direction, Ordering }
-import troy.cql.ast.dml.WhereClause.{ Operator, Relation }
+import troy.cql.ast.dml.WhereClause.Relation
 import troy.cql.ast.dml.SelectStatement.{ OrderBy, _ }
-import troy.cql.ast.dml.WhereClause
 
 trait SelectStatementParser {
   def selectStatement: Parser[SelectStatement] = {

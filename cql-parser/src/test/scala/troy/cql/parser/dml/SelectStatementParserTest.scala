@@ -18,9 +18,9 @@ package troy.cql.parser.dml
 
 import org.scalatest._
 import troy.cql.ast._
-import troy.cql.ast.dml.SelectStatement
+import troy.cql.ast.dml.{ Operator, SelectStatement }
 import troy.cql.ast.dml.WhereClause.Relation.{ Simple, Token, Tupled }
-import troy.cql.ast.dml.WhereClause.{ Operator, Relation }
+import troy.cql.ast.dml.WhereClause.Relation
 
 class SelectStatementParserTest extends FlatSpec with Matchers {
   "Select Parser" should "parse simple select statements" in {

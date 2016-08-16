@@ -1,7 +1,7 @@
 package troy.schema
 
 import troy.cql.ast.{ CreateTable, DataType }
-import troy.cql.ast.dml.WhereClause.Operator
+import troy.cql.ast.dml.Operator
 
 object ColumnOps {
   implicit class Operations(val column: CreateTable.Column) extends AnyVal {
