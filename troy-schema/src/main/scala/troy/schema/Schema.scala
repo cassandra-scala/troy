@@ -75,22 +75,22 @@ case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Opti
     case _                                                                 => ???
   }
 
-  private def extractVariableTypes(table: TableName, where: SelectStatement.WhereClause): Result[Seq[DataType]] =
+  private def extractVariableTypes(table: TableName, where: WhereClause): Result[Seq[DataType]] =
     for {
       table <- getTable(table).right
       dts <- extractVariableTypes(table, where).right
     } yield dts
 
-  private def extractVariableTypes(table: CreateTable, where: SelectStatement.WhereClause): Result[Seq[DataType]] =
+  private def extractVariableTypes(table: CreateTable, where: WhereClause): Result[Seq[DataType]] =
     Result.flattenSeq(where.relations.map {
-      case SelectStatement.WhereClause.Relation.Simple(columnName, op, BindMarker.Anonymous) =>
+      case WhereClause.Relation.Simple(columnName, op, BindMarker.Anonymous) =>
         import ColumnOps.Operations
         for {
           column <- getColumn(table, columnName).right
           dt <- column.operandType(op).toRight(s"Operator $op doesn't support column type ${column.dataType}").right
         } yield Seq(dt)
-      case SelectStatement.WhereClause.Relation.Tupled(identifiers, _, _) => ???
-      case SelectStatement.WhereClause.Relation.Token(_, identifiers, _)  => ???
+      case WhereClause.Relation.Tupled(identifiers, _, _) => ???
+      case WhereClause.Relation.Token(_, identifiers, _)  => ???
     })
 
   private def extractVariableTypes(table: TableName, insertClause: InsertStatement.NamesValues): Result[Seq[DataType]] =

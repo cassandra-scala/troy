@@ -1,12 +1,13 @@
 package troy.cql.ast.dml
 
 import troy.cql.ast.{ BindMarker, DataType, Term, TupleLiteral, _ }
+import troy.cql.ast.dml.WhereClause
 
 case class SelectStatement(
   mod: Option[SelectStatement.Mod],
   selection: SelectStatement.Selection,
   from: TableName,
-  where: Option[SelectStatement.WhereClause],
+  where: Option[WhereClause],
   orderBy: Option[SelectStatement.OrderBy],
   perPartitionLimit: Option[SelectStatement.LimitParam],
   limit: Option[SelectStatement.LimitParam],
@@ -28,31 +29,6 @@ object SelectStatement {
   case class Cast(selector: Selector, as: DataType) extends Selector
   case class Function(functionName: FunctionName, params: Seq[Selector]) extends Selector // Non empty
   case object Count extends Selector
-
-  case class WhereClause(relations: Seq[WhereClause.Relation])
-  object WhereClause {
-
-    trait Operator
-    object Operator {
-      case object Equals extends Operator
-      case object LessThan extends Operator
-      case object GreaterThan extends Operator
-      case object LessThanOrEqual extends Operator
-      case object GreaterThanOrEqual extends Operator
-      case object NotEquals extends Operator
-      case object In extends Operator
-      case object Contains extends Operator
-      case object ContainsKey extends Operator
-    }
-
-    trait Relation
-    object Relation {
-      case class Simple(columnName: ColumnName, operator: Operator, term: Term) extends Relation
-      case class Tupled(columnNames: Seq[ColumnName], operator: Operator, term: TupleLiteral) extends Relation
-      case class Token(columnNames: Seq[ColumnName], operator: Operator, term: Term) extends Relation
-    }
-
-  }
 
   sealed trait LimitParam
   case class LimitValue(value: String) extends LimitParam

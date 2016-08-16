@@ -2,8 +2,9 @@ package troy.cql.parser.dml
 import troy.cql.ast.CqlParser._
 import troy.cql.ast.dml.SelectStatement
 import troy.cql.ast.dml.SelectStatement.OrderBy.{ Direction, Ordering }
-import troy.cql.ast.dml.SelectStatement.WhereClause.{ Operator, Relation }
-import troy.cql.ast.dml.SelectStatement.{ OrderBy, WhereClause, _ }
+import troy.cql.ast.dml.WhereClause.{ Operator, Relation }
+import troy.cql.ast.dml.SelectStatement.{ OrderBy, _ }
+import troy.cql.ast.dml.WhereClause
 
 trait SelectStatementParser {
   def selectStatement: Parser[SelectStatement] = {
@@ -57,10 +58,9 @@ trait SelectStatementParser {
           lte | gte | eq | lt | gt | noteq | in | containsKey | contains
         }
 
-        def columnName = identifier ^^ ColumnName
-        def columnNames = parenthesis(rep1sep(columnName, ","))
+        def columnNames = parenthesis(rep1sep(identifier, ","))
 
-        def simple = columnName ~ op ~ term ^^^^ Simple
+        def simple = identifier ~ op ~ term ^^^^ Simple
         def tupled = columnNames ~ op ~ tupleLiteral ^^^^ Tupled
         def token = "TOKEN".i ~> columnNames ~ op ~ term ^^^^ Token
 

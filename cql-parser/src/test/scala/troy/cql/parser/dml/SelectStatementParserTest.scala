@@ -19,8 +19,8 @@ package troy.cql.parser.dml
 import org.scalatest._
 import troy.cql.ast._
 import troy.cql.ast.dml.SelectStatement
-import troy.cql.ast.dml.SelectStatement.WhereClause.Relation.{ Simple, Token, Tupled }
-import troy.cql.ast.dml.SelectStatement.WhereClause.{ Operator, Relation }
+import troy.cql.ast.dml.WhereClause.Relation.{ Simple, Token, Tupled }
+import troy.cql.ast.dml.WhereClause.{ Operator, Relation }
 
 class SelectStatementParserTest extends FlatSpec with Matchers {
   "Select Parser" should "parse simple select statements" in {
@@ -231,7 +231,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     statement.where.isDefined shouldBe true
     val relations = statement.where.get.relations
     relations.size shouldBe 1
-    relations(0).asInstanceOf[Relation.Simple].columnName.name shouldBe "userid"
+    relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "userid"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
     relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "199"
   }
@@ -259,7 +259,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     val relations = statement.where.get.relations
     relations.size shouldBe 1
     val relation = relations(0).asInstanceOf[Simple]
-    relation.columnName.name shouldBe "userid"
+    relation.columnName shouldBe "userid"
     relation.operator shouldBe Operator.In
     val tupleLiteral = relation.term.asInstanceOf[TupleLiteral]
     tupleLiteral.values.size shouldBe 3
@@ -290,15 +290,15 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     statement.where.isDefined shouldBe true
     val relations = statement.where.get.relations
     relations.size shouldBe 3
-    relations(0).asInstanceOf[Relation.Simple].columnName.name shouldBe "event_type"
+    relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "event_type"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
     relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "myEvent"
 
-    relations(1).asInstanceOf[Relation.Simple].columnName.name shouldBe "time"
+    relations(1).asInstanceOf[Relation.Simple].columnName shouldBe "time"
     relations(1).asInstanceOf[Relation.Simple].operator shouldBe Operator.GreaterThan
     relations(1).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "2011-02-03"
 
-    relations(2).asInstanceOf[Relation.Simple].columnName.name shouldBe "time"
+    relations(2).asInstanceOf[Relation.Simple].columnName shouldBe "time"
     relations(2).asInstanceOf[Relation.Simple].operator shouldBe Operator.LessThanOrEqual
     relations(2).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "2012-01-01"
 
@@ -326,19 +326,19 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     statement.where.isDefined shouldBe true
     val relations = statement.where.get.relations
     relations.size shouldBe 4
-    relations(0).asInstanceOf[Relation.Simple].columnName.name shouldBe "userid"
+    relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "userid"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
     relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "john doe"
 
-    relations(1).asInstanceOf[Relation.Simple].columnName.name shouldBe "blog_title"
+    relations(1).asInstanceOf[Relation.Simple].columnName shouldBe "blog_title"
     relations(1).asInstanceOf[Relation.Simple].operator shouldBe Operator.NotEquals
     relations(1).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "Spam"
 
-    relations(2).asInstanceOf[Relation.Simple].columnName.name shouldBe "posted_at"
+    relations(2).asInstanceOf[Relation.Simple].columnName shouldBe "posted_at"
     relations(2).asInstanceOf[Relation.Simple].operator shouldBe Operator.GreaterThanOrEqual
     relations(2).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "2012-01-01"
 
-    relations(3).asInstanceOf[Relation.Simple].columnName.name shouldBe "posted_at"
+    relations(3).asInstanceOf[Relation.Simple].columnName shouldBe "posted_at"
     relations(3).asInstanceOf[Relation.Simple].operator shouldBe Operator.LessThan
     relations(3).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "2012-01-31"
   }
@@ -359,7 +359,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 2
     val relation1 = relations(0).asInstanceOf[Token]
     relation1.columnNames.size shouldBe 1
-    relation1.columnNames(0).name shouldBe "userid"
+    relation1.columnNames(0) shouldBe "userid"
     relation1.operator shouldBe Operator.GreaterThan
     relation1.term.asInstanceOf[FunctionCall].functionName shouldBe "token"
     relation1.term.asInstanceOf[FunctionCall].params.size shouldBe 1
@@ -367,7 +367,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
 
     val relation2 = relations(1).asInstanceOf[Token]
     relation2.columnNames.size shouldBe 1
-    relation2.columnNames(0).name shouldBe "userid"
+    relation2.columnNames(0) shouldBe "userid"
     relation2.operator shouldBe Operator.LessThan
     relation2.term.asInstanceOf[FunctionCall].functionName shouldBe "token"
     relation2.term.asInstanceOf[FunctionCall].params.size shouldBe 1
@@ -391,14 +391,14 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 2
 
     val relation1 = relations(0).asInstanceOf[Simple]
-    relation1.columnName.name shouldBe "userid"
+    relation1.columnName shouldBe "userid"
     relation1.operator shouldBe Operator.Equals
     relation1.term.asInstanceOf[Constant].raw shouldBe "john doe"
 
     val relation2 = relations(1).asInstanceOf[Tupled]
     relation2.columnNames.size shouldBe 2
-    relation2.columnNames(0).name shouldBe "blog_title"
-    relation2.columnNames(1).name shouldBe "posted_at"
+    relation2.columnNames(0) shouldBe "blog_title"
+    relation2.columnNames(1) shouldBe "posted_at"
     relation2.operator shouldBe Operator.GreaterThan
     val tupleLiteral: TupleLiteral = relation2.term.asInstanceOf[TupleLiteral]
     tupleLiteral.values.size shouldBe 2
@@ -413,7 +413,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     statement.where.isDefined shouldBe true
     val relations = statement.where.get.relations
     relations.size shouldBe 1
-    relations(0).asInstanceOf[Relation.Simple].columnName.name shouldBe "author_name"
+    relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "author_name"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
     relations(0).asInstanceOf[Relation.Simple].term shouldBe BindMarker.Anonymous
   }
@@ -424,7 +424,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     statement.where.isDefined shouldBe true
     val relations = statement.where.get.relations
     relations.size shouldBe 1
-    relations(0).asInstanceOf[Relation.Simple].columnName.name shouldBe "author_name"
+    relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "author_name"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
     relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[BindMarker.Named].name shouldBe "x"
   }
@@ -451,15 +451,15 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     statement.where.isDefined shouldBe true
     val relations = statement.where.get.relations
     relations.size shouldBe 3
-    relations(0).asInstanceOf[Relation.Simple].columnName.name shouldBe "event_type"
+    relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "event_type"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
     relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "myEvent"
 
-    relations(1).asInstanceOf[Relation.Simple].columnName.name shouldBe "time"
+    relations(1).asInstanceOf[Relation.Simple].columnName shouldBe "time"
     relations(1).asInstanceOf[Relation.Simple].operator shouldBe Operator.GreaterThan
     relations(1).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "2011-02-03"
 
-    relations(2).asInstanceOf[Relation.Simple].columnName.name shouldBe "time"
+    relations(2).asInstanceOf[Relation.Simple].columnName shouldBe "time"
     relations(2).asInstanceOf[Relation.Simple].operator shouldBe Operator.LessThanOrEqual
     relations(2).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "2012-01-01"
 
