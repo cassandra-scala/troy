@@ -1,7 +1,7 @@
 package troy.cql.parser.dml
 
 import troy.cql.ast.CqlParser._
-import troy.cql.ast.dml
+import troy.cql.ast.dml._
 import troy.cql.ast.dml.InsertStatement
 
 trait InsertStatementParser {

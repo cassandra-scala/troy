@@ -6,7 +6,7 @@ case class InsertStatement(
   into: TableName,
   insertClause: InsertStatement.InsertClause,
   ifNotExists: Boolean,
-  using: Option[Seq[InsertStatement.UpdateParam]]
+  using: Option[Seq[UpdateParam]]
 ) extends DataManipulation
 object InsertStatement {
   sealed trait InsertClause
@@ -16,12 +16,4 @@ object InsertStatement {
   sealed trait Default
   case object NullValue extends Default
   case object Unset extends Default
-
-  sealed trait UpdateParam
-  case class Timestamp(value: UpdateParamValue) extends UpdateParam
-  case class Ttl(value: UpdateParamValue) extends UpdateParam
-
-  sealed trait UpdateParamValue
-  case class UpdateValue(value: String) extends UpdateParamValue
-  case class UpdateVariable(bindMarker: BindMarker) extends UpdateParamValue
 }

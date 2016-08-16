@@ -1,10 +1,9 @@
 package troy.cql.parser.dml
 
 import org.scalatest.{ FlatSpec, Matchers }
-import troy.cql.ast.dml.InsertStatement
+import troy.cql.ast.dml.{ InsertStatement, Timestamp, Ttl, UpdateValue }
 import troy.cql.ast._
 import org.scalatest._
-import troy.cql.ast.dml.InsertStatement.UpdateValue
 
 class InsertStatementParserTest extends FlatSpec with Matchers {
 
@@ -77,7 +76,7 @@ class InsertStatementParserTest extends FlatSpec with Matchers {
     statement.using.isDefined shouldBe true
 
     statement.using.size shouldBe 1
-    val ttl = statement.using.get(0).asInstanceOf[InsertStatement.Ttl]
+    val ttl = statement.using.get(0).asInstanceOf[Ttl]
     ttl.value.asInstanceOf[UpdateValue].value shouldBe "86400"
   }
 
@@ -104,7 +103,7 @@ class InsertStatementParserTest extends FlatSpec with Matchers {
     statement.using.isDefined shouldBe true
 
     statement.using.size shouldBe 1
-    val ttl = statement.using.get(0).asInstanceOf[InsertStatement.Timestamp]
+    val ttl = statement.using.get(0).asInstanceOf[Timestamp]
     ttl.value.asInstanceOf[UpdateValue].value shouldBe "86400"
   }
 
