@@ -18,14 +18,15 @@ package troy.cql.ast
 
 import troy.cql.ast.CreateIndex.IndexIdentifier
 import troy.cql.ast._
-import troy.cql.ast.dml.SelectStatement
+import troy.cql.ast.dml._
+import troy.cql.ast.dml.{ SelectStatement, UpdateParam, UpdateParamValue, UpdateVariable }
 import troy.cql.parser.{ Helpers, TermParser }
-import troy.cql.parser.dml.{ SelectStatementParser, InsertStatementParser }
+import troy.cql.parser.dml.{ DeleteStatementParser, InsertStatementParser, SelectStatementParser }
 
 import scala.util.parsing.combinator._
 
 // Based on CQLv3.4.3: https://cassandra.apache.org/doc/latest/cql/index.html
-object CqlParser extends JavaTokenParsers with Helpers with TermParser with SelectStatementParser with InsertStatementParser {
+object CqlParser extends JavaTokenParsers with Helpers with TermParser with SelectStatementParser with InsertStatementParser with DeleteStatementParser {
   def parseSchema(input: String): ParseResult[Seq[DataDefinition]] =
     parse(phrase(rep(dataDefinition <~ semicolon)), input)
 
@@ -115,13 +116,11 @@ object CqlParser extends JavaTokenParsers with Helpers with TermParser with Sele
 
   ///////////////////////////////////// Data Manipulation
   def dmlDefinition: Parser[DataManipulation] =
-    selectStatement | insertStatement // updateStatement | batchStatement | deleteStatement | truncateStatement
+    selectStatement | insertStatement | deleteStatement // updateStatement | batchStatement | truncateStatement
 
   def updateStatement: Parser[Cql3Statement] = ???
 
   def batchStatement: Parser[Cql3Statement] = ???
-
-  def deleteStatement: Parser[Cql3Statement] = ???
 
   def truncateStatement: Parser[Cql3Statement] = ???
 
@@ -184,6 +183,63 @@ object CqlParser extends JavaTokenParsers with Helpers with TermParser with Sele
   def tableName: Parser[TableName] = (keyspaceName <~ ".").? ~ identifier ^^^^ TableName
 
   def ifNotExists: Parser[Boolean] = "if not exists".flag
+
+  def UpdateParamValue: Parser[UpdateParamValue] = {
+    def updateValue = Constants.integer ^^ UpdateValue
+    def updateVariable = bindMarker ^^ UpdateVariable
+
+    updateValue | updateVariable
+  }
+
+  def updateParam: Parser[UpdateParam] = {
+    def timestamp = "TIMESTAMP".i ~> UpdateParamValue ^^ Timestamp
+    def ttl = "TTL".i ~> UpdateParamValue ^^ Ttl
+
+    timestamp | ttl
+  }
+
+  def using = "USING".i ~> rep1sep(updateParam, "AND".i)
+
+  def simpleSelection: Parser[SimpleSelection] = {
+    def columnNameSelection = identifier ^^ ColumnNameSelection
+    def columnNameSelectionWithTerm = identifier ~ squareBrackets(term) ^^^^ ColumnNameSelectionWithTerm
+    def columnNameSelectionWithFieldName = (identifier <~ ".") ~ "[a-zA-Z0-9_]+".r ^^^^ ColumnNameSelectionWithFieldName
+
+    columnNameSelectionWithTerm | columnNameSelectionWithFieldName | columnNameSelection
+  }
+  def operator: Parser[Operator] = {
+    import Operator._
+    def eq = "=".r ^^^ Equals
+    def lt = "<".r ^^^ LessThan
+    def gt = ">".r ^^^ GreaterThan
+    def lte = "<=".r ^^^ LessThanOrEqual
+    def gte = ">=".r ^^^ GreaterThanOrEqual
+    def noteq = "!=".r ^^^ NotEquals
+    def in = "IN".r ^^^ In
+    def contains = "CONTAINS".i ^^^ Contains
+    def containsKey = "CONTAINS KEY".i ^^^ ContainsKey
+
+    lte | gte | eq | lt | gt | noteq | in | containsKey | contains
+  }
+
+  def where: Parser[WhereClause] = {
+    import WhereClause._
+    def relation: Parser[Relation] = {
+      import Relation._
+
+      def columnNames = parenthesis(rep1sep(identifier, ","))
+
+      def simple = identifier ~ operator ~ term ^^^^ Simple
+      def tupled = columnNames ~ operator ~ tupleLiteral ^^^^ Tupled
+      def token = "TOKEN".i ~> columnNames ~ operator ~ term ^^^^ Token
+
+      simple | tupled | token
+    }
+
+    "WHERE".i ~> rep1sep(relation, "AND".i) ^^ WhereClause.apply
+  }
+
+  def condition = simpleSelection ~ operator ~ term ^^^^ SimpleCondition
 
   def dataType: Parser[DataType] = {
     def ascii = "ascii".i ^^^ DataType.ascii

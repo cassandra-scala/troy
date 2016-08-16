@@ -37,38 +37,6 @@ trait SelectStatementParser {
 
     def from = "FROM" ~> tableName
 
-    def where: Parser[WhereClause] = {
-      import WhereClause._
-      def relation: Parser[Relation] = {
-        import Relation._
-
-        def op: Parser[Operator] = {
-          import Operator._
-          def eq = "=".r ^^^ Equals
-          def lt = "<".r ^^^ LessThan
-          def gt = ">".r ^^^ GreaterThan
-          def lte = "<=".r ^^^ LessThanOrEqual
-          def gte = ">=".r ^^^ GreaterThanOrEqual
-          def noteq = "!=".r ^^^ NotEquals
-          def in = "IN".r ^^^ In
-          def contains = "CONTAINS".i ^^^ Contains
-          def containsKey = "CONTAINS KEY".i ^^^ ContainsKey
-
-          lte | gte | eq | lt | gt | noteq | in | containsKey | contains
-        }
-
-        def columnNames = parenthesis(rep1sep(identifier, ","))
-
-        def simple = identifier ~ op ~ term ^^^^ Simple
-        def tupled = columnNames ~ op ~ tupleLiteral ^^^^ Tupled
-        def token = "TOKEN".i ~> columnNames ~ op ~ term ^^^^ Token
-
-        simple | tupled | token
-      }
-
-      "WHERE".i ~> rep1sep(relation, "AND".i) ^^ WhereClause.apply
-    }
-
     def limitParam: Parser[SelectStatement.LimitParam] = {
       def limitValue = Constants.integer ^^ LimitValue
       def limitVariable = bindMarker ^^ LimitVariable

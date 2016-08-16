@@ -3,12 +3,14 @@ package troy.cql.ast.dml
 import troy.cql.ast.{ DataManipulation, TableName }
 
 case class DeleteStatement(
-  simpleSelection: Seq[SimpleSelection],
+  simpleSelection: Option[Seq[SimpleSelection]],
   from: TableName,
   using: Option[Seq[UpdateParam]],
-  where: Option[WhereClause],
-  ifCondition: Option[Condition]
+  where: WhereClause,
+  ifCondition: Option[DeleteStatement.IfCondition]
 ) extends DataManipulation
 object DeleteStatement {
-  case object Exist extends Condition
+  sealed trait IfCondition
+  case class SimpleIfCondition(conditions: Seq[Condition]) extends IfCondition
+  case class Exist(value: Boolean) extends IfCondition
 }

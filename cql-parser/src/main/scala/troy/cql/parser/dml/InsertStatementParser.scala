@@ -1,7 +1,6 @@
 package troy.cql.parser.dml
 
 import troy.cql.ast.CqlParser._
-import troy.cql.ast.dml._
 import troy.cql.ast.dml.InsertStatement
 
 trait InsertStatementParser {
@@ -30,22 +29,6 @@ trait InsertStatementParser {
     }
 
     def ifNotExists = "IF NOT EXISTS".flag
-
-    def UpdateParamValue: Parser[UpdateParamValue] = {
-      def updateValue = Constants.integer ^^ UpdateValue
-      def updateVariable = bindMarker ^^ UpdateVariable
-
-      updateValue | updateVariable
-    }
-
-    def updateParam: Parser[UpdateParam] = {
-      def timestamp = "TIMESTAMP".i ~> UpdateParamValue ^^ Timestamp
-      def ttl = "TTL".i ~> UpdateParamValue ^^ Ttl
-
-      timestamp | ttl
-    }
-
-    def using = "USING".i ~> rep1sep(updateParam, "AND".i)
 
     "INSERT".i ~>
       into ~
