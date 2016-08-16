@@ -17,6 +17,7 @@
 package troy.schema
 
 import troy.cql.ast._
+import troy.cql.ast.dml.SelectStatement.WhereClause.Relation
 import troy.cql.ast.dml._
 
 import scala.util.Left
@@ -28,7 +29,7 @@ trait Schema {
   def +(statement: DataDefinition): Result[Schema]
 }
 
-case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Option[KeyspaceName]) extends Schema {
+case class SchemaImpl(schema: Map[KeyspaceName, Map[CreateTable, Seq[CreateIndex]]], context: Option[KeyspaceName]) extends Schema {
   import Schema._
 
   override def apply(statement: DataManipulation) =
@@ -47,7 +48,12 @@ case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Opti
       success(Columns(Seq.empty)) // TODO: Statements with If Not exists should return a row with a single boolean [applied flat]
   }
 
-  private def validate(query: DataManipulation): Result[Unit] = success(())
+  private def validate(query: DataManipulation): Result[Unit] = query match {
+    case stmt: SelectStatement =>
+      validate(stmt)
+    case _ =>
+      success(())
+  }
 
   private def extractRowType(query: SelectStatement): Result[RowType] = query match {
     case SelectStatement(_, SelectStatement.Asterisk, table, _, _, _, _, _) =>
@@ -67,6 +73,30 @@ case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Opti
         Seq.empty
     ))
 
+  private def validate(query: SelectStatement): Result[Unit] = query match {
+    case SelectStatement(_, _, _, _, _, _, _, true) =>
+      success(())
+    case SelectStatement(_, _, table, Some(where), _, _, _, false) =>
+      val columnNames: Seq[Identifier] = where.relations.flatMap {
+        case Relation.Simple(columnName, _, _) => Seq(columnName.name)
+        case Relation.Tupled(columnNames, _, _) => columnNames.map(_.name)
+        case Relation.Token(columnNames, _, _) => columnNames.map(_.name)
+      }
+
+      //      val relations = where.relations
+      //      relations.match {
+      //        case Relation.Simple(columnName, _, _) =>
+      //          columnName.name.matches {
+      //            case pkey
+      //            case indx
+      //            case clastercol => check next relation
+      //          }
+      //      }
+
+      ???
+    case _ =>
+      success(())
+  }
   private def extractVariableTypes(statement: DataManipulation): Result[Seq[DataType]] = statement match {
     case SelectStatement(_, _, from, Some(where), _, _, _, _)              => extractVariableTypes(from, where)
     case SelectStatement(_, _, from, None, _, _, _, _)                     => success(Seq.empty)
@@ -179,6 +209,8 @@ case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Opti
       tables <- getKeyspace(keyspace).right
       _ <- (if (tableExists(tables, createTable)) fail(s"Table ${createTable.tableName} already exists") else success).right
     } yield copy(schema = schema + (keyspace -> (createTable +: tables)))
+
+  def withIndex(createIndex: CreateIndex) =
 }
 
 object Schema {
