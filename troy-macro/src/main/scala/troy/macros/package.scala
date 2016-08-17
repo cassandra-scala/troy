@@ -79,10 +79,11 @@ package object macros {
       }
     }
 
+    val fullBody = Seq(parser, body)
+
     val stats = imports ++ Seq(
       prepareStatement,
-      parser,
-      q"(..$params) => $body"
+      q"(..$params) => {..$fullBody}"
     ).filter(!_.isEmpty)
 
     c.Expr(log(q"{ ..$stats }"))
