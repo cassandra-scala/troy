@@ -15,7 +15,7 @@ object Build extends AutoPlugin {
 
   def compileSettings = Vector(
     // Core settings
-    organization := "com.abdulradi",
+    organization := "io.github.cassandra-scala",
     licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")),
     scalaVersion := Version.Scala,
     crossScalaVersions := Vector(scalaVersion.value),
@@ -47,15 +47,15 @@ object Build extends AutoPlugin {
 
     pomExtra := (
       <modules>
-        <module>cqlAst</module>
-        <module>cqlParser</module>
-        <module>troySchema</module>
-        <module>troyDriver</module>
-        <module>troyMacro</module>
+        <module>cql-ast</module>
+        <module>cql-parser</module>
+        <module>troy-schema</module>
+        <module>troy-driver</module>
+        <module>troy</module>
       </modules>
         <scm>
-          <url>git@github.com:tabdulradi/troy.git</url>
-          <connection>scm:git:git@github.com:tabdulradi/troy.git</connection>
+          <url>git@github.com:cassandra-scala/troy.git</url>
+          <connection>scm:git:git@github.com:cassandra-scala/troy.git</connection>
         </scm>
         <developers>
           <developer>
@@ -64,8 +64,6 @@ object Build extends AutoPlugin {
             <url>http://abdulradi.com</url>
           </developer>
         </developers>),
-
-    publishMavenStyle := false,
     licenses := ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0.txt")) :: Nil
   )
 

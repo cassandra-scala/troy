@@ -2,9 +2,11 @@ import sbt.Keys._
 
 lazy val cqlAst = project
   .in(file("cql-ast"))
+  .settings(name := "cql-ast")
 
 lazy val cqlParser = project
   .in(file("cql-parser"))
+  .settings(name := "cql-parser")
   .settings(libraryDependencies ++= Vector(
     Library.scalaTest % Test,
     Library.scalaParserCombinators
@@ -13,6 +15,7 @@ lazy val cqlParser = project
 
 lazy val troySchema = project
   .in(file("troy-schema"))
+  .settings(name := "troy-schema")
   .dependsOn(cqlParser)
   .settings(libraryDependencies ++= Vector(
     Library.scalaTest % Test
@@ -20,12 +23,13 @@ lazy val troySchema = project
 
 lazy val troyDriver = project
   .in(file("troy-driver"))
+  .settings(name := "troy-driver")
   .settings(libraryDependencies ++= Vector(
     Library.scalaTest % Test,
     Library.cassandraDriverCore
   ))
 
-lazy val troyMacro = project
+lazy val troy = project
   .in(file("troy-macro"))
   .settings(libraryDependencies ++= Vector(
     Library.scalaReflect,
@@ -40,6 +44,7 @@ lazy val troyMacro = project
 
 lazy val troyMeta = project
   .in(file("troy-meta"))
+  .settings(name := "troy-meta")
   .settings(libraryDependencies ++= Vector(
     Library.scalaMeta,
     Library.scalaTest % Test,
@@ -55,7 +60,7 @@ lazy val troyMeta = project
 
 lazy val root = project.in(file("."))
   .settings(name := "troy-root", publishArtifact := false, publish := {}, publishLocal := {})
-  .aggregate(troyMacro, troyDriver, troySchema, cqlParser, cqlAst)
+  .aggregate(troy, troyDriver, troySchema, cqlParser, cqlAst)
 
 initialCommands := """import java.util.UUID
                      |import troy.Troy
