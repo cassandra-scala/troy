@@ -1,18 +1,22 @@
+package demo99
+
 import java.util.UUID
+
 import com.datastax.driver.core._
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
 import troy.dsl._
-import scala.concurrent.ExecutionContext
+
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext}
+
 
 case class Post(
-  id: UUID,
-  authorName: String,
-  reviewerName: Option[String],
-  title: String,
-  rating: Option[Int],
-  tags: Seq[String]
-)
+                 id: UUID,
+                 authorName: String,
+                 reviewerName: Option[String],
+                 title: String,
+                 rating: Option[Int],
+                 tags: Seq[String]
+               )
 
 class PostService(implicit session: Session, ec: ExecutionContext) {
   // val create = withSchema { (authorId: String, post: Post) =>
