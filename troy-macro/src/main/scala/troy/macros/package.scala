@@ -24,6 +24,7 @@ import troy.cql.ast.DataType
 import troy.schema.Schema
 
 package object macros {
+  import CqlOps._
 
   def log[T](value: T): T = { println(value); value }
 
@@ -36,12 +37,9 @@ package object macros {
 
     val (qParts, qParams) = findCqlQuery(c)(expr)
     val rawQuery = qParts.map{case q"${p: String}" => p}.mkString("?")
-    val schema = parseSchemaFromFileName("/schema.cql")(c)
-    val query = parseQuery(rawQuery)
-    val (rowType, variableDataTypes) = schema(query) match {
-      case Right(data) => data
-      case Left(e)     => c.abort(c.enclosingPosition, e)
-    }
+    val schema = getOrAbort(loadOrParseSchema("/schema.cql"))
+    val query = getOrAbort(parseQuery(rawQuery))
+    val (rowType, variableDataTypes) = getOrAbort(schema(query))
 
     val imports = Seq(
       q"import _root_.troy.dsl.InternalDsl._",
@@ -66,7 +64,7 @@ package object macros {
           case ((p, c), i) =>
             q"column[$p]($i)(row).as[$c]"
         }
-        q"def parser(row: Row) = $f(..$params)"
+        q"def parser(row: _root_.com.datastax.driver.core.Row) = $f(..$params)"
       case _ =>
         q"" // Parser is ignored if ".as(...)" was omitted.
     }
@@ -218,38 +216,9 @@ package object macros {
     }
   }
 
-
-  def parseSchemaFromFileName(path: String)(implicit c: Context) =
-    parseSchemaFromInputStream(
-      Option(this.getClass.getResourceAsStream(path))
-        .getOrElse(c.abort(c.universe.NoPosition, s"Can't find schema file $path"))
-    )
-
-  def parseSchemaFromInputStream(schemaFile: InputStream)(implicit c: Context) =
-    parseSchemaFromSource(scala.io.Source.fromInputStream(schemaFile))
-
-  def parseSchemaFromSource(schema: Source)(implicit c: Context) = {
-    val lines = schema.getLines()
-    val str = lines.mkString("\n")
-    parseSchemaFromString(str)
-  }
-
-  def parseSchemaFromString(schema: String)(implicit c: Context) =
-    CqlParser.parseSchema(schema) match {
-      case CqlParser.Success(result, _) =>
-        Schema(result) match {
-          case Right(schema) => schema
-          case Left(e)       => c.abort(c.enclosingPosition, e)
-        }
-      case CqlParser.Failure(msg, next) =>
-        c.abort(c.universe.NoPosition, s"Failure during parsing the schema. Error ($msg) near line ${next.pos.line}, column ${next.pos.column}")
+  def getOrAbort[T](res: Schema.Result[T])(implicit c: Context) =
+    res match {
+      case Right(data) => data
+      case Left(e)     => c.abort(c.enclosingPosition, e)
     }
-
-  def parseQuery(queryString: String)(implicit c: Context) = CqlParser.parseDML(queryString) match {
-    case CqlParser.Success(result, _) =>
-      result
-    case CqlParser.Failure(msg, _) =>
-      c.abort(c.enclosingPosition, msg)
-  }
-
 }
