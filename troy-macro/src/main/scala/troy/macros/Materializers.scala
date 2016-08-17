@@ -43,6 +43,9 @@ object Materializers {
 
       case (st, ct) if !isPrimitive(st) =>
         q"troy.codecs.TroyCodec.wrap[$st, $ct]"
+
+      case (st, ct) =>
+        c.abort(c.enclosingPosition, s"Incompatible column type $st <--> $ct")
     })
   }
 

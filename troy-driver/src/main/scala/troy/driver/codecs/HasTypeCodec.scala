@@ -7,6 +7,9 @@ import java.util.{ Date, UUID }
 import com.datastax.driver.core.{ LocalDate, TypeCodec }
 import troy.driver.{ CassandraDataType => CT }
 
+import scala.annotation.implicitNotFound
+
+@implicitNotFound("Incompatible column type ${S} <--> ${C}")
 case class HasTypeCodec[S, C <: CT](typeCodec: TypeCodec[S]) extends AnyVal
 
 object HasTypeCodec {

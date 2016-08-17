@@ -87,7 +87,7 @@ case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Opti
         import ColumnOps.Operations
         for {
           column <- getColumn(table, columnName).right
-          dt <- column.operandType(op).toRight(s"Operator $op doesn't support column type ${column.dataType}").right
+          dt <- column.operandType(op).toRight(s"Operator '$op' doesn't support column type '${column.dataType}'").right
         } yield Seq(dt)
       case SelectStatement.WhereClause.Relation.Tupled(identifiers, _, _) => ???
       case SelectStatement.WhereClause.Relation.Token(_, identifiers, _)  => ???
@@ -135,7 +135,7 @@ case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Opti
     getColumn(table, columnName.name)
 
   private def getColumn(table: CreateTable, columnName: String): Result[CreateTable.Column] =
-    table.columns.find(_.name == columnName).toRight(s"Column $columnName not found")
+    table.columns.find(_.name == columnName).toRight(s"Column '$columnName' not found in table '${table.tableName}'")
 
   private def getColumns(table: CreateTable, columnNames: Seq[String]): Result[Seq[CreateTable.Column]] =
     Result.seq(columnNames.map(getColumn(table, _)))

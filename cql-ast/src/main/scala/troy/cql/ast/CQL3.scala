@@ -90,5 +90,7 @@ object ConsistencyLevel {
 }
 
 case class KeyspaceName(name: String)
-case class TableName(keyspace: Option[KeyspaceName], table: String)
+case class TableName(keyspace: Option[KeyspaceName], table: String) {
+  override def toString = keyspace.map(_.name + ".").getOrElse("") + table
+}
 case class FunctionName(keyspace: Option[KeyspaceName], table: String)

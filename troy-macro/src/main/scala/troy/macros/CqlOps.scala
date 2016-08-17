@@ -1,40 +1,33 @@
 package troy.macros
 
 import java.io.InputStream
-
 import troy.cql.ast.CqlParser
 import troy.schema.Schema
-
 import scala.io.Source
-import scala.reflect.macros.blackbox.Context
 
 object CqlOps {
-//  val loadOrParseSchema(path: String)
-  
-  def parseSchemaFromFileName(path: String) =
-    parseSchemaFromInputStream(
-      Option(this.getClass.getResourceAsStream(path))
-        .getOrElse(c.abort(c.universe.NoPosition, s"Can't find schema file $path"))
-    )
+  val loadOrParseSchema = Memoize(parseSchemaFromFileName)
 
-  def parseSchemaFromInputStream(schemaFile: InputStream) =
+  private def parseSchemaFromFileName(path: String): Schema.Result[Schema] =
+    Option(this.getClass.getResourceAsStream(path))
+      .map(parseSchemaFromInputStream)
+      .getOrElse(Schema.fail(s"Can't find schema file $path"))
+
+  private def parseSchemaFromInputStream(schemaFile: InputStream) =
     parseSchemaFromSource(scala.io.Source.fromInputStream(schemaFile))
 
-  def parseSchemaFromSource(schema: Source) = {
+  private def parseSchemaFromSource(schema: Source) = {
     val lines = schema.getLines()
     val str = lines.mkString("\n")
     parseSchemaFromString(str)
   }
 
-  def parseSchemaFromString(schema: String) =
+  private def parseSchemaFromString(schema: String) =
     CqlParser.parseSchema(schema) match {
       case CqlParser.Success(result, _) =>
-        Schema(result) match {
-          case Right(schema) => schema
-          case Left(e)       => c.abort(c.enclosingPosition, e)
-        }
+        Schema(result)
       case CqlParser.Failure(msg, next) =>
-        c.abort(c.universe.NoPosition, s"Failure during parsing the schema. Error ($msg) near line ${next.pos.line}, column ${next.pos.column}")
+        Schema.fail(s"Failure during parsing the schema. Error ($msg) near line ${next.pos.line}, column ${next.pos.column}")
     }
 
   def parseQuery(queryString: String) = CqlParser.parseDML(queryString) match {
