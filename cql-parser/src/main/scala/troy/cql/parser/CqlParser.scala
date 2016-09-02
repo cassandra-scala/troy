@@ -20,13 +20,14 @@ import troy.cql.ast.dml._
 import troy.cql.ast.dml.{ UpdateParam, UpdateParamValue, UpdateVariable }
 import troy.cql.parser.{ Helpers, TermParser }
 import troy.cql.parser.dml.{ DeleteStatementParser, InsertStatementParser, SelectStatementParser, UpdateStatementParser }
-import troy.cql.parser.ddl.{ CreateKeyspaceParser, CreateTableParser, CreateIndexParser }
+import troy.cql.parser.ddl.{ AlterTableParser, CreateIndexParser, CreateKeyspaceParser, CreateTableParser }
+
 import scala.util.parsing.combinator._
 
 // Based on CQLv3.4.3: https://cassandra.apache.org/doc/latest/cql/index.html
 object CqlParser extends JavaTokenParsers
     with Helpers with TermParser
-    with CreateKeyspaceParser with CreateTableParser with CreateIndexParser
+    with CreateKeyspaceParser with CreateTableParser with CreateIndexParser with AlterTableParser
     with SelectStatementParser with InsertStatementParser with DeleteStatementParser with UpdateStatementParser {
   def parseSchema(input: String): ParseResult[Seq[DataDefinition]] =
     parse(phrase(rep(dataDefinition <~ semicolon)), input)
@@ -39,7 +40,7 @@ object CqlParser extends JavaTokenParsers
 
   ////////////////////////////////////////// Data Definition
   def dataDefinition: Parser[DataDefinition] =
-    createKeyspace | createTable | createIndex
+    createKeyspace | createTable | createIndex | alterTableStatement
 
   def alterKeyspace: Parser[Cql3Statement] = ??? // <create-keyspace-stmt> ::= ALTER KEYSPACE <identifier> WITH <properties>
 
@@ -67,8 +68,6 @@ object CqlParser extends JavaTokenParsers
 
   def dropIndexStatement: Parser[Cql3Statement] = ???
 
-  def alterTableStatement: Parser[Cql3Statement] = ???
-
   def usingConsistencyLevelClause: Parser[ConsistencyLevel] = {
     def consistencyLevel = any | one | quorum | all | localQuorum | eachQuorum
     def any = "quorum".i ^^^ ConsistencyLevel.Any
@@ -86,7 +85,20 @@ object CqlParser extends JavaTokenParsers
   /*
    * <identifier> ::= any quoted or unquoted identifier, excluding reserved keywords
    */
+  def constant: Parser[Constant] = {
+    import Constants._
+    (string | number | uuid | boolean) ^^ Constant // | hex // TODO
+  }
   def identifier: Parser[Identifier] = "[a-zA-Z0-9_]+".r.filter(k => !Keywords.contains(k.toUpperCase))
+
+  def optionInstruction: Parser[OptionInstruction] = {
+    def identifierOption = identifier ~ ("=".i ~> identifier) ^^^^ IdentifierOption
+
+    def constantOption = identifier ~ ("=".i ~> constant) ^^^^ ConstantOption
+    def mapLiteralOption = identifier ~ ("=".i ~> mapLiteral) ^^^^ MapLiteralOption
+
+    constantOption | mapLiteralOption | identifierOption
+  }
 
   object Constants {
     def string = "'".r ~> """[^']*""".r <~ "'"

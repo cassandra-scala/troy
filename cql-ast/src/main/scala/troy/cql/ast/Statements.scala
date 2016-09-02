@@ -65,3 +65,9 @@ final case class CreateIndex(
   identifier: Index.IndexIdentifier,
   using: Option[Index.Using]
 ) extends DataDefinition
+
+final case class AlterTable(
+  tableName: TableName,
+  alterTableInstruction: Alter.AlterTableInstruction
+) extends DataDefinition
+

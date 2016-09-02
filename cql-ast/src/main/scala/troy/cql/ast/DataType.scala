@@ -49,4 +49,6 @@ object DataType {
 
   final case class Tuple(ts: Seq[DataType]) extends DataType
   final case class Custom(javaClass: String) extends DataType
+
+  final case class UserDefined(keyspaceName: KeyspaceName, identifier: Identifier) extends DataType
 }

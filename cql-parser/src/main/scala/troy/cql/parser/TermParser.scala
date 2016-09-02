@@ -4,12 +4,8 @@ import troy.cql.ast.CqlParser._
 import troy.cql.ast._
 
 trait TermParser {
-  def term: Parser[Term] = {
-    def constant: Parser[Constant] = {
-      import Constants._
-      (string | number | uuid | boolean) ^^ Constant // | hex // TODO
-    }
 
+  def term: Parser[Term] = {
     def functionCall: Parser[FunctionCall] =
       identifier ~ parenthesis(repsep(term, ",")) ^^^^ FunctionCall
 
