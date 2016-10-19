@@ -58,6 +58,14 @@ class UpdateSpec extends FlatSpec with Matchers {
     variableTypes.isEmpty shouldBe true
   }
 
+  it should "support simple update statement with NotEquals ops" in {
+    val statement = parse("UPDATE test.post_details SET title = 'Testing' WHERE author_id != ?;")
+    val (rowType, variableTypes) = schema(statement).get
+    rowType.asInstanceOf[SchemaEngine.Columns].types.isEmpty shouldBe true
+    variableTypes.size shouldBe 1
+    variableTypes(0) shouldBe DataType.Uuid
+  }
+
   it should "update statement with variables" in {
     val statement = parse("UPDATE test.posts SET post_title = 'Testing' WHERE author_id = ?; ")
     val (rowType, variableTypes) = schema(statement).get
