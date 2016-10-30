@@ -127,6 +127,23 @@ class DslSpec extends CassandraSpec {
     }
     q(): Option[Row]
   }
+
+  it should "support select with orderby" in {
+    val listByAuthor = withSchema { (authorId: UUID) =>
+      cql"""
+         SELECT author_id, author_name, post_title
+         FROM test.posts
+         WHERE author_id = $authorId
+         ORDER BY post_id DESC ;
+       """
+        .prepared
+        .executeAsync
+        .all
+        .as(Post)
+    }
+    listByAuthor(UUID.randomUUID()): Future[Seq[Post]]
+  }
+
   //    TODO https://github.com/tabdulradi/troy/issues/37
   //  it should "support parsing select * with class/function matching the whole table" in {
   //    val q = withSchema { () =>
