@@ -52,8 +52,6 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
       extractRowType(stmt)
     case stmt: UpdateStatement =>
       extractRowType(stmt)
-    case _ =>
-      V.Success(Columns(Seq.empty))
   }
 
   private def extractRowType(query: SelectStatement): Result[RowType] = query match {
@@ -97,7 +95,6 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
     case InsertStatement(table, clause: Insert.JsonClause, _, _)  => V.Success(Seq.empty)
     case s: DeleteStatement                                       => extractVariableTypes(s)
     case s: UpdateStatement                                       => extractVariableTypes(s)
-    case _                                                        => ???
   }
 
   private def extractVariableTypes(tableName: TableName, where: WhereClause): Result[Seq[DataType]] =

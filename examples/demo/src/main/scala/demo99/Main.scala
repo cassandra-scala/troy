@@ -4,9 +4,11 @@ import java.util.UUID
 
 import com.datastax.driver.core._
 import troy.dsl._
+import troy.driver.DSL._
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 
 case class Post(
@@ -19,11 +21,12 @@ case class Post(
                )
 
 class PostService(implicit session: Session, ec: ExecutionContext) {
-  // val create = withSchema { (authorId: String, post: Post) =>
-  //   cql""
-  //     .prepared
-  //     .as(Post)
-  // }
+  val create = withSchema { (authorId: String, title: String) =>
+    cql"""
+       INSERT INTO test.posts (author_id , post_id , post_title )
+       VALUES ( $authorId, now(), $title);
+     """.prepared.executeAsync
+  }
 
   val get = withSchema { (authorId: String, postId: UUID) =>
     cql"""
@@ -32,6 +35,30 @@ class PostService(implicit session: Session, ec: ExecutionContext) {
       WHERE author_id = $authorId AND post_id = $postId;
     """.prepared.as(Post)
   }
+
+  val listByAuthor = withSchema { (authorId: String) =>
+      cql"""
+         SELECT post_id, author_name, reviewer_name, post_title, post_rating, post_tags
+         FROM test.posts
+         WHERE author_id = $authorId
+       """
+        .prepared
+        .executeAsync
+        .as(Post)
+  }
+
+  val update = withSchema { (authorId: String, postId: UUID, newTitle: String) =>
+    cql"""
+       UPDATE test.posts SET post_title = $newTitle WHERE author_id = $authorId AND post_id = $postId;
+     """.prepared.executeAsync
+  }
+
+  val delete = withSchema { (authorId: String, postId: UUID) =>
+    cql"""
+       DELETE FROM test.posts WHERE author_id = $authorId AND post_id = $postId;
+     """.prepared.executeAsync
+  }
+
 }
 
 object Main extends App {
@@ -41,11 +68,26 @@ object Main extends App {
   private val cluster =
     new Cluster.Builder().addContactPoints(host).withPort(port).build()
 
-  val session: Session = cluster.connect()
+  implicit val session: Session = cluster.connect()
 
-  val posts = new PostService()(session, ExecutionContext.global)
-  val result = posts.get("1", UUID.randomUUID())
-  println(Await.result(result, Duration(1, "second")))
+  val postService = new PostService()
+
+
+  val result = for {
+    _ <- postService.create("test", "title")
+    posts <- postService.listByAuthor("test")
+    postId = posts.head.id
+    _ <- postService.update("test", postId, "new title")
+    updatedPost <- postService.get("test", postId)
+    _ <- postService.delete("test", postId)
+    deletedPosts <- postService.listByAuthor("test")
+  } yield (posts, updatedPost, deletedPosts)
+
+  val (posts, updatedPost, deletedPosts) = Await.result(result, Duration(1, "second"))
+
+  println(posts)
+  println(updatedPost)
+  println(deletedPosts)
 
   session.close()
   cluster.close()

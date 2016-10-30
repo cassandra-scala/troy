@@ -1,9 +1,11 @@
 package troy.driver.codecs
 
 import com.datastax.driver.core._
+import scala.annotation.implicitNotFound
 import scala.collection.JavaConverters._
 import troy.driver.{ CassandraDataType => CT }
 
+@implicitNotFound("Incompatible column type ${S} <--> ${C}")
 trait TroyCodec[S, C <: CT] {
   def get(gettable: GettableByIndexData, i: Int): S
   def set[T <: SettableByIndexData[T]](settable: T, i: Int, value: S): T
