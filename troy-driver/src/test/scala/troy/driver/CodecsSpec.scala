@@ -1,6 +1,6 @@
 package troy.driver
 
-import java.math.{BigInteger, BigDecimal}
+import java.math.{ BigInteger, BigDecimal }
 import java.net.InetAddress
 import java.nio.ByteBuffer
 import java.util.{ UUID, Date }

@@ -64,7 +64,7 @@ trait SelectStatementParser {
         def column_name = identifier ^^ ColumnName
         column_name ~ direction.? ^^^^ Ordering
       }
-      rep1sep(ordering, ",") ^^ OrderBy.apply
+      "ORDER BY".i ~> rep1sep(ordering, ",") ^^ OrderBy.apply
     }
 
     "SELECT".i ~>

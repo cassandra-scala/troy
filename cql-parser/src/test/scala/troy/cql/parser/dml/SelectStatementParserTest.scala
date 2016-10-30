@@ -18,6 +18,9 @@ package troy.cql.parser.dml
 
 import org.scalatest._
 import troy.cql.ast._
+import troy.cql.ast.dml.Select.OrderBy
+import troy.cql.ast.dml.Select.OrderBy.Ordering
+import troy.cql.ast.dml.SimpleSelection.ColumnName
 import troy.cql.ast.dml.{ Operator, Select }
 import troy.cql.ast.dml.WhereClause.Relation.{ Simple, Token, Tupled }
 import troy.cql.ast.dml.WhereClause.Relation
@@ -51,6 +54,34 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     statement.mod.isEmpty shouldBe true
     statement.where.isEmpty shouldBe true
     statement.orderBy.isEmpty shouldBe true
+    statement.perPartitionLimit.isEmpty shouldBe true
+    statement.limit.isEmpty shouldBe true
+    statement.allowFiltering shouldBe false
+
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
+    selection.items.size shouldBe 2
+
+    selection.items(0).selector shouldBe Select.ColumnName("name")
+    selection.items(0).as.isEmpty shouldBe true
+
+    selection.items(1).selector shouldBe Select.ColumnName("occupation")
+    selection.items(1).as.isEmpty shouldBe true
+  }
+
+  it should "parse simple select statements with order by" in {
+    val statement = parseQuery("SELECT name, occupation FROM test.users ORDER BY name DESC;").asInstanceOf[SelectStatement]
+    statement.from.keyspace.get.name shouldBe "test"
+    statement.from.table shouldBe "users"
+    statement.mod.isEmpty shouldBe true
+    statement.where.isEmpty shouldBe true
+    statement.orderBy.isDefined shouldBe true
+    statement.orderBy.get.orderings.size shouldBe 1
+
+    val orderings = statement.orderBy.get.orderings(0)
+    orderings.columnName.name shouldBe "name"
+    orderings.direction.isDefined shouldBe true
+    orderings.direction.get shouldBe OrderBy.Descending
+
     statement.perPartitionLimit.isEmpty shouldBe true
     statement.limit.isEmpty shouldBe true
     statement.allowFiltering shouldBe false
