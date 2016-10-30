@@ -72,6 +72,15 @@ class SelectSpec extends FlatSpec with Matchers {
     variableTypes shouldBe List(Uuid)
   }
 
+  it should "support SELECT statement with Map Literal field" in {
+    val statement = parse("SELECT comments FROM test.post_details WHERE comments CONTAINS {1: ?, 2: ?};")
+    val (rowType, variableTypes) = schema(statement).get
+
+    rowType.asInstanceOf[SchemaEngine.Columns].types shouldBe Seq(CMap(CInt, Text))
+    variableTypes shouldBe List(Text, Text)
+
+  }
+
   def parse(s: String) = CqlParser.parseDML(s) match {
     case CqlParser.Success(result, _) =>
       result
