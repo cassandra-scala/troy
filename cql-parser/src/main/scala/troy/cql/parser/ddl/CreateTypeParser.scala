@@ -11,12 +11,12 @@ trait CreateTypeParser {
       parenthesis(rep1sep(fieldParser, ","))
     }
 
-    val typeName = ".".i ~> identifier
+    def optionKeyspaceName = (keyspaceName <~ ".").?
 
     "CREATE TYPE".i ~>
       ifNotExists ~
-      keyspaceName ~
-      typeName ~
+      optionKeyspaceName ~
+      identifier ~
       fields ^^^^ CreateType.apply
   }
 }
