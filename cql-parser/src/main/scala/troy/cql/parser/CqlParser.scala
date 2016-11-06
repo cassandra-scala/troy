@@ -20,14 +20,14 @@ import troy.cql.ast.dml._
 import troy.cql.ast.dml.{ UpdateParam, UpdateParamValue, UpdateVariable }
 import troy.cql.parser.{ Helpers, TermParser }
 import troy.cql.parser.dml.{ DeleteStatementParser, InsertStatementParser, SelectStatementParser, UpdateStatementParser }
-import troy.cql.parser.ddl.{ AlterTableParser, CreateIndexParser, CreateKeyspaceParser, CreateTableParser }
+import troy.cql.parser.ddl._
 
 import scala.util.parsing.combinator._
 
 // Based on CQLv3.4.3: https://cassandra.apache.org/doc/latest/cql/index.html
 object CqlParser extends JavaTokenParsers
     with Helpers with TermParser
-    with CreateKeyspaceParser with CreateTableParser with CreateIndexParser with AlterTableParser
+    with CreateKeyspaceParser with CreateTableParser with CreateIndexParser with AlterTableParser with CreateTypeParser
     with SelectStatementParser with InsertStatementParser with DeleteStatementParser with UpdateStatementParser {
   def parseSchema(input: String): ParseResult[Seq[DataDefinition]] =
     parse(phrase(rep(dataDefinition <~ semicolon)), input)
@@ -40,7 +40,7 @@ object CqlParser extends JavaTokenParsers
 
   ////////////////////////////////////////// Data Definition
   def dataDefinition: Parser[DataDefinition] =
-    createKeyspace | createTable | createIndex | alterTableStatement
+    createKeyspace | createTable | createIndex | alterTableStatement | createTypeStatement
 
   ///////////////////////////////////// Data Manipulation
   def dmlDefinition: Parser[DataManipulation] =
@@ -87,6 +87,8 @@ object CqlParser extends JavaTokenParsers
    * <tablename> ::= (<identifier> '.')? <identifier>
    */
   def tableName: Parser[TableName] = (keyspaceName <~ ".").? ~ identifier ^^^^ TableName
+
+  def typeName: Parser[TypeName] = (keyspaceName <~ ".").? ~ identifier ^^^^ TypeName
 
   def ifNotExists: Parser[Boolean] = "if not exists".flag
 

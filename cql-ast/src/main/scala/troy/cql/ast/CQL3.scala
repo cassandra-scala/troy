@@ -32,3 +32,7 @@ final case class TableName(keyspace: Option[KeyspaceName], table: String) {
   override def toString = keyspace.map(_.name + ".").getOrElse("") + table
 }
 final case class FunctionName(keyspace: Option[KeyspaceName], table: String)
+
+final case class TypeName(keyspace: Option[KeyspaceName], name: Identifier) {
+  override def toString = keyspace.map(_.name + ".").getOrElse("") + name
+}
