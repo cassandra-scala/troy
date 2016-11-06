@@ -71,3 +71,9 @@ final case class AlterTable(
   alterTableInstruction: Alter.AlterTableInstruction
 ) extends DataDefinition
 
+final case class CreateType(
+ ifNotExists: Boolean,
+ keyspace: KeyspaceName,
+ typeName: Identifier,
+ fields: Seq[Field]
+)extends DataDefinition
