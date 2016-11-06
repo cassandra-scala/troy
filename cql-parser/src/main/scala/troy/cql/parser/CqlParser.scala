@@ -88,6 +88,8 @@ object CqlParser extends JavaTokenParsers
    */
   def tableName: Parser[TableName] = (keyspaceName <~ ".").? ~ identifier ^^^^ TableName
 
+  def typeName: Parser[TypeName] = (keyspaceName <~ ".").? ~ identifier ^^^^ TypeName
+
   def ifNotExists: Parser[Boolean] = "if not exists".flag
 
   def UpdateParamValue: Parser[UpdateParamValue] = {

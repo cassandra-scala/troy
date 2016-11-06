@@ -10,8 +10,8 @@ class CreateTypeParserTest extends FlatSpec with Matchers {
     val statement = parseSchemaAs[CreateType]("CREATE TYPE cycling.basic_info (birthday timestamp, nationality text, weight text, height text);")
 
     statement.ifNotExists shouldBe false
-    statement.keyspaceName.get.name shouldBe "cycling"
-    statement.typeName shouldBe "basic_info"
+    statement.typeName.keyspace.get.name shouldBe "cycling"
+    statement.typeName.name shouldBe "basic_info"
 
     val fields = statement.fields
 
@@ -28,8 +28,8 @@ class CreateTypeParserTest extends FlatSpec with Matchers {
     val statement = parseSchemaAs[CreateType]("CREATE TYPE address (street text, city text, zip_code int, phones set<text>);")
 
     statement.ifNotExists shouldBe false
-    statement.keyspaceName.isEmpty shouldBe true
-    statement.typeName shouldBe "address"
+    statement.typeName.keyspace.isEmpty shouldBe true
+    statement.typeName.name shouldBe "address"
 
     val fields = statement.fields
 
@@ -46,8 +46,8 @@ class CreateTypeParserTest extends FlatSpec with Matchers {
     val statement = parseSchemaAs[CreateType]("CREATE TYPE IF NOT EXISTS mykeyspace.address (street text, city text, zip_code int, phones set<text>);")
 
     statement.ifNotExists shouldBe true
-    statement.keyspaceName.get.name shouldBe "mykeyspace"
-    statement.typeName shouldBe "address"
+    statement.typeName.keyspace.get.name shouldBe "mykeyspace"
+    statement.typeName.name shouldBe "address"
 
     val fields = statement.fields
 
@@ -64,8 +64,8 @@ class CreateTypeParserTest extends FlatSpec with Matchers {
     val statement = parseSchemaAs[CreateType]("CREATE TYPE IF NOT EXISTS address (street text, city text, zip_code int, phones set<text>);")
 
     statement.ifNotExists shouldBe true
-    statement.keyspaceName.isEmpty shouldBe true
-    statement.typeName shouldBe "address"
+    statement.typeName.keyspace.isEmpty shouldBe true
+    statement.typeName.name shouldBe "address"
 
     val fields = statement.fields
 

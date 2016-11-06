@@ -11,12 +11,9 @@ trait CreateTypeParser {
       parenthesis(rep1sep(fieldParser, ","))
     }
 
-    def optionKeyspaceName = (keyspaceName <~ ".").?
-
     "CREATE TYPE".i ~>
       ifNotExists ~
-      optionKeyspaceName ~
-      identifier ~
+      typeName ~
       fields ^^^^ CreateType.apply
   }
 }

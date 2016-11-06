@@ -73,7 +73,6 @@ final case class AlterTable(
 
 final case class CreateType(
   ifNotExists: Boolean,
-  keyspaceName: Option[KeyspaceName],
-  typeName: Identifier,
+  typeName: TypeName,
   fields: Seq[Field]
 ) extends DataDefinition
