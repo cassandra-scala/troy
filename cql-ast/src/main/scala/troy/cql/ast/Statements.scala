@@ -72,8 +72,8 @@ final case class AlterTable(
 ) extends DataDefinition
 
 final case class CreateType(
- ifNotExists: Boolean,
- keyspace: KeyspaceName,
- typeName: Identifier,
- fields: Seq[Field]
-)extends DataDefinition
+  ifNotExists: Boolean,
+  keyspaceName: KeyspaceName,
+  typeName: Identifier,
+  fields: Seq[Field]
+) extends DataDefinition
