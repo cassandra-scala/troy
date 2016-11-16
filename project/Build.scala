@@ -18,7 +18,7 @@ object Build extends AutoPlugin {
     organization := "io.github.cassandra-scala",
     licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")),
     scalaVersion := Version.Scala,
-    crossScalaVersions := Vector(scalaVersion.value),
+    crossScalaVersions := Vector("2.11.8", "2.12.0"),
     scalacOptions ++= Vector(
       "-encoding", "UTF-8",
       "-target:jvm-1.8",

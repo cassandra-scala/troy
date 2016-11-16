@@ -21,7 +21,7 @@ Check our [examples](examples) for more usecases.
 ```
 resolvers += Resolver.bintrayRepo("tabdulradi", "maven")
 
-libraryDependencies += "io.github.cassandra-scala" %% "troy" % "0.3.0"
+libraryDependencies += "io.github.cassandra-scala" %% "troy" % "0.4.0"
 ```
 
 ### 2. Add schema.cql files
@@ -68,7 +68,7 @@ Troy wraps Cassandra's codecs in Typeclasses, to allow picking the correct codec
 This is also extensible, by defining an implicit `HasTypeCodec[YourType, CassandraType]`.
 
 ### Optional columns
-Troy handles optional values automically, by wrapping Cassandra's codec with `null` checking.
+Troy handles optional values automatically, by wrapping Cassandra's codec with `null` checking.
 All you need to do is define your classes to contain `Option[T]` like.
 ```
 case class Post(id: UUID, title: Option[String])
