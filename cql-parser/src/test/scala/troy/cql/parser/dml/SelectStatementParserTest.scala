@@ -639,12 +639,12 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 1
     relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "blog_title"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Like
-    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw should include ("John")
+    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "%John%"
   }
 
   it should "parse select statements with where clause and LIKE operator start with term" in {
     val statement = parseQuery(
-      "SELECT entry_title, content FROM posts WHERE blog_title LIKE 'J%';"
+      "SELECT entry_title, content FROM posts WHERE blog_title LIKE 'John%';"
     ).asInstanceOf[SelectStatement]
 
     statement.from.table shouldBe "posts"
@@ -668,7 +668,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 1
     relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "blog_title"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Like
-    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw should startWith ("J")
+    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "John%"
   }
 
   it should "parse select statements with where clause and LIKE operator end with term" in {
@@ -697,7 +697,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 1
     relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "blog_title"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Like
-    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw should endWith ("n")
+    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "%n"
   }
 
 }
