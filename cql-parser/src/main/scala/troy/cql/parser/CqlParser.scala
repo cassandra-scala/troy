@@ -135,8 +135,9 @@ object CqlParser extends JavaTokenParsers
     def in = "IN".r ^^^ In
     def contains = "CONTAINS".i ^^^ Contains
     def containsKey = "CONTAINS KEY".i ^^^ ContainsKey
+    def like = "LIKE".r ^^^ Like
 
-    lte | gte | eq | lt | gt | noteq | in | containsKey | contains
+    lte | gte | eq | lt | gt | noteq | in | containsKey | contains | like
   }
 
   def where: Parser[WhereClause] = {
