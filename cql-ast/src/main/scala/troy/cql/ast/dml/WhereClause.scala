@@ -23,4 +23,5 @@ object Operator {
   case object In extends Operator
   case object Contains extends Operator
   case object ContainsKey extends Operator
+  case object Like extends Operator
 }
