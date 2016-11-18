@@ -1,8 +1,21 @@
 package troy.cql.ast
 
+import java.sql.Blob
+import java.util.UUID
+
 sealed trait Term
 
-final case class Constant(raw: String) extends Term
+
+sealed trait Constant extends Term
+final case class StringConstant (raw: String) extends Constant
+final case class IntegerConstant (raw: Int) extends Constant
+final case class FloatConstant (raw: Float) extends Constant
+final case class BooleanConstant (raw: Boolean) extends Constant
+final case class UuidConstant (raw: UUID) extends Constant
+final case class BlobConstant (raw: Blob) extends Constant
+final case class NullConstant (raw: Null) extends Constant
+
+
 sealed trait Literal extends Term
 sealed trait CollectionLiteral extends Literal
 final case class MapLiteral(pairs: Seq[(Term, Term)]) extends CollectionLiteral
