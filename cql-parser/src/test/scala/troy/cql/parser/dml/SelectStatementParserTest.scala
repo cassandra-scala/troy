@@ -202,7 +202,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
 
     selector.functionName shouldBe "intAsBlob"
     val params = selector.params.asInstanceOf[Select.SelectTerm]
-    params shouldBe Constant("4") //TODO: Term Constant need refactor
+    params shouldBe StringConstant("4") //TODO: Term Constant need refactor
     selection.items(0).as.isEmpty shouldBe true
   }
 
@@ -223,7 +223,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
 
     selector.functionName shouldBe "intAsBlob"
     val params = selector.params.asInstanceOf[Select.SelectTerm]
-    params shouldBe Constant("4") //TODO: Term Constant need refactor
+    params shouldBe StringConstant("4") //TODO: Term Constant need refactor
     selection.items(0).as.get shouldBe "four"
   }
 
@@ -265,7 +265,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 1
     relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "userid"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
-    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "199"
+    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[IntegerConstant].value shouldBe "199"
   }
 
   it should "parse select statements with simple where clause with UUID term" in {
@@ -294,7 +294,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 1
     relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "userid"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
-    relations(0).asInstanceOf[Relation.Simple].term shouldBe Constant("01234567-0123-0123-0123-0123456789ab")
+    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[UuidConstant].value shouldBe "01234567-0123-0123-0123-0123456789ab"
   }
 
   it should "parse select statements with simple where clause with float term" in {
@@ -323,7 +323,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 1
     relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "weight"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
-    relations(0).asInstanceOf[Relation.Simple].term shouldBe Constant("50.4")
+    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[FloatConstant].value shouldBe "50.4"
   }
 
   it should "parse select statements with simple where clause with escaped quote" in {
@@ -352,7 +352,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 1
     relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "blog_title"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
-    relations(0).asInstanceOf[Relation.Simple].term shouldBe Constant("John's Blog")
+    relations(0).asInstanceOf[Relation.Simple].term shouldBe StringConstant("John's Blog")
   }
 
   it should "parse select statements with simple where clause with multiple escaped quote" in {
@@ -381,7 +381,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 1
     relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "blog_title"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
-    relations(0).asInstanceOf[Relation.Simple].term shouldBe Constant("This isn't John's Blog")
+    relations(0).asInstanceOf[Relation.Simple].term shouldBe StringConstant("This isn't John's Blog")
   }
 
   it should "parse select statements with where IN clause" in {
@@ -411,9 +411,9 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relation.operator shouldBe Operator.In
     val tupleLiteral = relation.term.asInstanceOf[TupleLiteral]
     tupleLiteral.values.size shouldBe 3
-    tupleLiteral.values(0) shouldBe Constant("199")
-    tupleLiteral.values(1) shouldBe Constant("200")
-    tupleLiteral.values(2) shouldBe Constant("207")
+    tupleLiteral.values(0) shouldBe IntegerConstant(199)
+    tupleLiteral.values(1) shouldBe IntegerConstant(200)
+    tupleLiteral.values(2) shouldBe IntegerConstant(207)
   }
 
   it should "parse select statements with where clause and = > <= operators" in {
@@ -440,15 +440,15 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 3
     relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "event_type"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
-    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "myEvent"
+    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[StringConstant].value shouldBe "myEvent"
 
     relations(1).asInstanceOf[Relation.Simple].columnName shouldBe "time"
     relations(1).asInstanceOf[Relation.Simple].operator shouldBe Operator.GreaterThan
-    relations(1).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "2011-02-03"
+    relations(1).asInstanceOf[Relation.Simple].term.asInstanceOf[StringConstant].value shouldBe "2011-02-03"
 
     relations(2).asInstanceOf[Relation.Simple].columnName shouldBe "time"
     relations(2).asInstanceOf[Relation.Simple].operator shouldBe Operator.LessThanOrEqual
-    relations(2).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "2012-01-01"
+    relations(2).asInstanceOf[Relation.Simple].term.asInstanceOf[StringConstant].value shouldBe "2012-01-01"
 
   }
 
@@ -476,19 +476,19 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 4
     relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "userid"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
-    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "john doe"
+    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[StringConstant].value shouldBe "john doe"
 
     relations(1).asInstanceOf[Relation.Simple].columnName shouldBe "blog_title"
     relations(1).asInstanceOf[Relation.Simple].operator shouldBe Operator.NotEquals
-    relations(1).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "Spam"
+    relations(1).asInstanceOf[Relation.Simple].term.asInstanceOf[StringConstant].value "Spam"
 
     relations(2).asInstanceOf[Relation.Simple].columnName shouldBe "posted_at"
     relations(2).asInstanceOf[Relation.Simple].operator shouldBe Operator.GreaterThanOrEqual
-    relations(2).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "2012-01-01"
+    relations(2).asInstanceOf[Relation.Simple].term.asInstanceOf[StringConstant].value "2012-01-01"
 
     relations(3).asInstanceOf[Relation.Simple].columnName shouldBe "posted_at"
     relations(3).asInstanceOf[Relation.Simple].operator shouldBe Operator.LessThan
-    relations(3).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "2012-01-31"
+    relations(3).asInstanceOf[Relation.Simple].term.asInstanceOf[StringConstant].value "2012-01-31"
   }
 
   it should "parse asterisk select statements with where clause token" in {
@@ -511,7 +511,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relation1.operator shouldBe Operator.GreaterThan
     relation1.term.asInstanceOf[FunctionCall].functionName shouldBe "token"
     relation1.term.asInstanceOf[FunctionCall].params.size shouldBe 1
-    relation1.term.asInstanceOf[FunctionCall].params(0) shouldBe Constant("tom")
+    relation1.term.asInstanceOf[FunctionCall].params(0) shouldBe StringConstant("tom")
 
     val relation2 = relations(1).asInstanceOf[Token]
     relation2.columnNames.size shouldBe 1
@@ -519,7 +519,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relation2.operator shouldBe Operator.LessThan
     relation2.term.asInstanceOf[FunctionCall].functionName shouldBe "token"
     relation2.term.asInstanceOf[FunctionCall].params.size shouldBe 1
-    relation2.term.asInstanceOf[FunctionCall].params(0) shouldBe Constant("bob")
+    relation2.term.asInstanceOf[FunctionCall].params(0) shouldBe StringConstant("bob")
 
   }
 
@@ -541,7 +541,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     val relation1 = relations(0).asInstanceOf[Simple]
     relation1.columnName shouldBe "userid"
     relation1.operator shouldBe Operator.Equals
-    relation1.term.asInstanceOf[Constant].raw shouldBe "john doe"
+    relation1.term.asInstanceOf[StringConstant].value shouldBe "john doe"
 
     val relation2 = relations(1).asInstanceOf[Tupled]
     relation2.columnNames.size shouldBe 2
@@ -550,8 +550,8 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relation2.operator shouldBe Operator.GreaterThan
     val tupleLiteral: TupleLiteral = relation2.term.asInstanceOf[TupleLiteral]
     tupleLiteral.values.size shouldBe 2
-    tupleLiteral.values(0) shouldBe Constant("Johns Blog")
-    tupleLiteral.values(1) shouldBe Constant("2012-01-01")
+    tupleLiteral.values(0) shouldBe StringConstant("Johns Blog")
+    tupleLiteral.values(1) shouldBe StringConstant("2012-01-01")
 
   }
 
@@ -601,15 +601,15 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 3
     relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "event_type"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
-    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "myEvent"
+    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[StringConstant].value shouldBe "myEvent"
 
     relations(1).asInstanceOf[Relation.Simple].columnName shouldBe "time"
     relations(1).asInstanceOf[Relation.Simple].operator shouldBe Operator.GreaterThan
-    relations(1).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "2011-02-03"
+    relations(1).asInstanceOf[Relation.Simple].term.asInstanceOf[StringConstant].value shouldBe "2011-02-03"
 
     relations(2).asInstanceOf[Relation.Simple].columnName shouldBe "time"
     relations(2).asInstanceOf[Relation.Simple].operator shouldBe Operator.LessThanOrEqual
-    relations(2).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "2012-01-01"
+    relations(2).asInstanceOf[Relation.Simple].term.asInstanceOf[StringConstant].value shouldBe "2012-01-01"
 
   }
   // LIKE OPERATOR
@@ -639,7 +639,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 1
     relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "blog_title"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Like
-    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "%John%"
+    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[StringConstant].value shouldBe "%John%"
   }
 
   it should "parse select statements with where clause and LIKE operator start with term" in {
@@ -668,7 +668,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 1
     relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "blog_title"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Like
-    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "John%"
+    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[StringConstant].value shouldBe "John%"
   }
 
   it should "parse select statements with where clause and LIKE operator end with term" in {
@@ -697,7 +697,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 1
     relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "blog_title"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Like
-    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "%n"
+    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[StringConstant].value shouldBe "%n"
   }
 
 }

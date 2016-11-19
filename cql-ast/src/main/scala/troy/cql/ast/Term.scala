@@ -1,19 +1,19 @@
 package troy.cql.ast
 
-import java.sql.Blob
+
 import java.util.UUID
 
 sealed trait Term
 
 
 sealed trait Constant extends Term
-final case class StringConstant (raw: String) extends Constant
-final case class IntegerConstant (raw: Int) extends Constant
-final case class FloatConstant (raw: Float) extends Constant
-final case class BooleanConstant (raw: Boolean) extends Constant
-final case class UuidConstant (raw: UUID) extends Constant
-final case class BlobConstant (raw: Blob) extends Constant
-final case class NullConstant (raw: Null) extends Constant
+final case class StringConstant(value: String) extends Constant
+final case class IntegerConstant(value: Int) extends Constant
+final case class FloatConstant(value: Float) extends Constant
+final case class BooleanConstant(value: Boolean) extends Constant
+final case class UuidConstant(value: UUID) extends Constant
+final case class BlobConstant(value: String) extends Constant
+case object NullConstant extends Constant
 
 
 sealed trait Literal extends Term
