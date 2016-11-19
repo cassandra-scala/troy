@@ -480,15 +480,15 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
 
     relations(1).asInstanceOf[Relation.Simple].columnName shouldBe "blog_title"
     relations(1).asInstanceOf[Relation.Simple].operator shouldBe Operator.NotEquals
-    relations(1).asInstanceOf[Relation.Simple].term.asInstanceOf[StringConstant].value "Spam"
+    relations(1).asInstanceOf[Relation.Simple].term.asInstanceOf[StringConstant].value shouldBe "Spam"
 
     relations(2).asInstanceOf[Relation.Simple].columnName shouldBe "posted_at"
     relations(2).asInstanceOf[Relation.Simple].operator shouldBe Operator.GreaterThanOrEqual
-    relations(2).asInstanceOf[Relation.Simple].term.asInstanceOf[StringConstant].value "2012-01-01"
+    relations(2).asInstanceOf[Relation.Simple].term.asInstanceOf[StringConstant].value shouldBe "2012-01-01"
 
     relations(3).asInstanceOf[Relation.Simple].columnName shouldBe "posted_at"
     relations(3).asInstanceOf[Relation.Simple].operator shouldBe Operator.LessThan
-    relations(3).asInstanceOf[Relation.Simple].term.asInstanceOf[StringConstant].value "2012-01-31"
+    relations(3).asInstanceOf[Relation.Simple].term.asInstanceOf[StringConstant].value shouldBe "2012-01-31"
   }
 
   it should "parse asterisk select statements with where clause token" in {

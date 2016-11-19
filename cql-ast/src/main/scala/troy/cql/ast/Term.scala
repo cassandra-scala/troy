@@ -1,10 +1,8 @@
 package troy.cql.ast
 
-
 import java.util.UUID
 
 sealed trait Term
-
 
 sealed trait Constant extends Term
 final case class StringConstant(value: String) extends Constant
@@ -14,7 +12,6 @@ final case class BooleanConstant(value: Boolean) extends Constant
 final case class UuidConstant(value: UUID) extends Constant
 final case class BlobConstant(value: String) extends Constant
 case object NullConstant extends Constant
-
 
 sealed trait Literal extends Term
 sealed trait CollectionLiteral extends Literal
