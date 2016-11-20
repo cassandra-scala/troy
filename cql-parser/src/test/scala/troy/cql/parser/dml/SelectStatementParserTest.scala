@@ -265,7 +265,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 1
     relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "userid"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
-    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[IntegerConstant].value shouldBe "199"
+    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[IntegerConstant].value shouldBe 199
   }
 
   it should "parse select statements with simple where clause with UUID term" in {
@@ -294,7 +294,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 1
     relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "userid"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
-    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[UuidConstant].value shouldBe "01234567-0123-0123-0123-0123456789ab"
+    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[StringConstant].value shouldBe "01234567-0123-0123-0123-0123456789ab"
   }
 
   it should "parse select statements with simple where clause with float term" in {
@@ -323,7 +323,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 1
     relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "weight"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
-    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[FloatConstant].value shouldBe "50.4"
+    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[FloatConstant].value shouldBe 50.4
   }
 
   it should "parse select statements with simple where clause with escaped quote" in {

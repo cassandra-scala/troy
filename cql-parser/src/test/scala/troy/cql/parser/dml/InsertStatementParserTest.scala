@@ -21,10 +21,10 @@ class InsertStatementParserTest extends FlatSpec with Matchers {
 
     val values = insertClause.values.asInstanceOf[TupleLiteral].values
     values.size shouldBe 4
-    values(0).asInstanceOf[Constant].raw shouldBe "Serenity"
-    values(1).asInstanceOf[Constant].raw shouldBe "Joss Whedon"
-    values(2).asInstanceOf[Constant].raw shouldBe "Nathan Fillion"
-    values(3).asInstanceOf[Constant].raw shouldBe "2005"
+    values(0).asInstanceOf[StringConstant].value shouldBe "Serenity"
+    values(1).asInstanceOf[StringConstant].value shouldBe "Joss Whedon"
+    values(2).asInstanceOf[StringConstant].value shouldBe "Nathan Fillion"
+    values(3).asInstanceOf[IntegerConstant].value shouldBe 2005
 
     statement.ifNotExists shouldBe false
     statement.using.isEmpty shouldBe true
@@ -44,10 +44,10 @@ class InsertStatementParserTest extends FlatSpec with Matchers {
 
     val values = insertClause.values.asInstanceOf[TupleLiteral].values
     values.size shouldBe 4
-    values(0).asInstanceOf[Constant].raw shouldBe "Serenity"
-    values(1).asInstanceOf[Constant].raw shouldBe "Joss Whedon"
-    values(2).asInstanceOf[Constant].raw shouldBe "Nathan Fillion"
-    values(3).asInstanceOf[Constant].raw shouldBe "2005"
+    values(0).asInstanceOf[StringConstant].value shouldBe "Serenity"
+    values(1).asInstanceOf[StringConstant].value shouldBe "Joss Whedon"
+    values(2).asInstanceOf[StringConstant].value shouldBe "Nathan Fillion"
+    values(3).asInstanceOf[IntegerConstant].value shouldBe 2005
 
     statement.ifNotExists shouldBe true
     statement.using.isEmpty shouldBe true
@@ -67,10 +67,10 @@ class InsertStatementParserTest extends FlatSpec with Matchers {
 
     val values = insertClause.values.asInstanceOf[TupleLiteral].values
     values.size shouldBe 4
-    values(0).asInstanceOf[Constant].raw shouldBe "Serenity"
-    values(1).asInstanceOf[Constant].raw shouldBe "Joss Whedon"
-    values(2).asInstanceOf[Constant].raw shouldBe "Nathan Fillion"
-    values(3).asInstanceOf[Constant].raw shouldBe "2005"
+    values(0).asInstanceOf[StringConstant].value shouldBe "Serenity"
+    values(1).asInstanceOf[StringConstant].value shouldBe "Joss Whedon"
+    values(2).asInstanceOf[StringConstant].value shouldBe "Nathan Fillion"
+    values(3).asInstanceOf[IntegerConstant].value shouldBe 2005
 
     statement.ifNotExists shouldBe false
     statement.using.nonEmpty shouldBe true
@@ -94,10 +94,10 @@ class InsertStatementParserTest extends FlatSpec with Matchers {
 
     val values = insertClause.values.asInstanceOf[TupleLiteral].values
     values.size shouldBe 4
-    values(0).asInstanceOf[Constant].raw shouldBe "Serenity"
-    values(1).asInstanceOf[Constant].raw shouldBe "Joss Whedon"
-    values(2).asInstanceOf[Constant].raw shouldBe "Nathan Fillion"
-    values(3).asInstanceOf[Constant].raw shouldBe "2005"
+    values(0).asInstanceOf[StringConstant].value shouldBe "Serenity"
+    values(1).asInstanceOf[StringConstant].value shouldBe "Joss Whedon"
+    values(2).asInstanceOf[StringConstant].value shouldBe "Nathan Fillion"
+    values(3).asInstanceOf[IntegerConstant].value shouldBe 2005
 
     statement.ifNotExists shouldBe false
     statement.using.nonEmpty shouldBe true

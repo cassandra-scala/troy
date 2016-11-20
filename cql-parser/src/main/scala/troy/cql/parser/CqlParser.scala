@@ -16,6 +16,8 @@
 
 package troy.cql.ast
 
+import java.util.UUID
+
 import troy.cql.ast.dml._
 import troy.cql.ast.dml.{ UpdateParam, UpdateParamValue, UpdateVariable }
 import troy.cql.parser.{ Helpers, TermParser }
@@ -53,7 +55,13 @@ object CqlParser extends JavaTokenParsers
    */
   def constant: Parser[Constant] = {
     import Constants._
-    (string | uuid | number | boolean) ^^ StringConstant // | hex // TODO
+    def str = (string | uuid) ^^ StringConstant
+    def int = integer ^^ { s => new IntegerConstant(s.toInt) }
+    def floatNum = float ^^ { s => new FloatConstant(s.toFloat) }
+    //def uuid = uuid ^^ { s => new UuidConstant(new UUID (UUID.fromString(s))) }
+    def bool = boolean ^^ { s => new BooleanConstant(s.toBoolean) }
+
+    str | int | floatNum | bool
   }
   def identifier: Parser[Identifier] = "[a-zA-Z0-9_]+".r.filter(k => !Keywords.contains(k.toUpperCase))
 

@@ -3,10 +3,9 @@ package troy.cql.parser.dml
 import org.scalatest.{ FlatSpec, Matchers }
 import troy.cql.ast.dml.SimpleSelection._
 import troy.cql.ast.dml.{ IfExist, IfCondition }
-import troy.cql.ast.{ Constant, TupleLiteral }
+import troy.cql.ast._
 import troy.cql.ast.dml._
 import troy.cql.ast.dml.WhereClause.Relation.Simple
-import troy.cql.ast.DeleteStatement
 import troy.cql.parser.ParserTestUtils.parseQuery
 
 class DeleteStatementParserTest extends FlatSpec with Matchers {
@@ -21,7 +20,7 @@ class DeleteStatementParserTest extends FlatSpec with Matchers {
     val simpleRelation = relations(0).asInstanceOf[Simple]
     simpleRelation.columnName shouldBe "movie"
     simpleRelation.operator shouldBe Operator.Equals
-    simpleRelation.term.asInstanceOf[Constant].raw shouldBe "Serenity"
+    simpleRelation.term.asInstanceOf[StringConstant].value shouldBe "Serenity"
 
   }
 
@@ -37,7 +36,7 @@ class DeleteStatementParserTest extends FlatSpec with Matchers {
     val simpleRelation = relations(0).asInstanceOf[Simple]
     simpleRelation.columnName shouldBe "userid"
     simpleRelation.operator shouldBe Operator.Equals
-    simpleRelation.term shouldBe Constant("01234567-0123-0123-0123-0123456789ab")
+    simpleRelation.term.asInstanceOf[StringConstant].value shouldBe "01234567-0123-0123-0123-0123456789ab"
 
   }
 
@@ -57,8 +56,8 @@ class DeleteStatementParserTest extends FlatSpec with Matchers {
     simpleRelation.operator shouldBe Operator.In
     val literal: TupleLiteral = simpleRelation.term.asInstanceOf[TupleLiteral]
     literal.values.size shouldBe 2
-    literal.values(0) shouldBe Constant("123")
-    literal.values(1) shouldBe Constant("222")
+    literal.values(0) shouldBe IntegerConstant(123)
+    literal.values(1) shouldBe IntegerConstant(222)
 
   }
 
@@ -77,7 +76,7 @@ class DeleteStatementParserTest extends FlatSpec with Matchers {
     val simpleRelation = relations(0).asInstanceOf[Simple]
     simpleRelation.columnName shouldBe "userid"
     simpleRelation.operator shouldBe Operator.Equals
-    simpleRelation.term.asInstanceOf[Constant].raw shouldBe "123"
+    simpleRelation.term.asInstanceOf[IntegerConstant].value shouldBe 123
 
   }
 
@@ -97,7 +96,7 @@ class DeleteStatementParserTest extends FlatSpec with Matchers {
     val simpleRelation = relations(0).asInstanceOf[Simple]
     simpleRelation.columnName shouldBe "userid"
     simpleRelation.operator shouldBe Operator.Equals
-    simpleRelation.term.asInstanceOf[Constant].raw shouldBe "123"
+    simpleRelation.term shouldBe IntegerConstant(123)
 
   }
 
@@ -107,7 +106,7 @@ class DeleteStatementParserTest extends FlatSpec with Matchers {
     statement.simpleSelection.size shouldBe 1
     val simpleSelection = statement.simpleSelection(0).asInstanceOf[ColumnNameOf]
     simpleSelection.columnName shouldBe "address"
-    simpleSelection.term.asInstanceOf[Constant].raw shouldBe "postcode"
+    simpleSelection.term.asInstanceOf[StringConstant].value shouldBe "postcode"
 
     statement.from.table shouldBe "Users"
     statement.using.isEmpty shouldBe true
@@ -117,7 +116,7 @@ class DeleteStatementParserTest extends FlatSpec with Matchers {
     val simpleRelation = relations(0).asInstanceOf[Simple]
     simpleRelation.columnName shouldBe "userid"
     simpleRelation.operator shouldBe Operator.Equals
-    simpleRelation.term.asInstanceOf[Constant].raw shouldBe "123"
+    simpleRelation.term.asInstanceOf[IntegerConstant].value shouldBe 123
   }
 
   it should "parse delete specific column if exists statement " in {
@@ -136,7 +135,7 @@ class DeleteStatementParserTest extends FlatSpec with Matchers {
     val simpleRelation = relations(0).asInstanceOf[Simple]
     simpleRelation.columnName shouldBe "userid"
     simpleRelation.operator shouldBe Operator.Equals
-    simpleRelation.term.asInstanceOf[Constant].raw shouldBe "123"
+    simpleRelation.term.asInstanceOf[IntegerConstant].value shouldBe 123
 
   }
 
@@ -155,14 +154,14 @@ class DeleteStatementParserTest extends FlatSpec with Matchers {
     val condition = conditions(0).asInstanceOf[Condition]
     condition.simpleSelection.asInstanceOf[ColumnName].columnName shouldBe "postcode"
     condition.operator shouldBe Operator.Equals
-    condition.term.asInstanceOf[Constant].raw shouldBe "M1"
+    condition.term.asInstanceOf[StringConstant].value shouldBe "M1"
 
     val relations = statement.where.relations
     relations.size shouldBe 1
     val simpleRelation = relations(0).asInstanceOf[Simple]
     simpleRelation.columnName shouldBe "userid"
     simpleRelation.operator shouldBe Operator.Equals
-    simpleRelation.term.asInstanceOf[Constant].raw shouldBe "123"
+    simpleRelation.term.asInstanceOf[IntegerConstant].value shouldBe 123
 
   }
 
@@ -182,8 +181,8 @@ class DeleteStatementParserTest extends FlatSpec with Matchers {
     simpleRelation.operator shouldBe Operator.In
     val literal: TupleLiteral = simpleRelation.term.asInstanceOf[TupleLiteral]
     literal.values.size shouldBe 2
-    literal.values(0) shouldBe Constant("C73DE1D3")
-    literal.values(1) shouldBe Constant("B70DE1D0")
+    literal.values(0) shouldBe StringConstant("C73DE1D3")
+    literal.values(1) shouldBe StringConstant("B70DE1D0")
 
   }
 }
