@@ -16,7 +16,10 @@
 
 package troy.cql.parser.dml
 
+import java.util.UUID
+
 import org.scalatest._
+import troy.cql.ast
 import troy.cql.ast._
 import troy.cql.ast.dml.Select.OrderBy
 import troy.cql.ast.dml.Select.OrderBy.Ordering
@@ -270,7 +273,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
 
   it should "parse select statements with simple where clause with UUID term" in {
     val statement = parseQuery(
-      "SELECT JSON name, occupation FROM users WHERE userid = 01234567-0123-0123-0123-0123456789ab;"
+      "SELECT JSON name, occupation FROM users WHERE userid = B70DE1D0-9908-4AE3-BE34-5573E5B09F14;"
     ).asInstanceOf[SelectStatement]
 
     statement.from.table shouldBe "users"
@@ -294,7 +297,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 1
     relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "userid"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
-    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[StringConstant].value shouldBe "01234567-0123-0123-0123-0123456789ab"
+    relations(0).asInstanceOf[Relation.Simple].term shouldBe UuidConstant(UUID.fromString("B70DE1D0-9908-4AE3-BE34-5573E5B09F14"))
   }
 
   it should "parse select statements with simple where clause with float term" in {
@@ -323,7 +326,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 1
     relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "weight"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
-    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[FloatConstant].value shouldBe 50.4
+    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[FloatConstant].value shouldBe 50.4f
   }
 
   it should "parse select statements with simple where clause with escaped quote" in {

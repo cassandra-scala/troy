@@ -1,5 +1,7 @@
 package troy.cql.parser.dml
 
+import java.util.UUID
+
 import org.scalatest.{ FlatSpec, Matchers }
 import troy.cql.ast.dml.SimpleSelection._
 import troy.cql.ast.dml.{ IfExist, IfCondition }
@@ -25,7 +27,7 @@ class DeleteStatementParserTest extends FlatSpec with Matchers {
   }
 
   it should "parse simple delete statement with UUID value" in {
-    val statement = parseQuery("DELETE FROM Users WHERE userid = 01234567-0123-0123-0123-0123456789ab;")
+    val statement = parseQuery("DELETE FROM Users WHERE userid = B70DE1D0-9908-4AE3-BE34-5573E5B09F14;")
       .asInstanceOf[DeleteStatement]
     statement.simpleSelection.isEmpty shouldBe true
     statement.from.table shouldBe "Users"
@@ -36,7 +38,7 @@ class DeleteStatementParserTest extends FlatSpec with Matchers {
     val simpleRelation = relations(0).asInstanceOf[Simple]
     simpleRelation.columnName shouldBe "userid"
     simpleRelation.operator shouldBe Operator.Equals
-    simpleRelation.term.asInstanceOf[StringConstant].value shouldBe "01234567-0123-0123-0123-0123456789ab"
+    simpleRelation.term shouldBe UuidConstant(UUID.fromString("B70DE1D0-9908-4AE3-BE34-5573E5B09F14"))
 
   }
 

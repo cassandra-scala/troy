@@ -55,13 +55,20 @@ object CqlParser extends JavaTokenParsers
    */
   def constant: Parser[Constant] = {
     import Constants._
-    def str = (string | uuid) ^^ StringConstant
-    def int = integer ^^ { s => new IntegerConstant(s.toInt) }
-    def floatNum = float ^^ { s => new FloatConstant(s.toFloat) }
-    //def uuid = uuid ^^ { s => new UuidConstant(new UUID (UUID.fromString(s))) }
+    def str = string ^^ StringConstant
+    def uuidNum = uuid ^^ { s => new UuidConstant(UUID.fromString(s)) }
     def bool = boolean ^^ { s => new BooleanConstant(s.toBoolean) }
+    //def int = integer ^^ { s => new IntegerConstant(s.toInt) }
+    //def floatNum = float ^^ { s => new FloatConstant(s.toFloat) }
 
-    str | int | floatNum | bool
+    def num: Parser[Number] = number ^^ {
+      number match {
+        case float   => { s => new FloatConstant(s.toFloat) }
+        case integer => { s => new IntegerConstant(s.toInt) }
+      }
+    }
+
+    str | num | uuidNum | bool
   }
   def identifier: Parser[Identifier] = "[a-zA-Z0-9_]+".r.filter(k => !Keywords.contains(k.toUpperCase))
 

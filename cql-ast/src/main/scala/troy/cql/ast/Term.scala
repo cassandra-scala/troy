@@ -5,9 +5,10 @@ import java.util.UUID
 sealed trait Term
 
 sealed trait Constant extends Term
+sealed trait Number extends Constant
+final case class IntegerConstant(value: Int) extends Number
+final case class FloatConstant(value: Float) extends Number
 final case class StringConstant(value: String) extends Constant
-final case class IntegerConstant(value: Int) extends Constant
-final case class FloatConstant(value: Float) extends Constant
 final case class BooleanConstant(value: Boolean) extends Constant
 final case class UuidConstant(value: UUID) extends Constant
 final case class BlobConstant(value: String) extends Constant

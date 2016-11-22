@@ -1,5 +1,7 @@
 package troy.cql.parser.dml
 
+import java.util.UUID
+
 import org.scalatest.{ FlatSpec, Matchers }
 import troy.cql.ast.CqlParser.Constants
 import troy.cql.ast._
@@ -61,7 +63,7 @@ class UpdateStatementParserTest extends FlatSpec with Matchers {
     val simpleRelation1 = relations(0).asInstanceOf[Simple]
     simpleRelation1.columnName shouldBe "user"
     simpleRelation1.operator shouldBe Operator.Equals
-    simpleRelation1.term.asInstanceOf[StringConstant].value shouldBe "B70DE1D0-9908-4AE3-BE34-5573E5B09F14"
+    simpleRelation1.term shouldBe UuidConstant(UUID.fromString("B70DE1D0-9908-4AE3-BE34-5573E5B09F14"))
 
     val simpleRelation2 = relations(1).asInstanceOf[Simple]
     simpleRelation2.columnName shouldBe "action"
@@ -89,7 +91,7 @@ class UpdateStatementParserTest extends FlatSpec with Matchers {
     val simpleRelation1 = relations(0).asInstanceOf[Simple]
     simpleRelation1.columnName shouldBe "user"
     simpleRelation1.operator shouldBe Operator.Equals
-    simpleRelation1.term.asInstanceOf[StringConstant].value shouldBe "B70DE1D0-9908-4AE3-BE34-5573E5B09F14"
+    simpleRelation1.term shouldBe UuidConstant(UUID.fromString("B70DE1D0-9908-4AE3-BE34-5573E5B09F14"))
 
     val simpleRelation2 = relations(1).asInstanceOf[Simple]
     simpleRelation2.columnName shouldBe "action"
@@ -117,7 +119,7 @@ class UpdateStatementParserTest extends FlatSpec with Matchers {
     val simpleRelation1 = relations(0).asInstanceOf[Simple]
     simpleRelation1.columnName shouldBe "user"
     simpleRelation1.operator shouldBe Operator.Equals
-    simpleRelation1.term.asInstanceOf[StringConstant].value shouldBe "B70DE1D0-9908-4AE3-BE34-5573E5B09F14"
+    simpleRelation1.term shouldBe UuidConstant(UUID.fromString("B70DE1D0-9908-4AE3-BE34-5573E5B09F14"))
 
     val simpleRelation2 = relations(1).asInstanceOf[Simple]
     simpleRelation2.columnName shouldBe "action"
@@ -144,7 +146,7 @@ class UpdateStatementParserTest extends FlatSpec with Matchers {
     val simpleRelation1 = relations(0).asInstanceOf[Simple]
     simpleRelation1.columnName shouldBe "user"
     simpleRelation1.operator shouldBe Operator.Equals
-    simpleRelation1.term.asInstanceOf[StringConstant].value shouldBe "B70DE1D0-9908-4AE3-BE34-5573E5B09F14"
+    simpleRelation1.term shouldBe UuidConstant(UUID.fromString("B70DE1D0-9908-4AE3-BE34-5573E5B09F14"))
 
     val simpleRelation2 = relations(1).asInstanceOf[Simple]
     simpleRelation2.columnName shouldBe "action"
