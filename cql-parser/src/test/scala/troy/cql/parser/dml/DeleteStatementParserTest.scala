@@ -187,4 +187,21 @@ class DeleteStatementParserTest extends FlatSpec with Matchers {
     literal.values(1) shouldBe StringConstant("B70DE1D0")
 
   }
+
+  it should "parse simple delete statement with NULL term" in {
+    val statement = parseQuery("DELETE FROM Users WHERE phone = null;")
+      .asInstanceOf[DeleteStatement]
+    statement.simpleSelection.isEmpty shouldBe true
+    statement.from.table shouldBe "Users"
+    statement.using.isEmpty shouldBe true
+
+    val relations = statement.where.relations
+    relations.size shouldBe 1
+    val simpleRelation = relations(0).asInstanceOf[Simple]
+    simpleRelation.columnName shouldBe "phone"
+    simpleRelation.operator shouldBe Operator.Equals
+    simpleRelation.term shouldBe NullConstant
+
+  }
+
 }
