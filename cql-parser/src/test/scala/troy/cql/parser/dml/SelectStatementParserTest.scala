@@ -273,7 +273,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
 
   it should "parse select statements with simple where clause with UUID term" in {
     val statement = parseQuery(
-      "SELECT JSON name, occupation FROM users WHERE userid = B70DE1D0-9908-4AE3-BE34-5573E5B09F14;"
+      "SELECT JSON name, occupation FROM users WHERE userid = 01234567-0123-0123-0123-0123456789ab;"
     ).asInstanceOf[SelectStatement]
 
     statement.from.table shouldBe "users"
@@ -297,7 +297,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 1
     relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "userid"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
-    relations(0).asInstanceOf[Relation.Simple].term shouldBe UuidConstant(UUID.fromString("B70DE1D0-9908-4AE3-BE34-5573E5B09F14"))
+    relations(0).asInstanceOf[Relation.Simple].term shouldBe UuidConstant(UUID.fromString("01234567-0123-0123-0123-0123456789ab"))
   }
 
   it should "parse select statements with simple where clause with float term" in {

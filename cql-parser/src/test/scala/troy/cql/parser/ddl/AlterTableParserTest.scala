@@ -113,6 +113,6 @@ class AlterTableParserTest extends FlatSpec with Matchers {
 
     val option2 = alertTableInstruction1.options(1).asInstanceOf[ConstantOption]
     option2.basicIdentifier shouldBe "read_repair_chance"
-    option2.constant shouldBe StringConstant("0.2")
+    option2.constant shouldBe FloatConstant(0.2f)
   }
 }
