@@ -57,12 +57,16 @@ object CqlParser extends JavaTokenParsers
     import Constants._
     def str = string ^^ StringConstant
     def floatNum = float ^^ { s => new FloatConstant(s.toFloat) }
+    def nan = "NaN".i ^^^ Nan
+    def infinity = "Infinity".i ^^^ Infinity
+    def floats: Parser[FloatNum] = floatNum | nan | infinity
+
     def int = integer ^^ { s => new IntegerConstant(s.toInt) }
     def uuidNum = uuid ^^ { s => new UuidConstant(UUID.fromString(s)) }
     def bool = boolean ^^ { s => new BooleanConstant(s.toBoolean) }
     def nullConst = "null".i ^^^ NullConstant
 
-    str | uuidNum | floatNum | int | bool | nullConst
+    str | uuidNum | floats | int | bool | nullConst
   }
   def identifier: Parser[Identifier] = "[a-zA-Z0-9_]+".r.filter(k => !Keywords.contains(k.toUpperCase))
 
@@ -81,7 +85,7 @@ object CqlParser extends JavaTokenParsers
 
     def integer = wholeNumber
 
-    def float = """[+-]?[0-9]*((\.[0-9]+([eE][+-]?[0-9]+)?[fF]?)|([fF])|([eE][+\u200C\u200B-]?[0-9]+))\b""".r
+    def float = """[+-]?[0-9]*((\.[0-9]+([eE][+-]?[0-9]+)?[fF]?)|([fF])|([eE][+‌​-]?[0-9]+))\b""".r
 
     def number = float | integer
 

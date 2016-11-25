@@ -204,4 +204,20 @@ class DeleteStatementParserTest extends FlatSpec with Matchers {
 
   }
 
+  it should "parse simple delete statement with Boolean term" in {
+    val statement = parseQuery("DELETE FROM posts WHERE published = false;")
+      .asInstanceOf[DeleteStatement]
+    statement.simpleSelection.isEmpty shouldBe true
+    statement.from.table shouldBe "posts"
+    statement.using.isEmpty shouldBe true
+
+    val relations = statement.where.relations
+    relations.size shouldBe 1
+    val simpleRelation = relations(0).asInstanceOf[Simple]
+    simpleRelation.columnName shouldBe "published"
+    simpleRelation.operator shouldBe Operator.Equals
+    simpleRelation.term shouldBe BooleanConstant(false)
+
+  }
+
 }

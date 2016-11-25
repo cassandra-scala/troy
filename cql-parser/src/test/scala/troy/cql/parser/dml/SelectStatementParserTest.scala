@@ -615,7 +615,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations(2).asInstanceOf[Relation.Simple].term.asInstanceOf[StringConstant].value shouldBe "2012-01-01"
 
   }
-  // LIKE OPERATOR
+
   it should "parse select statements with where clause and LIKE operator include term" in {
     val statement = parseQuery(
       "SELECT entry_title, content FROM posts WHERE blog_title LIKE '%John%';"
@@ -730,4 +730,90 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations(0).asInstanceOf[Relation.Simple].term shouldBe NullConstant
   }
 
+  it should "parse select statements with where clause and Boolean term" in {
+    val statement = parseQuery(
+      "SELECT entry_title, content FROM posts WHERE published = true;"
+    ).asInstanceOf[SelectStatement]
+
+    statement.from.table shouldBe "posts"
+    statement.mod.isDefined shouldBe false
+    statement.orderBy.isEmpty shouldBe true
+    statement.perPartitionLimit.isEmpty shouldBe true
+    statement.limit.isEmpty shouldBe true
+    statement.allowFiltering shouldBe false
+
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
+    selection.items.size shouldBe 2
+
+    selection.items(0).selector shouldBe Select.ColumnName("entry_title")
+    selection.items(0).as.isEmpty shouldBe true
+
+    selection.items(1).selector shouldBe Select.ColumnName("content")
+    selection.items(1).as.isEmpty shouldBe true
+
+    statement.where.isDefined shouldBe true
+    val relations = statement.where.get.relations
+    relations.size shouldBe 1
+    relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "published"
+    relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
+    relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[BooleanConstant].value shouldBe true
+  }
+
+  it should "parse select statements with simple where clause with float term and NaN value" in {
+    val statement = parseQuery(
+      "SELECT name, occupation FROM users WHERE weight = NaN;"
+    ).asInstanceOf[SelectStatement]
+
+    statement.from.table shouldBe "users"
+    statement.mod.isDefined shouldBe false
+    statement.orderBy.isEmpty shouldBe true
+    statement.perPartitionLimit.isEmpty shouldBe true
+    statement.limit.isEmpty shouldBe true
+    statement.allowFiltering shouldBe false
+
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
+    selection.items.size shouldBe 2
+
+    selection.items(0).selector shouldBe Select.ColumnName("name")
+    selection.items(0).as.isEmpty shouldBe true
+
+    selection.items(1).selector shouldBe Select.ColumnName("occupation")
+    selection.items(1).as.isEmpty shouldBe true
+
+    statement.where.isDefined shouldBe true
+    val relations = statement.where.get.relations
+    relations.size shouldBe 1
+    relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "weight"
+    relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
+    relations(0).asInstanceOf[Relation.Simple].term shouldBe Nan
+  }
+
+  it should "parse select statements with simple where clause with float term and Infinity value" in {
+    val statement = parseQuery(
+      "SELECT name, occupation FROM users WHERE weight = Infinity;"
+    ).asInstanceOf[SelectStatement]
+
+    statement.from.table shouldBe "users"
+    statement.mod.isDefined shouldBe false
+    statement.orderBy.isEmpty shouldBe true
+    statement.perPartitionLimit.isEmpty shouldBe true
+    statement.limit.isEmpty shouldBe true
+    statement.allowFiltering shouldBe false
+
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
+    selection.items.size shouldBe 2
+
+    selection.items(0).selector shouldBe Select.ColumnName("name")
+    selection.items(0).as.isEmpty shouldBe true
+
+    selection.items(1).selector shouldBe Select.ColumnName("occupation")
+    selection.items(1).as.isEmpty shouldBe true
+
+    statement.where.isDefined shouldBe true
+    val relations = statement.where.get.relations
+    relations.size shouldBe 1
+    relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "weight"
+    relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
+    relations(0).asInstanceOf[Relation.Simple].term shouldBe Infinity
+  }
 }
