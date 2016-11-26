@@ -142,5 +142,23 @@ class InsertStatementParserTest extends FlatSpec with Matchers {
     statement.ifNotExists shouldBe false
     statement.using.isEmpty shouldBe true
   }
+  it should "parse simple insert statement with Blob constant" in {
+    val statement = parseQuery("INSERT INTO bios (user_name, id) VALUES ('fred', 0x0000000000000003);").asInstanceOf[InsertStatement]
+    statement.into.table shouldBe "bios"
+
+    val insertClause = statement.insertClause.asInstanceOf[Insert.NamesValues]
+    val names: Seq[Identifier] = insertClause.columnNames
+    names.size shouldBe 2
+    names(0) shouldBe "user_name"
+    names(1) shouldBe "id"
+
+    val values = insertClause.values.asInstanceOf[TupleLiteral].values
+    values.size shouldBe 2
+    values(0).asInstanceOf[StringConstant].value shouldBe "fred"
+    values(1).asInstanceOf[BlobConstant].value shouldBe "0x0000000000000003"
+
+    statement.ifNotExists shouldBe false
+    statement.using.isEmpty shouldBe true
+  }
 
 }
