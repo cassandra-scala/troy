@@ -8,7 +8,7 @@ sealed trait Constant extends Term
 
 sealed trait FloatNum extends Constant
 final case class FloatConstant(value: Float) extends FloatNum
-case object Nan extends FloatNum
+case object NaN extends FloatNum
 case object Infinity extends FloatNum
 
 final case class IntegerConstant(value: Int) extends Constant

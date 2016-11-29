@@ -56,24 +56,23 @@ object CqlParser extends JavaTokenParsers
   def constant: Parser[Constant] = {
     import Constants._
 
-    def float = """[+-]?[0-9]*((\.[0-9]+([eE][+-]?[0-9]+)?[fF]?)|([fF])|([eE][+‌​-]?[0-9]+))\b""".r
     def hex = "[0-9a-fA-F]".r
-    def uuid = s"$hex{8}-$hex{4}-$hex{4}-$hex{4}-$hex{12}".r
-    def blob = s"0(x|X)$hex+".r
 
-    def floatNum = float ^^ { s => new FloatConstant(s.toFloat) }
-    def nan = "NaN".r ^^^ Nan
+    def float = """[+-]?[0-9]*((\.[0-9]+([eE][+-]?[0-9]+)?[fF]?)|([fF])|([eE][+‌​-]?[0-9]+))\b""".r ^^ { s =>
+      new FloatConstant(s.toFloat)
+    }
+    def nan = "NaN".r ^^^ NaN
     def infinity = "Infinity".r ^^^ Infinity
-    def floats: Parser[FloatNum] = floatNum | nan | infinity
+    def floats: Parser[FloatNum] = float | nan | infinity
 
     def str = string ^^ StringConstant
     def int = integer ^^ { s => new IntegerConstant(s.toInt) }
-    def uuidNum = uuid ^^ { s => new UuidConstant(UUID.fromString(s)) }
+    def uuid = s"$hex{8}-$hex{4}-$hex{4}-$hex{4}-$hex{12}".r ^^ { s => new UuidConstant(UUID.fromString(s)) }
     def boolean = ("true".i | "false".i) ^^ { s => new BooleanConstant(s.toBoolean) }
-    def blobConst = blob ^^ { s => new BlobConstant(s.toString) }
+    def blob = s"0(x|X)$hex+".r ^^ { s => new BlobConstant(s.toString) }
     def nullConst = "null".i ^^^ NullConstant
 
-    str | blobConst | uuidNum | floats | int | boolean | nullConst
+    str | blob | uuid | floats | int | boolean | nullConst
   }
   def identifier: Parser[Identifier] = "[a-zA-Z0-9_]+".r.filter(k => !Keywords.contains(k.toUpperCase))
 

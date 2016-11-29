@@ -702,7 +702,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Like
     relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[StringConstant].value shouldBe "%n"
   }
-
+  // Null is case-insensitive
   it should "parse select statements with where clause with NULL term" in {
     val statement = parseQuery("SELECT name, occupation FROM users WHERE occupation = NULL;").asInstanceOf[SelectStatement]
 
@@ -759,6 +759,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[BooleanConstant].value shouldBe true
   }
 
+  // NaN is case-sensitive
   it should "parse select statements with simple where clause with float term and NaN value" in {
     val statement = parseQuery(
       "SELECT name, occupation FROM users WHERE weight = NaN;"
@@ -785,9 +786,10 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 1
     relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "weight"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
-    relations(0).asInstanceOf[Relation.Simple].term shouldBe Nan
+    relations(0).asInstanceOf[Relation.Simple].term shouldBe NaN
   }
 
+  // Infinity is case-sensitive
   it should "parse select statements with simple where clause with float term and Infinity value" in {
     val statement = parseQuery(
       "SELECT name, occupation FROM users WHERE weight = Infinity;"
@@ -816,4 +818,18 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
     relations(0).asInstanceOf[Relation.Simple].term shouldBe Infinity
   }
+
+  // NaN and Infinity parse test
+  it should "parse select statements with simple where clause with float term and NaN" in {
+    CqlParser.parseDML(
+      "SELECT name, occupation FROM users WHERE weight = nan;"
+    ).asInstanceOf[CqlParser.Failure]
+  }
+
+  it should "parse select statements with simple where clause with float term and Infinity" in {
+    CqlParser.parseDML(
+      "SELECT name, occupation FROM users WHERE weight = infinity;"
+    ).asInstanceOf[CqlParser.Failure]
+  }
+
 }
