@@ -21,10 +21,10 @@ class InsertStatementParserTest extends FlatSpec with Matchers {
 
     val values = insertClause.values.asInstanceOf[TupleLiteral].values
     values.size shouldBe 4
-    values(0).asInstanceOf[Constant].raw shouldBe "Serenity"
-    values(1).asInstanceOf[Constant].raw shouldBe "Joss Whedon"
-    values(2).asInstanceOf[Constant].raw shouldBe "Nathan Fillion"
-    values(3).asInstanceOf[Constant].raw shouldBe "2005"
+    values(0).asInstanceOf[StringConstant].value shouldBe "Serenity"
+    values(1).asInstanceOf[StringConstant].value shouldBe "Joss Whedon"
+    values(2).asInstanceOf[StringConstant].value shouldBe "Nathan Fillion"
+    values(3).asInstanceOf[IntegerConstant].value shouldBe 2005
 
     statement.ifNotExists shouldBe false
     statement.using.isEmpty shouldBe true
@@ -44,10 +44,10 @@ class InsertStatementParserTest extends FlatSpec with Matchers {
 
     val values = insertClause.values.asInstanceOf[TupleLiteral].values
     values.size shouldBe 4
-    values(0).asInstanceOf[Constant].raw shouldBe "Serenity"
-    values(1).asInstanceOf[Constant].raw shouldBe "Joss Whedon"
-    values(2).asInstanceOf[Constant].raw shouldBe "Nathan Fillion"
-    values(3).asInstanceOf[Constant].raw shouldBe "2005"
+    values(0).asInstanceOf[StringConstant].value shouldBe "Serenity"
+    values(1).asInstanceOf[StringConstant].value shouldBe "Joss Whedon"
+    values(2).asInstanceOf[StringConstant].value shouldBe "Nathan Fillion"
+    values(3).asInstanceOf[IntegerConstant].value shouldBe 2005
 
     statement.ifNotExists shouldBe true
     statement.using.isEmpty shouldBe true
@@ -67,10 +67,10 @@ class InsertStatementParserTest extends FlatSpec with Matchers {
 
     val values = insertClause.values.asInstanceOf[TupleLiteral].values
     values.size shouldBe 4
-    values(0).asInstanceOf[Constant].raw shouldBe "Serenity"
-    values(1).asInstanceOf[Constant].raw shouldBe "Joss Whedon"
-    values(2).asInstanceOf[Constant].raw shouldBe "Nathan Fillion"
-    values(3).asInstanceOf[Constant].raw shouldBe "2005"
+    values(0).asInstanceOf[StringConstant].value shouldBe "Serenity"
+    values(1).asInstanceOf[StringConstant].value shouldBe "Joss Whedon"
+    values(2).asInstanceOf[StringConstant].value shouldBe "Nathan Fillion"
+    values(3).asInstanceOf[IntegerConstant].value shouldBe 2005
 
     statement.ifNotExists shouldBe false
     statement.using.nonEmpty shouldBe true
@@ -94,10 +94,10 @@ class InsertStatementParserTest extends FlatSpec with Matchers {
 
     val values = insertClause.values.asInstanceOf[TupleLiteral].values
     values.size shouldBe 4
-    values(0).asInstanceOf[Constant].raw shouldBe "Serenity"
-    values(1).asInstanceOf[Constant].raw shouldBe "Joss Whedon"
-    values(2).asInstanceOf[Constant].raw shouldBe "Nathan Fillion"
-    values(3).asInstanceOf[Constant].raw shouldBe "2005"
+    values(0).asInstanceOf[StringConstant].value shouldBe "Serenity"
+    values(1).asInstanceOf[StringConstant].value shouldBe "Joss Whedon"
+    values(2).asInstanceOf[StringConstant].value shouldBe "Nathan Fillion"
+    values(3).asInstanceOf[IntegerConstant].value shouldBe 2005
 
     statement.ifNotExists shouldBe false
     statement.using.nonEmpty shouldBe true
@@ -139,6 +139,24 @@ class InsertStatementParserTest extends FlatSpec with Matchers {
     insertClause.value shouldBe "{\"movie\": \"Serenity\", \"director\": \"Joss Whedon\", \"year\": 2005}"
     insertClause.default.isDefined shouldBe true
     insertClause.default.get shouldBe Insert.Unset
+    statement.ifNotExists shouldBe false
+    statement.using.isEmpty shouldBe true
+  }
+  it should "parse simple insert statement with Blob constant" in {
+    val statement = parseQuery("INSERT INTO bios (user_name, id) VALUES ('fred', 0x0000000000000003);").asInstanceOf[InsertStatement]
+    statement.into.table shouldBe "bios"
+
+    val insertClause = statement.insertClause.asInstanceOf[Insert.NamesValues]
+    val names: Seq[Identifier] = insertClause.columnNames
+    names.size shouldBe 2
+    names(0) shouldBe "user_name"
+    names(1) shouldBe "id"
+
+    val values = insertClause.values.asInstanceOf[TupleLiteral].values
+    values.size shouldBe 2
+    values(0).asInstanceOf[StringConstant].value shouldBe "fred"
+    values(1).asInstanceOf[BlobConstant].value shouldBe "0x0000000000000003"
+
     statement.ifNotExists shouldBe false
     statement.using.isEmpty shouldBe true
   }

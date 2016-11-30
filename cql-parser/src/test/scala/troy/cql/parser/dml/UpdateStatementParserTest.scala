@@ -1,8 +1,10 @@
 package troy.cql.parser.dml
 
+import java.util.UUID
+
 import org.scalatest.{ FlatSpec, Matchers }
 import troy.cql.ast.CqlParser.Constants
-import troy.cql.ast.{ BindMarker, Constant, ListLiteral, UpdateStatement }
+import troy.cql.ast._
 import troy.cql.ast.dml._
 import troy.cql.ast.dml.Update._
 import troy.cql.ast.dml.WhereClause.Relation.Simple
@@ -11,7 +13,7 @@ import troy.cql.parser.ParserTestUtils.parseQuery
 class UpdateStatementParserTest extends FlatSpec with Matchers {
   import SimpleSelection._
   "Update Parser" should "parse simple update statement with simple set" in {
-    val statement = parseQuery("UPDATE NerdMovies USING TTL 400 SET director = 'Joss Whedon', main_actor = 'Nathan Fillion',year = 2005WHERE movie = 'Serenity';").asInstanceOf[UpdateStatement]
+    val statement = parseQuery("UPDATE NerdMovies USING TTL 400 SET director = 'Joss Whedon', main_actor = 'Nathan Fillion',year = 2005 WHERE movie = 'Serenity';").asInstanceOf[UpdateStatement]
     statement.tableName.table shouldBe "NerdMovies"
 
     statement.using.size shouldBe 1
@@ -23,15 +25,15 @@ class UpdateStatementParserTest extends FlatSpec with Matchers {
 
     val assignment1 = assignments(0).asInstanceOf[SimpleSelectionAssignment]
     assignment1.selection.asInstanceOf[ColumnName].columnName shouldBe "director"
-    assignment1.term.asInstanceOf[Constant].raw shouldBe "Joss Whedon"
+    assignment1.term.asInstanceOf[StringConstant].value shouldBe "Joss Whedon"
 
     val assignment2 = assignments(1).asInstanceOf[SimpleSelectionAssignment]
     assignment2.selection.asInstanceOf[ColumnName].columnName shouldBe "main_actor"
-    assignment2.term.asInstanceOf[Constant].raw shouldBe "Nathan Fillion"
+    assignment2.term.asInstanceOf[StringConstant].value shouldBe "Nathan Fillion"
 
     val assignment3 = assignments(2).asInstanceOf[SimpleSelectionAssignment]
     assignment3.selection.asInstanceOf[ColumnName].columnName shouldBe "year"
-    assignment3.term.asInstanceOf[Constant].raw shouldBe "2005"
+    assignment3.term.asInstanceOf[IntegerConstant].value shouldBe 2005
 
     val relations = statement.where.relations
     relations.size shouldBe 1
@@ -39,7 +41,7 @@ class UpdateStatementParserTest extends FlatSpec with Matchers {
     val simpleRelation = relations(0).asInstanceOf[Simple]
     simpleRelation.columnName shouldBe "movie"
     simpleRelation.operator shouldBe Operator.Equals
-    simpleRelation.term.asInstanceOf[Constant].raw shouldBe "Serenity"
+    simpleRelation.term.asInstanceOf[StringConstant].value shouldBe "Serenity"
   }
 
   it should "parse update statement with term assignment" in {
@@ -53,7 +55,7 @@ class UpdateStatementParserTest extends FlatSpec with Matchers {
     assignment1.columnName1 shouldBe "total"
     assignment1.columnName2 shouldBe "total"
     assignment1.updateOperator shouldBe UpdateOperator.Add
-    assignment1.term.asInstanceOf[Constant].raw shouldBe "2"
+    assignment1.term.asInstanceOf[IntegerConstant].value shouldBe 2
 
     val relations = statement.where.relations
     relations.size shouldBe 2
@@ -61,12 +63,12 @@ class UpdateStatementParserTest extends FlatSpec with Matchers {
     val simpleRelation1 = relations(0).asInstanceOf[Simple]
     simpleRelation1.columnName shouldBe "user"
     simpleRelation1.operator shouldBe Operator.Equals
-    simpleRelation1.term.asInstanceOf[Constant].raw shouldBe "B70DE1D0-9908-4AE3-BE34-5573E5B09F14"
+    simpleRelation1.term shouldBe UuidConstant(UUID.fromString("B70DE1D0-9908-4AE3-BE34-5573E5B09F14"))
 
     val simpleRelation2 = relations(1).asInstanceOf[Simple]
     simpleRelation2.columnName shouldBe "action"
     simpleRelation2.operator shouldBe Operator.Equals
-    simpleRelation2.term.asInstanceOf[Constant].raw shouldBe "click"
+    simpleRelation2.term.asInstanceOf[StringConstant].value shouldBe "click"
 
   }
 
@@ -89,12 +91,12 @@ class UpdateStatementParserTest extends FlatSpec with Matchers {
     val simpleRelation1 = relations(0).asInstanceOf[Simple]
     simpleRelation1.columnName shouldBe "user"
     simpleRelation1.operator shouldBe Operator.Equals
-    simpleRelation1.term.asInstanceOf[Constant].raw shouldBe "B70DE1D0-9908-4AE3-BE34-5573E5B09F14"
+    simpleRelation1.term shouldBe UuidConstant(UUID.fromString("B70DE1D0-9908-4AE3-BE34-5573E5B09F14"))
 
     val simpleRelation2 = relations(1).asInstanceOf[Simple]
     simpleRelation2.columnName shouldBe "action"
     simpleRelation2.operator shouldBe Operator.Equals
-    simpleRelation2.term.asInstanceOf[Constant].raw shouldBe "click"
+    simpleRelation2.term.asInstanceOf[StringConstant].value shouldBe "click"
 
   }
 
@@ -109,7 +111,7 @@ class UpdateStatementParserTest extends FlatSpec with Matchers {
 
     assignment1.columnName1 shouldBe "users"
     assignment1.columnName2 shouldBe "users"
-    assignment1.listLiteral.left.get.values(0).asInstanceOf[Constant].raw shouldBe "2"
+    assignment1.listLiteral.left.get.values(0).asInstanceOf[IntegerConstant].value shouldBe 2
 
     val relations = statement.where.relations
     relations.size shouldBe 2
@@ -117,12 +119,12 @@ class UpdateStatementParserTest extends FlatSpec with Matchers {
     val simpleRelation1 = relations(0).asInstanceOf[Simple]
     simpleRelation1.columnName shouldBe "user"
     simpleRelation1.operator shouldBe Operator.Equals
-    simpleRelation1.term.asInstanceOf[Constant].raw shouldBe "B70DE1D0-9908-4AE3-BE34-5573E5B09F14"
+    simpleRelation1.term shouldBe UuidConstant(UUID.fromString("B70DE1D0-9908-4AE3-BE34-5573E5B09F14"))
 
     val simpleRelation2 = relations(1).asInstanceOf[Simple]
     simpleRelation2.columnName shouldBe "action"
     simpleRelation2.operator shouldBe Operator.Equals
-    simpleRelation2.term.asInstanceOf[Constant].raw shouldBe "click"
+    simpleRelation2.term.asInstanceOf[StringConstant].value shouldBe "click"
   }
 
   it should "parse update statement with bindmark in list literal assignment" in {
@@ -144,11 +146,11 @@ class UpdateStatementParserTest extends FlatSpec with Matchers {
     val simpleRelation1 = relations(0).asInstanceOf[Simple]
     simpleRelation1.columnName shouldBe "user"
     simpleRelation1.operator shouldBe Operator.Equals
-    simpleRelation1.term.asInstanceOf[Constant].raw shouldBe "B70DE1D0-9908-4AE3-BE34-5573E5B09F14"
+    simpleRelation1.term shouldBe UuidConstant(UUID.fromString("B70DE1D0-9908-4AE3-BE34-5573E5B09F14"))
 
     val simpleRelation2 = relations(1).asInstanceOf[Simple]
     simpleRelation2.columnName shouldBe "action"
     simpleRelation2.operator shouldBe Operator.Equals
-    simpleRelation2.term.asInstanceOf[Constant].raw shouldBe "click"
+    simpleRelation2.term.asInstanceOf[StringConstant].value shouldBe "click"
   }
 }

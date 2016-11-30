@@ -96,7 +96,7 @@ class AlterTableParserTest extends FlatSpec with Matchers {
 
     val option = alertTableInstruction1.options(0).asInstanceOf[ConstantOption]
     option.basicIdentifier shouldBe "comment"
-    option.constant shouldBe Constant("A most excellent and useful table")
+    option.constant shouldBe StringConstant("A most excellent and useful table")
 
   }
 
@@ -109,10 +109,10 @@ class AlterTableParserTest extends FlatSpec with Matchers {
 
     val option1 = alertTableInstruction1.options(0).asInstanceOf[ConstantOption]
     option1.basicIdentifier shouldBe "comment"
-    option1.constant shouldBe Constant("A most excellent and useful table")
+    option1.constant shouldBe StringConstant("A most excellent and useful table")
 
     val option2 = alertTableInstruction1.options(1).asInstanceOf[ConstantOption]
     option2.basicIdentifier shouldBe "read_repair_chance"
-    option2.constant shouldBe Constant("0.2")
+    option2.constant shouldBe FloatConstant(0.2f)
   }
 }

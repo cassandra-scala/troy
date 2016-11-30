@@ -16,6 +16,8 @@
 
 package troy.cql.ast
 
+import java.util.UUID
+
 import troy.cql.ast.dml._
 import troy.cql.ast.dml.{ UpdateParam, UpdateParamValue, UpdateVariable }
 import troy.cql.parser.{ Helpers, TermParser }
@@ -53,7 +55,24 @@ object CqlParser extends JavaTokenParsers
    */
   def constant: Parser[Constant] = {
     import Constants._
-    (string | uuid | number | boolean) ^^ Constant // | hex // TODO
+
+    def hex = "[0-9a-fA-F]".r
+
+    def float = """[+-]?[0-9]*((\.[0-9]+([eE][+-]?[0-9]+)?[fF]?)|([fF])|([eE][+‌​-]?[0-9]+))\b""".r ^^ { s =>
+      new FloatConstant(s.toFloat)
+    }
+    def nan = "NaN".r ^^^ NaN
+    def infinity = "Infinity".r ^^^ Infinity
+    def floats: Parser[FloatNum] = float | nan | infinity
+
+    def str = string ^^ StringConstant
+    def int = integer ^^ { s => new IntegerConstant(s.toInt) }
+    def uuid = s"$hex{8}-$hex{4}-$hex{4}-$hex{4}-$hex{12}".r ^^ { s => new UuidConstant(UUID.fromString(s)) }
+    def boolean = ("true".i | "false".i) ^^ { s => new BooleanConstant(s.toBoolean) }
+    def blob = s"0(x|X)$hex+".r ^^ { s => new BlobConstant(s.toString) }
+    def nullConst = "null".i ^^^ NullConstant
+
+    str | blob | uuid | floats | int | boolean | nullConst
   }
   def identifier: Parser[Identifier] = "[a-zA-Z0-9_]+".r.filter(k => !Keywords.contains(k.toUpperCase))
 
@@ -72,13 +91,6 @@ object CqlParser extends JavaTokenParsers
 
     def integer = wholeNumber
 
-    def float = floatingPointNumber
-
-    def number = float | integer
-
-    def uuid = "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}".r
-
-    def boolean = "true".i | "false".i
   }
 
   def keyspaceName: Parser[KeyspaceName] = identifier ^^ KeyspaceName

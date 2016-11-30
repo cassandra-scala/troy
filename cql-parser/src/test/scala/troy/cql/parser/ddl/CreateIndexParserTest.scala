@@ -2,7 +2,7 @@ package troy.cql.parser.ddl
 
 import org.scalatest.{ FlatSpec, Matchers }
 import troy.cql.ast.ddl.Index
-import troy.cql.ast.{ Constant, CreateIndex }
+import troy.cql.ast.{ StringConstant, Constant, CreateIndex }
 import troy.cql.parser.ParserTestUtils.parseSchemaAs
 
 class CreateIndexParserTest extends FlatSpec with Matchers {
@@ -53,6 +53,6 @@ class CreateIndexParserTest extends FlatSpec with Matchers {
     stmt5.identifier.asInstanceOf[Index.Identifier].value shouldBe "email"
     stmt5.using.get.using shouldBe "path.to.the.IndexClass"
     stmt5.using.get.options.get.pairs.size shouldBe 1
-    stmt5.using.get.options.get.pairs(0) shouldBe Constant("storage") -> Constant("/mnt/ssd/indexes/")
+    stmt5.using.get.options.get.pairs(0) shouldBe StringConstant("storage") -> StringConstant("/mnt/ssd/indexes/")
   }
 }
