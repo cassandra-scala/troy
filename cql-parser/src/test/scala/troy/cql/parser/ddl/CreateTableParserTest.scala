@@ -105,4 +105,26 @@ class CreateTableParserTest extends FlatSpec with Matchers {
       """
     )
   }
+
+  it should "parse multi-fields create table with float datatype" in {
+    val statement = parseSchemaAs[CreateTable](
+      """
+        CREATE TABLE test.users (
+          user_id text PRIMARY KEY,
+          user_name text static,
+          user_age int static,
+          user_weight float
+        );
+      """
+    )
+    statement.ifNotExists shouldBe false
+    statement.columns shouldBe Seq(
+      Table.Column("user_id", DataType.Text, false, true),
+      Table.Column("user_name", DataType.Text, true, false),
+      Table.Column("user_age", DataType.Int, true, false),
+      Table.Column("user_weight", DataType.Float, false, false)
+    )
+    statement.primaryKey.isEmpty shouldBe true // Primary is defined inline instead
+    statement.options.isEmpty shouldBe true
+  }
 }
