@@ -1,6 +1,6 @@
 package troy.cql.parser.dml
 import troy.cql.ast.CqlParser._
-import troy.cql.ast.SelectStatement
+import troy.cql.ast.{ FunctionCall, FunctionName, SelectStatement }
 import troy.cql.ast.dml.Select
 
 trait SelectStatementParser {
@@ -24,7 +24,9 @@ trait SelectStatementParser {
             def cast = "CAST".i ~> parenthesis(selector ~ ("AS".i ~> dataType)) ^^^^ Select
               .Cast
             def column_name = identifier ^^ ColumnName
-            term_selector | cast | count | column_name
+            def function = functionName ~ parenthesis(repsep(selector, ",")) ^^^^ Function
+
+            cast | function | term_selector | count | column_name
           }
 
           selector ~ ("AS".i ~> identifier).? ^^^^ Select
