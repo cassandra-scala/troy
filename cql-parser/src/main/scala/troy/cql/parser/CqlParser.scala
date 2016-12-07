@@ -94,6 +94,7 @@ object CqlParser extends JavaTokenParsers
   }
 
   def keyspaceName: Parser[KeyspaceName] = identifier ^^ KeyspaceName
+  def functionName: Parser[FunctionName] = (keyspaceName <~ ".").? ~ identifier ^^^^ FunctionName
 
   /*
    * <tablename> ::= (<identifier> '.')? <identifier>
