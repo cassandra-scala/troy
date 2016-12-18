@@ -205,7 +205,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
 
     selector.functionName shouldBe "intAsBlob"
     val params = selector.params.asInstanceOf[Select.SelectTerm]
-    params shouldBe BlobConstant("4") //TODO: Term Constant need refactor
+    params shouldBe BlobConstant("4")
     selection.items(0).as.isEmpty shouldBe true
   }
 
@@ -226,7 +226,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
 
     selector.functionName shouldBe "intAsBlob"
     val params = selector.params.asInstanceOf[Select.SelectTerm]
-    params shouldBe BlobConstant("4") //TODO: Term Constant need refactor
+    params shouldBe BlobConstant("4")
     selection.items(0).as.get shouldBe "four"
   }
 
@@ -831,7 +831,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
       "SELECT name, occupation FROM users WHERE weight = infinity;"
     ).asInstanceOf[CqlParser.Failure]
   }
-  //
+
   it should "parse select statements with function name selector and column name" in {
     val statement = parseQuery(
       "SELECT dateOf(x) FROM system.local;"
@@ -875,12 +875,12 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
 
     selector.functionName.keyspace shouldBe None
     selector.functionName.table shouldBe "dateOf"
-    val params = selector.params.seq(0).asInstanceOf[Select.Cast]
+    val param = selector.params.seq(0).asInstanceOf[Select.Cast]
 
-    val fn = params.selector.asInstanceOf[Select.Function]
+    val fn = param.selector.asInstanceOf[Select.Function]
     fn.functionName.keyspace shouldBe None
     fn.functionName.table shouldBe "now"
-    params.as shouldBe DataType.Timeuuid
+    param.as shouldBe DataType.Timeuuid
   }
 
   it should "parse select statements with function name selector and asterisk " in {
