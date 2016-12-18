@@ -205,7 +205,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
 
     selector.functionName shouldBe "intAsBlob"
     val params = selector.params.asInstanceOf[Select.SelectTerm]
-    params shouldBe StringConstant("4") //TODO: Term Constant need refactor
+    params shouldBe BlobConstant("4")
     selection.items(0).as.isEmpty shouldBe true
   }
 
@@ -226,7 +226,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
 
     selector.functionName shouldBe "intAsBlob"
     val params = selector.params.asInstanceOf[Select.SelectTerm]
-    params shouldBe StringConstant("4") //TODO: Term Constant need refactor
+    params shouldBe BlobConstant("4")
     selection.items(0).as.get shouldBe "four"
   }
 
@@ -832,4 +832,100 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     ).asInstanceOf[CqlParser.Failure]
   }
 
+  it should "parse select statements with function name selector and column name" in {
+    val statement = parseQuery(
+      "SELECT dateOf(x) FROM system.local;"
+    ).asInstanceOf[SelectStatement]
+
+    statement.from.keyspace.get.name shouldBe "system"
+    statement.from.table shouldBe "local"
+    statement.mod.isDefined shouldBe false
+    statement.orderBy.isEmpty shouldBe true
+    statement.perPartitionLimit.isEmpty shouldBe true
+    statement.limit.isEmpty shouldBe true
+    statement.allowFiltering shouldBe false
+
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
+    selection.items.size shouldBe 1
+
+    val selector = selection.items(0).selector.asInstanceOf[Select.Function]
+
+    selector.functionName.keyspace shouldBe None
+    selector.functionName.table shouldBe "dateOf"
+    selector.params.seq(0) shouldBe Select.ColumnName("x")
+  }
+
+  it should "parse select statements with function name selector, cast and as" in {
+    val statement = parseQuery(
+      "SELECT dateOf(cast(now() AS timeuuid)) from system.local;"
+    ).asInstanceOf[SelectStatement]
+
+    statement.from.keyspace.get.name shouldBe "system"
+    statement.from.table shouldBe "local"
+    statement.mod.isDefined shouldBe false
+    statement.orderBy.isEmpty shouldBe true
+    statement.perPartitionLimit.isEmpty shouldBe true
+    statement.limit.isEmpty shouldBe true
+    statement.allowFiltering shouldBe false
+
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
+    selection.items.size shouldBe 1
+
+    val selector = selection.items(0).selector.asInstanceOf[Select.Function]
+
+    selector.functionName.keyspace shouldBe None
+    selector.functionName.table shouldBe "dateOf"
+    val param = selector.params.seq(0).asInstanceOf[Select.Cast]
+
+    val fn = param.selector.asInstanceOf[Select.Function]
+    fn.functionName.keyspace shouldBe None
+    fn.functionName.table shouldBe "now"
+    param.as shouldBe DataType.Timeuuid
+  }
+
+  it should "parse select statements with function name selector and asterisk " in {
+    val statement = parseQuery(
+      "SELECT bigintAsBlob(count(*)) from system.local;"
+    ).asInstanceOf[SelectStatement]
+
+    statement.from.keyspace.get.name shouldBe "system"
+    statement.from.table shouldBe "local"
+    statement.mod.isDefined shouldBe false
+    statement.orderBy.isEmpty shouldBe true
+    statement.perPartitionLimit.isEmpty shouldBe true
+    statement.limit.isEmpty shouldBe true
+    statement.allowFiltering shouldBe false
+
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
+    selection.items.size shouldBe 1
+
+    val selector = selection.items(0).selector.asInstanceOf[Select.Function]
+
+    selector.functionName.keyspace shouldBe None
+    selector.functionName.table shouldBe "bigintAsBlob"
+    selector.params.seq(0) shouldBe Select.Count
+    selection.items(0).as.isEmpty shouldBe true
+  }
+
+  it should "parse select statements with function name selector and cast" in {
+    val statement = parseQuery(
+      "SELECT cast(count(*) AS int) from system.local;"
+    ).asInstanceOf[SelectStatement]
+
+    statement.from.keyspace.get.name shouldBe "system"
+    statement.from.table shouldBe "local"
+    statement.mod.isDefined shouldBe false
+    statement.orderBy.isEmpty shouldBe true
+    statement.perPartitionLimit.isEmpty shouldBe true
+    statement.limit.isEmpty shouldBe true
+    statement.allowFiltering shouldBe false
+
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
+    selection.items.size shouldBe 1
+
+    val selector = selection.items(0).selector.asInstanceOf[Select.Cast]
+
+    selector.selector shouldBe Select.Count
+    selector.as shouldBe DataType.Int
+  }
 }
