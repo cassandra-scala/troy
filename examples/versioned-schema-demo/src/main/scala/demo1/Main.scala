@@ -5,11 +5,11 @@ import com.datastax.driver.core.{Cluster, Session}
 import troy.dsl._
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
 
-case class Post(id: UUID, img: String) // Map doesn't work with Primitives yet. See: https://github.com/cassandra-scala/troy/issues/18
+case class Post(id: UUID, img: String)
 
 object Main extends App {
-  import scala.concurrent.ExecutionContext.Implicits.global
 
   val port: Int = 9042
   val host: String = "127.0.0.1"
@@ -19,10 +19,10 @@ object Main extends App {
 
   implicit val session: Session = cluster.connect()
 
-  val getCommentsByLine = withSchema.minVersion(2).maxVersion(2) {
+  val getCommentsByLine = withSchema.minVersion(1) {
     (authorId: String, postId: UUID) =>
       cql"""
-         SELECT post_id, post_img, foo
+         SELECT post_id, post_img
          FROM test.posts
          WHERE author_id = $authorId
            AND post_id = $postId
