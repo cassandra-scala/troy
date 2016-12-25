@@ -3,7 +3,6 @@ package troy.cql.parser.dml
 import java.util.UUID
 
 import org.scalatest.{ FlatSpec, Matchers }
-import troy.cql.ast.CqlParser.Constants
 import troy.cql.ast._
 import troy.cql.ast.dml._
 import troy.cql.ast.dml.Update._

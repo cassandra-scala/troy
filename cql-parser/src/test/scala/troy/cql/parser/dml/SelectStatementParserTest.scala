@@ -19,11 +19,8 @@ package troy.cql.parser.dml
 import java.util.UUID
 
 import org.scalatest._
-import troy.cql.ast
 import troy.cql.ast._
 import troy.cql.ast.dml.Select.OrderBy
-import troy.cql.ast.dml.Select.OrderBy.Ordering
-import troy.cql.ast.dml.SimpleSelection.ColumnName
 import troy.cql.ast.dml.{ Operator, Select }
 import troy.cql.ast.dml.WhereClause.Relation.{ Simple, Token, Tupled }
 import troy.cql.ast.dml.WhereClause.Relation

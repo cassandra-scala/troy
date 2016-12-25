@@ -2,7 +2,7 @@ package troy.cql.parser.ddl
 
 import org.scalatest.{ FlatSpec, Matchers }
 import troy.cql.ast.ddl.Index
-import troy.cql.ast.{ StringConstant, Constant, CreateIndex }
+import troy.cql.ast.{ StringConstant, CreateIndex }
 import troy.cql.parser.ParserTestUtils.parseSchemaAs
 
 class CreateIndexParserTest extends FlatSpec with Matchers {

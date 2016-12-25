@@ -95,7 +95,7 @@ class CreateTableParserTest extends FlatSpec with Matchers {
   }
 
   it should "accepts schemas with timeuuid fields" in {
-    val statement = parseSchemaAs[CreateTable](
+    parseSchemaAs[CreateTable](
       """
         CREATE TABLE test.posts (
           author_id text,
