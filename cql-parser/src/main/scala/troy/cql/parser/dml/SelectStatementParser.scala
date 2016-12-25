@@ -1,6 +1,6 @@
 package troy.cql.parser.dml
 import troy.cql.ast.CqlParser._
-import troy.cql.ast.{ FunctionCall, FunctionName, SelectStatement }
+import troy.cql.ast.SelectStatement
 import troy.cql.ast.dml.Select
 
 trait SelectStatementParser {

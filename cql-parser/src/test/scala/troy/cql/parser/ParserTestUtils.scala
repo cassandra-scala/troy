@@ -2,13 +2,11 @@ package troy.cql.parser
 
 import org.scalatest.{ FlatSpec, Matchers }
 import troy.cql.ast._
+import troy.cql.ast.dml.Insert.NamesValues
 
 object ParserTestUtils extends FlatSpec with Matchers {
   def parseSchema(statement: String) =
-    CqlParser.parseSchema(statement) match {
-      case CqlParser.Success(res, _)    => res
-      case CqlParser.Failure(msg, next) => fail(s"Parse Failure: $msg, line = ${next.pos.line}, column = ${next.pos.column}")
-    }
+    handleParseFailure(CqlParser.parseSchema(statement))
 
   def parseSchemaAs[T](statement: String) =
     parseSchema(statement)
@@ -16,15 +14,29 @@ object ParserTestUtils extends FlatSpec with Matchers {
       .asInstanceOf[T]
 
   def parseCreateTable(statement: String) =
-    parseSchemaAs(statement).asInstanceOf[CreateTable]
+    parseSchemaAs[CreateTable](statement)
 
   def parseQuery(statement: String) =
-    CqlParser
-      .parseDML(statement) match {
-        case CqlParser.Success(res, _)    => res
-        case CqlParser.Failure(msg, next) => fail(s"Parse Failure: $msg, line = ${next.pos.line}, column = ${next.pos.column}")
-      }
+    handleParseFailure(CqlParser.parseDML(statement))
+
+  private[this] def handleParseFailure[T](parsed: => CqlParser.ParseResult[T]): T =
+    parsed match {
+      case CqlParser.Success(res, _)    => res
+      case CqlParser.Failure(msg, next) => fail(s"Parse Failure: $msg, line = ${next.pos.line}, column = ${next.pos.column}")
+      case CqlParser.Error(msg, _)      => throw new Exception(msg)
+    }
 
   def parseSelect(statement: String) =
     parseQuery(statement).asInstanceOf[SelectStatement]
+
+  def parseInsert(statement: String) =
+    parseQuery(statement).asInstanceOf[InsertStatement]
+
+  object InsertUtils {
+    val parse = parseInsert _
+
+    implicit class InsertStatementHelpers(val statement: InsertStatement) extends AnyVal {
+      def values = statement.insertClause.asInstanceOf[NamesValues].values.values
+    }
+  }
 }

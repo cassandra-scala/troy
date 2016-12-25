@@ -40,7 +40,8 @@ class CaseSensitivityParsingSpec extends FlatSpec with Matchers {
         |  "baR" UUID,
         |  "baz" timestamp
         | );
-      """.stripMargin).columns
+      """.stripMargin
+    ).columns
 
     columns(0).name shouldBe "foo"
     columns(1).name shouldBe "Bar"
