@@ -265,7 +265,7 @@ object CqlParser extends JavaTokenParsers
     "SET",
     "TABLE",
     "TO",
-    //    "TOKEN",
+    // "TOKEN", // FIXME: https://github.com/cassandra-scala/troy/issues/132
     "TRUNCATE",
     "UNLOGGED",
     "UPDATE",
