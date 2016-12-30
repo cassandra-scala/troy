@@ -35,53 +35,52 @@ object PrimitivesConverter {
 
 object PrimitivesCodecs {
 
-  implicit val intAsInt = new TroyCodec[Int, CT.Int] {
+  implicit val intAsInt = new TroyCodec[CT.Int, Int] {
     override def get(gettable: GettableByIndexData, i: Int): Int = gettable.getInt(i)
     override def set[T <: SettableByIndexData[T]](settable: T, i: Int, v: Int): T = settable.setInt(i, v)
   }
 
-  implicit val bigIntAsLong = new TroyCodec[Long, CT.BigInt] {
+  implicit val bigIntAsLong = new TroyCodec[CT.BigInt, Long] {
     override def get(gettable: GettableByIndexData, i: Int): Long = gettable.getLong(i)
     override def set[T <: SettableByIndexData[T]](settable: T, i: Int, v: Long): T = settable.setLong(i, v)
   }
 
-  implicit val counterAsLong = new TroyCodec[Long, CT.Counter] {
+  implicit val counterAsLong = new TroyCodec[CT.Counter, Long] {
     override def get(gettable: GettableByIndexData, i: Int): Long = gettable.getLong(i)
     override def set[T <: SettableByIndexData[T]](settable: T, i: Int, v: Long): T = settable.setLong(i, v)
   }
 
-  implicit val timeAsLong = new TroyCodec[Long, CT.Time] {
+  implicit val timeAsLong = new TroyCodec[CT.Time, Long] {
     override def get(gettable: GettableByIndexData, i: Int): Long = gettable.getLong(i)
     override def set[T <: SettableByIndexData[T]](settable: T, i: Int, v: Long): T = settable.setLong(i, v)
   }
 
-  implicit val doubleAsDouble = new TroyCodec[Double, CT.Double] {
+  implicit val doubleAsDouble = new TroyCodec[CT.Double, Double] {
     override def get(gettable: GettableByIndexData, i: Int): Double = gettable.getDouble(i)
     override def set[T <: SettableByIndexData[T]](settable: T, i: Int, v: Double): T = settable.setDouble(i, v)
   }
 
-  implicit val booleanAsBoolean = new TroyCodec[Boolean, CT.Boolean] {
+  implicit val booleanAsBoolean = new TroyCodec[CT.Boolean, Boolean] {
     override def get(gettable: GettableByIndexData, i: Int): Boolean = gettable.getBool(i)
     override def set[T <: SettableByIndexData[T]](settable: T, i: Int, v: Boolean): T = settable.setBool(i, v)
   }
 
-  implicit val smallIntAsShort = new TroyCodec[Short, CT.SmallInt] {
+  implicit val smallIntAsShort = new TroyCodec[CT.SmallInt, Short] {
     override def get(gettable: GettableByIndexData, i: Int): Short = gettable.getShort(i)
     override def set[T <: SettableByIndexData[T]](settable: T, i: Int, v: Short): T = settable.setShort(i, v)
   }
-
-  implicit val tinyIntAsByte = new TroyCodec[Byte, CT.TinyInt] {
+  implicit val tinyIntAsByte = new TroyCodec[CT.TinyInt, Byte] {
     override def get(gettable: GettableByIndexData, i: Int): Byte = gettable.getByte(i)
     override def set[T <: SettableByIndexData[T]](settable: T, i: Int, v: Byte): T = settable.setByte(i, v)
   }
 
-  implicit val floatAsFloat = new TroyCodec[Float, CT.Float] {
+  implicit val floatAsFloat = new TroyCodec[CT.Float, Float] {
     override def get(gettable: GettableByIndexData, i: Int): Float = gettable.getFloat(i)
     override def set[T <: SettableByIndexData[T]](settable: T, i: Int, v: Float): T = settable.setFloat(i, v)
   }
 
-  implicit def troyOptionalPrimitiveTypeCodec[S <: AnyVal, C <: CT](implicit inner: TroyCodec[S, C]) =
-    new TroyCodec[Option[S], C] {
+  implicit def troyOptionalPrimitiveTypeCodec[S <: AnyVal, C <: CT](implicit inner: TroyCodec[C, S]) =
+    new TroyCodec[C, Option[S]] {
       override def set[T <: SettableByIndexData[T]](settable: T, i: Int, value: Option[S]) =
         value.map(inner.set(settable, i, _)).getOrElse(settable.setToNull(i))
 

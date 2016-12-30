@@ -18,7 +18,8 @@ object Build extends AutoPlugin {
     organization := "io.github.cassandra-scala",
     licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")),
     scalaVersion := Version.Scala,
-    crossScalaVersions := Vector("2.11.8", "2.12.0"),
+    scalaOrganization := "org.typelevel", // FIXME: Remove once literal-types is merged into lightbend Scala
+    crossScalaVersions := Vector("2.11.8", "2.12.1"),
     scalacOptions ++= Vector(
       "-encoding", "UTF-8",
       "-target:jvm-1.8",
@@ -31,8 +32,10 @@ object Build extends AutoPlugin {
       "-Ywarn-dead-code",
       "-Ywarn-unused-import",
       "-Ywarn-unused",
-      "-Ywarn-nullary-unit"
+      "-Ywarn-nullary-unit",
+      "-Yliteral-types"
     ),
+    scalacOptions in (Compile, console) := Seq("-Yliteral-types"),
     unmanagedSourceDirectories.in(Compile) := Vector(scalaSource.in(Compile).value),
     unmanagedSourceDirectories.in(Test) := Vector(scalaSource.in(Test).value)
   )

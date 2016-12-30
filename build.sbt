@@ -27,7 +27,8 @@ lazy val troyDriver = project
   .settings(libraryDependencies ++= Vector(
     Library.scalaTest % Test,
     Library.mockito % Test,
-    Library.cassandraDriverCore
+    Library.cassandraDriverCore,
+    Library.shapeless
   ))
 
 lazy val troy = project
@@ -62,17 +63,3 @@ lazy val troyMeta = project
 lazy val root = project.in(file("."))
   .settings(name := "troy-root", publishArtifact := false, publish := {}, publishLocal := {})
   .aggregate(troy, troyDriver, troySchema, cqlParser, cqlAst)
-
-initialCommands := """import java.util.UUID
-                     |import troy.Troy
-                     |import com.datastax.driver.core._
-                     |import scala.concurrent.duration.Duration
-                     |import scala.concurrent.Await
-                     |import scala.concurrent.ExecutionContext.Implicits.global
-                     |
-                     |val cluster = Cluster.builder().addContactPoint("127.0.0.1").build()
-                     |implicit val session: Session = cluster.connect()
-                     |
-                     |import Troy._
-                     |
-                     |""".stripMargin
