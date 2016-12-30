@@ -13,16 +13,16 @@ object InternalDsl {
   val CDT = CassandraDataType
 
   def column[S](i: Int)(implicit row: GettableByIndexData) = new {
-    def as[C <: CassandraDataType](implicit getter: TroyCodec[S, C]): S =
+    def as[C <: CassandraDataType](implicit getter: TroyCodec[C, S]): S =
       getter.get(row, i)
   }
 
   def param[S](value: S) = new {
-    def as[C <: CassandraDataType](implicit setter: TroyCodec[S, C]) =
+    def as[C <: CassandraDataType](implicit setter: TroyCodec[C, S]) =
       Param[S, C](value, setter)
   }
 
-  case class Param[S, C <: CassandraDataType](value: S, setter: TroyCodec[S, C]) {
+  case class Param[S, C <: CassandraDataType](value: S, setter: TroyCodec[C, S]) {
     def set(bs: BoundStatement, i: Int) = setter.set(bs, i, value)
   }
 
