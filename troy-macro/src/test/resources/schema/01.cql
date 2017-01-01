@@ -2,7 +2,7 @@ CREATE KEYSPACE test WITH replication = {'class': 'SimpleStrategy' , 'replicatio
 
 CREATE TABLE test.posts (
   author_id uuid,
-  post_id uuid,
+  post_id timeuuid,
   author_name text static,
   post_title text,
   PRIMARY KEY ((author_id), post_id)

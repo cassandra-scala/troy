@@ -31,10 +31,10 @@ class DslSpec extends CassandraSpec {
   override val testDataFixtures =
     """
       INSERT INTO test.posts (author_id, post_id , author_name , post_rating, post_title)
-      VALUES ( uuid(), uuid(), 'test author', 5, 'test post') ;
+      VALUES ( uuid(), now(), 'test author', 5, 'test post') ;
 
       INSERT INTO test.post_details (author_id, id , tags , comment_ids, comment_userIds, comment_bodies , comments)
-      VALUES ( uuid(), uuid(), {'test1', 'test2'}, {1, 2}, [1, 2], ['test1', 'test2'], {1: 'test1', 2 : 'test2'}) ;
+      VALUES ( uuid(), now(), {'test1', 'test2'}, {1, 2}, [1, 2], ['test1', 'test2'], {1: 'test1', 2 : 'test2'}) ;
     """
 
   case class Post(id: UUID, author_name: String, title: String)

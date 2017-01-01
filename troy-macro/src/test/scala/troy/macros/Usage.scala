@@ -18,7 +18,8 @@ package troy.macros
 
 import java.util.UUID
 
-import com.datastax.driver.core.{ Statement, Row, ResultSet, BoundStatement }
+import com.datastax.driver.core.utils.UUIDs
+import com.datastax.driver.core.{ BoundStatement, ResultSet, Row, Statement }
 
 import scala.concurrent.Future
 
@@ -35,7 +36,7 @@ class Usage extends CassandraSpec {
   override val testDataFixtures =
     """
       INSERT INTO test.posts (author_id, post_id , author_name , post_rating, post_title)
-      VALUES ( uuid(), uuid(), 'test author', 5, 'Title') ;
+      VALUES ( uuid(), now(), 'test author', 5, 'Title') ;
     """
 
   case class Post(id: UUID, authorName: String, title: String)
@@ -87,7 +88,7 @@ class Usage extends CassandraSpec {
         VALUES ( ${p.authorId}, ${p.postId}, ${p.authorName}, ${p.postRating}, ${p.postTitle}) ;
       """.prepared.executeAsync
     }
-    createPost(AuthorAndPost(UUID.randomUUID(), UUID.randomUUID(), "Author", Some(5), Some("Title"))).futureValue
+    createPost(AuthorAndPost(UUID.randomUUID(), UUIDs.timeBased(), "Author", Some(5), Some("Title"))).futureValue
   }
 
   it should "support INSERT with if not exists flag" in {
@@ -98,7 +99,7 @@ class Usage extends CassandraSpec {
         IF NOT EXISTS;
       """.prepared.execute.oneOption.as(identity[Boolean] _)
     }
-    createPost(AuthorAndPost(UUID.randomUUID(), UUID.randomUUID(), "Author", Some(5), Some("Title"))).get shouldBe true
+    createPost(AuthorAndPost(UUID.randomUUID(), UUIDs.timeBased(), "Author", Some(5), Some("Title"))).get shouldBe true
   }
 
   //   TODO: https://github.com/tabdulradi/troy/issues/34
@@ -110,7 +111,7 @@ class Usage extends CassandraSpec {
           WHERE author_id=$authId and post_id=$postId;
         """.prepared.executeAsync
     }
-    setTitle(UUID.randomUUID(), UUID.randomUUID(), "not test anymore")
+    setTitle(UUID.randomUUID(), UUIDs.timeBased(), "not test anymore")
 
     val setRating = withSchema { (authId: UUID, id: UUID, title: String, rating: Int) =>
       cql"""
@@ -119,7 +120,7 @@ class Usage extends CassandraSpec {
           WHERE author_id=$authId and id=$id IF title=$title;
         """.prepared.executeAsync
     }
-    setRating(UUID.randomUUID(), UUID.randomUUID(), "test", 5)
+    setRating(UUID.randomUUID(), UUIDs.timeBased(), "test", 5)
 
     val addTag = withSchema { (authId: UUID, id: UUID, newTag: Set[String]) =>
       cql"""
@@ -128,7 +129,7 @@ class Usage extends CassandraSpec {
           WHERE author_id=$authId and id=$id;
         """.prepared.executeAsync
     }
-    addTag(UUID.randomUUID(), UUID.randomUUID(), Set("test"))
+    addTag(UUID.randomUUID(), UUIDs.timeBased(), Set("test"))
   }
 
   // TODO: https://github.com/tabdulradi/troy/issues/33
