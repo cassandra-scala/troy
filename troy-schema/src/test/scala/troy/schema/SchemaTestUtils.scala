@@ -1,9 +1,9 @@
 package troy.schema
 
 import org.scalatest.{ FlatSpec, Matchers }
-import troy.cql.parser.ParserTestUtils.{ parseSchema, parseQuery }
+import troy.cql.parser.ParserTestUtils.{ parseQuery, parseSchema }
 import VTestUtils._
-import troy.schema.SchemaEngine.Columns
+import troy.schema.SchemaEngine.{ Asterisk, Columns }
 
 object SchemaTestUtils extends FlatSpec with Matchers {
   def buildSchema(versionedStatements: String*) =
@@ -11,6 +11,9 @@ object SchemaTestUtils extends FlatSpec with Matchers {
 
   def analyse(query: String)(implicit schema: VersionedSchemaEngine) =
     schema(parseQuery(query))
+
+  def asteriskOf(query: String)(implicit schema: VersionedSchemaEngine) =
+    analyse(query).get._1.asInstanceOf[Asterisk].types
 
   def columnsOf(query: String)(implicit schema: VersionedSchemaEngine) =
     analyse(query).get._1.asInstanceOf[Columns].types
