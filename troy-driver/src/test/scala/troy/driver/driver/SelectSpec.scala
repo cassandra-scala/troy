@@ -21,6 +21,7 @@ object SelectSpec {
     HNil
   ]
 
+  // Columns
   assertSelectOut[1, "test", "posts",
     Column["author_id"] :: HNil,
     CDT.Uuid :: HNil
@@ -29,5 +30,29 @@ object SelectSpec {
   assertSelectOut[1, "test", "posts",
     Column["author_id"] :: Column["post_id"] :: HNil,
     CDT.Uuid :: CDT.TimeUuid :: HNil
+  ]
+
+  // Functions only
+  assertSelectOut[1, "test", "posts",
+    Function[NoKeyspace, "now", HNil] :: HNil,
+    CDT.TimeUuid :: HNil
+  ]
+
+  // Functions on columns
+  assertSelectOut[1, "test", "posts",
+    Function[NoKeyspace, "writetime", Column["author_id"] :: HNil] :: HNil,
+    CDT.BigInt :: HNil
+  ]
+
+  // Functions AND columns
+  assertSelectOut[1, "test", "posts",
+    Column["author_id"] :: Function[NoKeyspace, "writetime", Column["author_id"] :: HNil] :: HNil,
+    CDT.Uuid :: CDT.BigInt :: HNil
+  ]
+
+  // Functions on Functions
+  assertSelectOut[1, "test", "posts",
+    Function[NoKeyspace, "dateof", Function[NoKeyspace, "now", HNil] :: HNil] :: HNil,
+    CDT.Timestamp :: HNil
   ]
 }
