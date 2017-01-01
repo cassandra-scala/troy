@@ -5,8 +5,16 @@ import shapeless.test.illTyped
 import troy.driver.{CassandraDataType => CDT}
 import troy.driver.codecs.TroyCodec
 import troy.driver.codecs.PrimitivesCodecs.intAsInt
+import troy.driver.schema.column.{CodecForColumn, ColumnType}
+import troy.driver.schema.keyspace.KeyspaceExists
+import troy.driver.schema.table.TableExists
+import troy.driver.schema.version.VersionExists
 
 class CodecForColumnSpec extends FlatSpec with Matchers {
+  implicit val v1Exists = VersionExists.instance[1]
+  implicit val keyspaceTestExists = KeyspaceExists.instance[1, "my_keyspace"]
+  implicit val tablePostsInKeyspaceTestExists = TableExists.instance[1, "my_keyspace", "my_table"]
+
   implicit val column1 = ColumnType.instance[1, "my_keyspace", "my_table", "my_column_1", CDT.Ascii]
   implicit val column2 = ColumnType.instance[1, "my_keyspace", "my_table", "my_column_2", CDT.Int]
   implicit val column3 = ColumnType.instance[1, "my_keyspace", "my_table", "my_column_3", CDT.List[CDT.Int]]
