@@ -17,8 +17,8 @@
 package troy
 
 import scala.reflect.macros.blackbox.Context
-import troy.cql.ast.DataType
-import troy.schema.{SchemaEngine, V, Result, ResourceFileOrFolderSchemaLoader}
+import troy.cql.ast.{DataType, KeyspaceName, TableName}
+import troy.schema._
 
 package object macros {
   import CqlOps._
@@ -39,6 +39,35 @@ package object macros {
     val (qParts, qParams) = findCqlQuery(c)(expr)
     val rawQuery = qParts.map{case q"${p: String}" => p}.mkString("?")
     val schema = getOrAbort(loadedSchema)
+
+    val versionsSchemaImplicits = for {
+      (v, schema: SchemaEngineImpl) <- schema.asInstanceOf[VersionedSchemaEngineImpl].schemas
+      identifier = TermName(s"v${v}Exists")
+    } yield q"implicit val $identifier = VersionExists.instance[$v]"
+
+    val keyspacesSchemaImplicits = for {
+      (v, schema: SchemaEngineImpl) <- schema.asInstanceOf[VersionedSchemaEngineImpl].schemas
+      (KeyspaceName(k), keyspace) <- schema.schema.keyspaces
+      identifier = TermName(s"keyspace${k}ExistsInV$v")
+    } yield q"implicit val $identifier = KeyspaceExists.instance[$v, $k]"
+
+    val tablesSchemaImplicits = for {
+      (v, schema: SchemaEngineImpl) <- schema.asInstanceOf[VersionedSchemaEngineImpl].schemas
+      (KeyspaceName(k), keyspace) <- schema.schema.keyspaces
+      (TableName(_, t), table) <- keyspace.tables
+      identifier = TermName(s"table${t}ExistsInKeyspace${k}InV$v")
+    } yield q"implicit val $identifier = TableExists.instance[$v, $k, $t]"
+
+    val columnsSchemaImplicits = for {
+      (v, schema: SchemaEngineImpl) <- schema.asInstanceOf[VersionedSchemaEngineImpl].schemas
+      (KeyspaceName(k), keyspace) <- schema.schema.keyspaces
+      (TableName(_, t), table) <- keyspace.tables
+      (cName, column) <- table.columns
+      ct = translateColumnType(c)(column.dataType)
+      identifier = TermName(s"column${cName}ExistsInTable${t}InKeyspace${k}InV$v")
+    } yield q"implicit val $identifier = ColumnType.instance[$v, $k, $t, $cName, $ct]"
+
+
     val query = getOrAbort(parseQuery(rawQuery))
     val (rowType, variableDataTypes) = getOrAbort {
       queryConfig match {
@@ -50,8 +79,12 @@ package object macros {
 
     val imports = Seq(
       q"import _root_.troy.driver.InternalDsl._",
-      q"import _root_.troy.driver.codecs.PrimitivesCodecs._"
-    )
+      q"import _root_.troy.driver.codecs.PrimitivesCodecs._",
+      q"import troy.driver.schema.version.VersionExists",
+      q"import troy.driver.schema.keyspace.KeyspaceExists",
+      q"import troy.driver.schema.table.TableExists",
+      q"import troy.driver.schema.column.ColumnType"
+    ) ++ versionsSchemaImplicits ++ keyspacesSchemaImplicits ++ tablesSchemaImplicits ++ columnsSchemaImplicits
 
     val session = q"implicitly[com.datastax.driver.core.Session]"
 
@@ -189,7 +222,11 @@ package object macros {
   }
 
   private def translateColumnTypes(c: Context)(types: Seq[DataType]) = {
-    types map {
+    types.map(t => translateColumnType(c)(t))
+  }
+
+  private def translateColumnType(c: Context)(t: DataType) = {
+    t match {
       case t: DataType.Native => translateNativeColumnType(c)(t)
       case t: DataType.Collection => translateCollectionColumnType(c)(t)
     }
