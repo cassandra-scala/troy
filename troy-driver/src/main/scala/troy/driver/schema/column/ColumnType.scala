@@ -1,6 +1,7 @@
-package troy.driver.schema
+package troy.driver.schema.column
 
 import troy.driver.CassandraDataType
+import troy.driver.schema.table.TableExists
 
 /*
  * Represents the column's Cassandra data type
@@ -12,8 +13,8 @@ trait ColumnType[Version, Keyspace, Table, Column] {
 }
 
 object ColumnType {
-  type Aux[Version, Keyspace, Table, Column, ColumnT] = ColumnType[Version, Keyspace, Table, Column] { type Out = ColumnT }
+  type Aux[V, K, T, C, CT] = ColumnType[V, K, T, C] { type Out = CT }
 
-  def instance[Version, Keyspace, Table, Column, ColumnT <: CassandraDataType]: Aux[Version, Keyspace, Table, Column, ColumnT] =
-    new ColumnType[Version, Keyspace, Table, Column] { type Out = ColumnT }
+  def instance[V, K, T, C, CT <: CassandraDataType](implicit tableExists: TableExists[V, K, T]): Aux[V, K, T, C, CT] =
+    new ColumnType[V, K, T, C] { type Out = CT }
 }

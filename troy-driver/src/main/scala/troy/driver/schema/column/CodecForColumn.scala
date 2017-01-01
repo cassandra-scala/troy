@@ -1,6 +1,7 @@
-package troy.driver.schema
+package troy.driver.schema.column
 
 import troy.driver.codecs.TroyCodec
+import troy.driver.schema.TypeBinding
 import troy.driver.{ CassandraDataType => CDT }
 
 sealed trait CodecForColumn[Version, Keyspace, Table, Column] {
@@ -29,4 +30,3 @@ object CodecForColumn {
     val codec: TroyCodec[CassandraType, ScalaType] = codec
   }
 }
-
