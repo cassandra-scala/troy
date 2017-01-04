@@ -38,7 +38,7 @@ object CqlParser extends JavaTokenParsers
     parse(phrase(selectStatement <~ semicolon.?), input)
 
   def parseDML(input: String): ParseResult[DataManipulation] =
-    parse(phrase(dmlDefinition <~ semicolon.?), input)
+    parse(phrase(dmlDefinition <~ semicolon.? <~ comment.?), input)
 
   ////////////////////////////////////////// Data Definition
   def dataDefinition: Parser[DataDefinition] =
@@ -74,6 +74,18 @@ object CqlParser extends JavaTokenParsers
 
     str | blob | uuid | floats | int | boolean | nullConst
   }
+
+  def comment: Parser[Comment] = {
+    import Comment._
+
+    def str = "[0-9a-fA-F]".r
+    def dash = s"--$str".r ^^ SingleLineDash
+    def slash = s"//$str".r ^^ SingleLineSlash
+    def multi = s"/*$str*/".r ^^ MultiLine
+
+    dash | slash | multi
+  }
+
   def identifier: Parser[Identifier] = "[a-zA-Z0-9_]+".r.filter(k => !Keywords.contains(k.toUpperCase))
 
   def optionInstruction: Parser[OptionInstruction] = {

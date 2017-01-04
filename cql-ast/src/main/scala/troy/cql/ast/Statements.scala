@@ -6,6 +6,7 @@ import troy.cql.ast.ddl._
 sealed trait Cql3Statement
 sealed trait DataDefinition extends Cql3Statement
 sealed trait DataManipulation extends Cql3Statement
+sealed trait Comment extends Cql3Statement
 
 final case class DeleteStatement(
   simpleSelection: Seq[SimpleSelection],
@@ -76,3 +77,9 @@ final case class CreateType(
   typeName: TypeName,
   fields: Seq[Field]
 ) extends DataDefinition
+
+object Comment {
+  final case class SingleLineDash(comment: String) extends Comment
+  final case class SingleLineSlash(comment: String) extends Comment
+  final case class MultiLine(comment: String) extends Comment
+}
