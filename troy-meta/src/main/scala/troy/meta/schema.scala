@@ -3,15 +3,16 @@ package meta
 
 import java.io.InputStream
 
-import troy.Seq
 import troy.cql.ast.{CqlParser, DataType, KeyspaceName, TableName}
-import troy.schema.{SchemaEngine, SchemaEngineImpl, VersionedSchemaEngine, VersionedSchemaEngineImpl}
+import troy.schema.{SchemaEngineImpl, VersionedSchemaEngine, VersionedSchemaEngineImpl}
 
 import scala.io.Source
 import scala.meta._
 
 
+
 object SchemaUtils extends Utils {
+
   val imports = Seq(
     q"import troy.driver.schema._",
     q"import troy.driver.schema.column._",
