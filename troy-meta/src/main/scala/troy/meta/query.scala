@@ -3,12 +3,11 @@ package meta
 
 import troy.cql.ast._
 import troy.cql.ast.dml.Select._
-import scala.collection.immutable._
-
+import scala.collection.immutable.{Seq => ImmutableSeq} // Required to construct quasiquotes
 import scala.meta._
 
 object QueryUtils extends Utils {
-  val imports = Seq(
+  val imports = ImmutableSeq(
     q"import troy.driver.query.select._",
     q"import Select._"
   )
@@ -19,7 +18,7 @@ object QueryUtils extends Utils {
 
   def translateQuery(inputType: Type, outputType: Type, query: DataManipulation, raw: String): Stat = query match {
     case SelectStatement(mod, selection, from, where, orderBy, perPartitionLimit, limit, allowFiltering) =>
-      val ts: Seq[Type] = Seq(Type.Name("1"), translateKeyspace(from.keyspace), literal(from.table), translateSelection(selection), inputType, outputType)
+      val ts: ImmutableSeq[Type] = ImmutableSeq(Type.Name("1"), translateKeyspace(from.keyspace), literal(from.table), translateSelection(selection), inputType, outputType)
       q"select[..$ts]($raw)"
   }
 
@@ -41,7 +40,9 @@ object QueryUtils extends Utils {
   def translateSelectors(selectors: Seq[Selector]): Type =
     foldAsTuple(selectors.map(translateSelector))
 
-  def foldAsTuple(ts: Seq[Type]): Type = t"(..$ts)"
+  def foldAsTuple(ts: Seq[Type]): Type = foldAsTuple(ts.to[ImmutableSeq])
+  def foldAsTuple(ts: ImmutableSeq[Type]): Type = t"(..$ts)"
+
 
   //  def foldAsHList(ts: Seq[Type]): Type = ts.reverse.foldLeft[Type](t"HNil") {
 //    case (acc: Type, s: Type) =>
