@@ -25,6 +25,7 @@ lazy val troyDriver = project
   .in(file("troy-driver"))
   .settings(name := "troy-driver")
   .settings(libraryDependencies ++= Vector(
+    Library.scalaReflect,
     Library.scalaTest % Test,
     Library.mockito % Test,
     Library.cassandraDriverCore,
