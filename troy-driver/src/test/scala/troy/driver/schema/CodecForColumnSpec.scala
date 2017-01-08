@@ -7,9 +7,9 @@ import troy.driver.{CassandraDataType => CDT}
 import troy.driver.codecs.TroyCodec
 import troy.driver.codecs.PrimitivesCodecs.intAsInt
 import troy.driver.schema.column.{CodecForColumn, ColumnType}
-import troy.driver.schema.keyspace.KeyspaceExists
-import troy.driver.schema.table.TableExists
-import troy.driver.schema.version.VersionExists
+import troy.driver.schema.KeyspaceExists
+import troy.driver.schema.TableExists
+import troy.driver.schema.VersionExists
 
 class CodecForColumnSpec extends FlatSpec with Matchers {
   implicit val v1Exists = VersionExists.instance[1]

@@ -3,9 +3,9 @@ package driver.driver
 
 import troy.driver.{CassandraDataType => CDT}
 import troy.driver.schema.column.ColumnType
-import troy.driver.schema.keyspace.KeyspaceExists
-import troy.driver.schema.table.TableExists
-import troy.driver.schema.version.VersionExists
+import troy.driver.schema.KeyspaceExists
+import troy.driver.schema.TableExists
+import troy.driver.schema.VersionExists
 
 object TestSchema {
   implicit val v1Exists = VersionExists.instance[1]
