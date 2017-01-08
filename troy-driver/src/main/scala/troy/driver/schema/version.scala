@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package troy.driver.schema
+package troy
+package driver.schema
 
 /**
  * V is expected to be a numric literal type

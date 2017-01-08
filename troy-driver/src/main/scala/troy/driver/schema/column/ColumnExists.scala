@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package troy.driver.schema.column
+package troy
+package driver.schema.column
 
 /*
  * Name is expected to be a textual literal type

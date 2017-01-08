@@ -1,4 +1,5 @@
-package troy.driver.driver
+package troy
+package driver.driver
 
 import troy.driver.{CassandraDataType => CDT}
 import troy.driver.schema.column.ColumnType

@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package troy.cql.ast
+package troy
+package cql.ast
 
 sealed trait DataType
 

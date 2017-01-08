@@ -1,4 +1,5 @@
-package troy.schema.validation
+package troy
+package schema.validation
 
 import troy.cql.ast._
 import troy.cql.ast.ddl.Alter.AlterType

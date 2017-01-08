@@ -1,4 +1,5 @@
-package troy.cql.parser.ddl
+package troy
+package cql.parser.ddl
 
 import troy.cql.ast.AlterTable
 import troy.cql.ast.CqlParser._

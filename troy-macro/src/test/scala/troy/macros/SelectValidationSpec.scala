@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package troy.macros
+package troy
+package macros
 
 import java.util.UUID
 import com.datastax.driver.core.Session

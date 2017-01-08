@@ -1,4 +1,5 @@
-package troy.meta
+package troy
+package meta
 
 import scala.meta._
 

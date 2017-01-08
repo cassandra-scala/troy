@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package troy.schema
+package troy
+package schema
 
 import org.scalatest._
 

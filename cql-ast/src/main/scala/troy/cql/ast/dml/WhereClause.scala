@@ -1,4 +1,5 @@
-package troy.cql.ast.dml
+package troy
+package cql.ast.dml
 
 import troy.cql.ast.{ Identifier, Term, TupleLiteral }
 

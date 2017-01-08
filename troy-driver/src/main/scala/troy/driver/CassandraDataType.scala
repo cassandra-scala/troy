@@ -1,4 +1,5 @@
-package troy.driver
+package troy
+package driver
 
 /**
  * Represents Cassandra Types

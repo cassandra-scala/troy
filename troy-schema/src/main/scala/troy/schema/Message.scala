@@ -1,4 +1,5 @@
-package troy.schema
+package troy
+package schema
 
 import troy.cql.ast._
 import troy.cql.ast.dml.Operator

@@ -1,4 +1,5 @@
-package troy.schema
+package troy
+package schema
 
 import org.scalatest.{ FlatSpec, Matchers }
 

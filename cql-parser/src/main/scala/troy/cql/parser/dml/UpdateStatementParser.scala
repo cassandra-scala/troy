@@ -1,4 +1,5 @@
-package troy.cql.parser.dml
+package troy
+package cql.parser.dml
 
 import troy.cql.ast.CqlParser._
 import troy.cql.ast.UpdateStatement

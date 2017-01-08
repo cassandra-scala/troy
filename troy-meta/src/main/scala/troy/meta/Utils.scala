@@ -1,4 +1,5 @@
-package troy.meta
+package troy
+package meta
 
 import troy.cql.ast.CqlParser
 import troy.schema.{ Message, Result, V }

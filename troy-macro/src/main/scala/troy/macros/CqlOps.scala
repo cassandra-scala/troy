@@ -1,4 +1,5 @@
-package troy.macros
+package troy
+package macros
 
 import troy.cql.ast.CqlParser
 import troy.schema._

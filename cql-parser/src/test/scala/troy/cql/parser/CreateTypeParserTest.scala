@@ -1,4 +1,5 @@
-package troy.cql.parser
+package troy
+package cql.parser
 
 import org.scalatest._
 import troy.cql.ast.ddl.Field

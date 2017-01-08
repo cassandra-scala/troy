@@ -1,4 +1,5 @@
-package troy.cql3_4.lexical
+package troy
+package cql3_4.lexical
 
 import org.scalatest.{ FlatSpec, Matchers }
 import troy.cql.parser.ParserTestUtils._

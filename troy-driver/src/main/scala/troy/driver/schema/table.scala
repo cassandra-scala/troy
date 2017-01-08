@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package troy.driver.schema
+package troy
+package driver.schema
 
 import scala.annotation.implicitNotFound
 

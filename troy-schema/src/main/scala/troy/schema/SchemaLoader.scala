@@ -1,4 +1,5 @@
-package troy.schema
+package troy
+package schema
 
 import java.io.InputStream
 import troy.cql.ast.CqlParser

@@ -1,4 +1,5 @@
-package troy.driver.codecs
+package troy
+package driver.codecs
 
 import com.datastax.driver.core.{ SettableByIndexData, GettableByIndexData }
 import troy.driver.{ CassandraDataType => CT }

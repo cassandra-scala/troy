@@ -1,4 +1,5 @@
-package troy.driver.schema
+package troy
+package driver.schema
 
 import org.scalatest.{FlatSpec, Matchers}
 import shapeless.test.illTyped

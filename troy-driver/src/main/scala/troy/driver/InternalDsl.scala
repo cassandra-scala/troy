@@ -1,4 +1,5 @@
-package troy.driver
+package troy
+package driver
 
 import com.datastax.driver.core._
 import troy.driver.codecs.TroyCodec

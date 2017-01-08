@@ -1,4 +1,5 @@
-package troy.driver
+package troy
+package driver
 
 import com.datastax.driver.core.{ Session, Row, ResultSet, Statement }
 

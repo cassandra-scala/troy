@@ -1,4 +1,5 @@
-package troy.driver.query.select
+package troy
+package driver.query.select
 
 import shapeless._
 import troy.driver.schema.{ FunctionType, KeyspaceExists, TableExists, VersionExists }

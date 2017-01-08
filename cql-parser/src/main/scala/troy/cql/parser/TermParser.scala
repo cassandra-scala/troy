@@ -1,4 +1,5 @@
-package troy.cql.parser
+package troy
+package cql.parser
 
 import troy.cql.ast.CqlParser._
 import troy.cql.ast._

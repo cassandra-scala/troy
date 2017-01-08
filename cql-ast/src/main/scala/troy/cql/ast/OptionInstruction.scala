@@ -1,4 +1,5 @@
-package troy.cql.ast
+package troy
+package cql.ast
 
 sealed trait OptionInstruction
 

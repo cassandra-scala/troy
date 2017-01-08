@@ -1,4 +1,5 @@
-package troy.dsl
+package troy
+package dsl
 
 import scala.annotation.compileTimeOnly
 
