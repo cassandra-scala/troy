@@ -1,5 +1,4 @@
-package troy
-package cql.ast.dml
+package troy.cql.ast.dml
 
 import troy.cql.ast.{ BindMarker, DataType, Term, _ }
 
