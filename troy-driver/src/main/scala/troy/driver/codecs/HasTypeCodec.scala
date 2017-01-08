@@ -1,4 +1,5 @@
-package troy.driver.codecs
+package troy
+package driver.codecs
 
 import java.net.InetAddress
 import java.nio.ByteBuffer

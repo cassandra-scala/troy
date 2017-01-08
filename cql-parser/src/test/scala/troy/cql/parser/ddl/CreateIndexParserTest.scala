@@ -1,4 +1,5 @@
-package troy.cql.parser.ddl
+package troy
+package cql.parser.ddl
 
 import org.scalatest.{ FlatSpec, Matchers }
 import troy.cql.ast.ddl.Index

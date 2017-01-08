@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package troy.macros
+package troy
+package macros
 
 import troy.schema.Messages.{ SchemaNotFound, QueryParseFailure }
 import troy.schema.VTestUtils._

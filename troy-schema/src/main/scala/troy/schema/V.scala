@@ -1,4 +1,5 @@
-package troy.schema
+package troy
+package schema
 
 /**
  * V for Validation، similar to Either but also includes Warnings

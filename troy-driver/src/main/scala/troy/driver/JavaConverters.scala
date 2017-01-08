@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package troy.driver
+package troy
+package driver
 
 import com.google.common.util.concurrent.{ FutureCallback, Futures, ListenableFuture }
 

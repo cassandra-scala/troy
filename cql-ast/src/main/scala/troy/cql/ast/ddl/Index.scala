@@ -1,4 +1,5 @@
-package troy.cql.ast.ddl
+package troy
+package cql.ast.ddl
 
 import troy.cql.ast.MapLiteral
 

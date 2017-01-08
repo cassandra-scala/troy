@@ -1,4 +1,5 @@
-package troy.cql3_3.lexical
+package troy
+package cql3_3.lexical
 
 import org.scalatest._
 import troy.cql.ast.DataType

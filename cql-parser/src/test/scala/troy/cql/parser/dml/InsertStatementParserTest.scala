@@ -1,4 +1,5 @@
-package troy.cql.parser.dml
+package troy
+package cql.parser.dml
 
 import org.scalatest.{ FlatSpec, Matchers }
 import troy.cql.ast.dml.{ Insert, Timestamp, Ttl, UpdateValue }

@@ -1,4 +1,5 @@
-package troy.meta
+package troy
+package meta
 
 import troy.cql.ast._
 import troy.cql.ast.dml.Select._

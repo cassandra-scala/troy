@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package troy.driver.schema.column
+package troy
+package driver.schema.column
 
 import troy.driver.codecs.TroyCodec
 import troy.driver.schema.TypeBinding

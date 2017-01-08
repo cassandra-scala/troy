@@ -1,4 +1,5 @@
-package troy.cql.parser.dml
+package troy
+package cql.parser.dml
 
 import java.util.UUID
 

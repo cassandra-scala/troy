@@ -1,4 +1,5 @@
-package troy.cql.ast
+package troy
+package cql.ast
 
 import troy.cql.ast.dml._
 import troy.cql.ast.ddl._

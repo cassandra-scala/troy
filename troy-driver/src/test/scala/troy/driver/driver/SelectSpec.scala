@@ -1,4 +1,5 @@
-package troy.driver.driver
+package troy
+package driver.driver
 
 import org.scalatest.{FlatSpec, Matchers}
 import shapeless._

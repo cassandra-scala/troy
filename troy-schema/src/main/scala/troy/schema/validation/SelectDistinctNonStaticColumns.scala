@@ -1,4 +1,5 @@
-package troy.schema.validation
+package troy
+package schema.validation
 
 import troy.schema.Messages.SelectedDistinctNonStaticColumn
 import troy.schema.Schema

@@ -1,4 +1,5 @@
-package troy.driver
+package troy
+package driver
 
 import java.math.{ BigInteger, BigDecimal }
 import java.net.InetAddress

@@ -1,4 +1,5 @@
-package troy.cql.parser
+package troy
+package cql.parser
 
 import scala.util.parsing.combinator.JavaTokenParsers
 

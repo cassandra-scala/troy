@@ -1,4 +1,5 @@
-package troy.cql.parser.ddl
+package troy
+package cql.parser.ddl
 
 import org.scalatest._
 import troy.cql.ast.ddl.Table
