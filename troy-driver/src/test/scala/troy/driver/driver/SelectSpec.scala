@@ -7,7 +7,6 @@ import shapeless.test.illTyped
 import troy.driver.codecs.TroyCodec
 import troy.driver.query.select.Select
 import troy.driver.schema.column.{CodecForColumn, ColumnType}
-import troy.driver.schema.version.VersionExists
 import troy.driver.{CassandraDataType => CDT}
 import troy.driver.query.select._
 
