@@ -116,7 +116,10 @@ class CreateTableParserTest extends FlatSpec with Matchers {
           user_weight float,
           user_gender smallint,
           user_ip inet,
-          user_time time
+          user_time time,
+          user_status boolean,
+          user_balance double,
+          user_trans_id bigint
         );
       """
     )
@@ -128,7 +131,10 @@ class CreateTableParserTest extends FlatSpec with Matchers {
       Table.Column("user_weight", DataType.Float, false, false),
       Table.Column("user_gender", DataType.Smallint, false, false),
       Table.Column("user_ip", DataType.Inet, false, false),
-      Table.Column("user_time", DataType.Time, false, false)
+      Table.Column("user_time", DataType.Time, false, false),
+      Table.Column("user_status", DataType.Boolean, false, false),
+      Table.Column("user_balance", DataType.Double, false, false),
+      Table.Column("user_trans_id", DataType.BigInt, false, false)
     )
     statement.primaryKey.isEmpty shouldBe true // Primary is defined inline instead
     statement.options.isEmpty shouldBe true
