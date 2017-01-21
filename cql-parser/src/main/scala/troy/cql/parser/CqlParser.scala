@@ -75,9 +75,8 @@ object CqlParser extends JavaTokenParsers
     str | blob | uuid | floats | int | boolean | nullConst
   }
 
-  // Comments Parser
+  // Ignores comments
   protected override val whiteSpace = """(\s|//.*|--.*|(?m)/\*(\*(?!/)|[^*])*\*/)+""".r
-  def comment = ident+
 
   def identifier: Parser[Identifier] = "[a-zA-Z0-9_]+".r.filter(k => !Keywords.contains(k.toUpperCase))
 
