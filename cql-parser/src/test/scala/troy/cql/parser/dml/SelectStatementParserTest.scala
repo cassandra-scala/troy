@@ -925,25 +925,4 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     selector.selector shouldBe Select.Count
     selector.as shouldBe DataType.Int
   }
-  // SQL Comments
-  it should "parse simple select statements with comments" in {
-    val statement = parseQuery("SELECT name, occupation FROM users; /* End of line comment*/").asInstanceOf[SelectStatement]
-    statement.mod.isEmpty shouldBe true
-    statement.from.table shouldBe "users"
-    statement.where.isEmpty shouldBe true
-    statement.orderBy.isEmpty shouldBe true
-    statement.perPartitionLimit.isEmpty shouldBe true
-    statement.limit.isEmpty shouldBe true
-    statement.allowFiltering shouldBe false
-
-    val selection = statement.selection.asInstanceOf[Select.SelectClause]
-    selection.items.size shouldBe 2
-
-    selection.items(0).selector shouldBe Select.ColumnName("name")
-    selection.items(0).as.isEmpty shouldBe true
-
-    selection.items(1).selector shouldBe Select.ColumnName("occupation")
-    selection.items(1).as.isEmpty shouldBe true
-
-  }
 }
