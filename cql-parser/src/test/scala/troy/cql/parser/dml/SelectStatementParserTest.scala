@@ -96,6 +96,34 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     selection.items(1).as.isEmpty shouldBe true
   }
 
+  it should "parse simple select statements with order by ASC" in {
+    val statement = parseQuery("SELECT name, occupation FROM test.users ORDER BY name ASC;").asInstanceOf[SelectStatement]
+    statement.from.keyspace.get.name shouldBe "test"
+    statement.from.table shouldBe "users"
+    statement.mod.isEmpty shouldBe true
+    statement.where.isEmpty shouldBe true
+    statement.orderBy.isDefined shouldBe true
+    statement.orderBy.get.orderings.size shouldBe 1
+
+    val orderings = statement.orderBy.get.orderings(0)
+    orderings.columnName.name shouldBe "name"
+    orderings.direction.isDefined shouldBe true
+    orderings.direction.get shouldBe OrderBy.Ascending
+
+    statement.perPartitionLimit.isEmpty shouldBe true
+    statement.limit.isEmpty shouldBe true
+    statement.allowFiltering shouldBe false
+
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
+    selection.items.size shouldBe 2
+
+    selection.items(0).selector shouldBe Select.ColumnName("name")
+    selection.items(0).as.isEmpty shouldBe true
+
+    selection.items(1).selector shouldBe Select.ColumnName("occupation")
+    selection.items(1).as.isEmpty shouldBe true
+  }
+
   it should "parse simple select statements with JSON" in {
     val statement = parseQuery("SELECT JSON name, occupation FROM users;").asInstanceOf[SelectStatement]
     statement.from.table shouldBe "users"
