@@ -141,6 +141,7 @@ class schema extends scala.annotation.StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
     val q"object $name { ..$stats }" = defn
     val newStats = stats ++ SchemaUtils.writeSchema
+    newStats.foreach(println)
     q"object $name { ..$newStats }"
   }
 }
