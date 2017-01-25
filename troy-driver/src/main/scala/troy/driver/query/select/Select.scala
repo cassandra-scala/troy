@@ -51,6 +51,29 @@ object StatementBinder {
   //    def implicitNotFoundMacroImpl[Ps](c: Context) = c.abort(c.enclosingPosition, s"a7a need 3ala fekra")
 }
 
+/*
+ * QInfo: Compile time info about schema
+ * Out: generic representation of required Scala Row representation
+ */
+trait RowParser[QInfo, Out <: HList] {
+  def parse(row: Row): Out
+}
+object RowParser {
+  def instance[QInfo, Out <: HList](p: Row => Out) = new RowParser[QInfo, Out] {
+    override def parse(row: Row): Out = p(row)
+  }
+
+  implicit val hNilInstance = instance[HNil, HNil](_ => HNil)
+
+  implicit def hListInstance[CassandraType <: CassandraDataType, Index <: Nat, QInfoTail <: HList, ScalaType, OutTail <: HList](
+    implicit
+    index: ToInt[Index],
+    headCodec: TroyCodec[CassandraType, ScalaType],
+    tailParser: RowParser[QInfoTail, OutTail]
+  ) = instance[(CassandraType, Index) :: QInfoTail, ScalaType :: OutTail] { row =>
+    headCodec.get(row, Nat.toInt[Index]) :: tailParser.parse(row)
+  }
+}
 
 trait Select[I, O] {
   def apply(input: I): Future[Iterable[O]]
