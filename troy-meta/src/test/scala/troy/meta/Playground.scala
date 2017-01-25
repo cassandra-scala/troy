@@ -31,7 +31,7 @@ object Playground extends App {
   def withSession[T](f: Session => T) = {
     val cluster = new Cluster.Builder().addContactPoints("127.0.0.1").withPort(9042).build()
     val session: Session = cluster.connect()
-    Try(f(session))
+    Try(f(session)).failed.foreach(println)
     session.close()
     cluster.close()
   }

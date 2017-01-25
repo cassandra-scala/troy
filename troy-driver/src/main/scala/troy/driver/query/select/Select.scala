@@ -24,7 +24,6 @@ trait StatementBinder[PInfo, Params] {
   def bind(bs: BoundStatement, params: Params): BoundStatement
 }
 
-
 object StatementBinder {
   def instance[PInfo, Params <: HList](binder: (BoundStatement, Params) => BoundStatement) = new StatementBinder[PInfo, Params] {
     override def bind(bs: BoundStatement, params: Params): BoundStatement = binder(bs, params)
@@ -107,6 +106,10 @@ object Select {
     def apply[Version, Keyspace, Table, SelectonClause, Relations, QueryInputScalaType, QueryOutputRowScalaType] =
       new Query[Version, Keyspace, Table, SelectonClause, Relations, QueryInputScalaType, QueryOutputRowScalaType]
   }
+
+  implicit val nothingZipWithIndex: ZipWithIndex.Aux[Nothing, Nothing] = ???
+  implicit def nothingRowParser[T <: HList]: RowParser[Nothing, T] = ???
+
   class Query[Version, Keyspace, Table, SelectonClause, Relations, QueryInputScalaType, QueryOutputRowScalaType] {
     /**
      * Type Params to be inferred by compiler

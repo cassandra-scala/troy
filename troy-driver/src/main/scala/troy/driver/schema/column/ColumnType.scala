@@ -36,8 +36,4 @@ object ColumnType {
 
   def instance[V, K, T, C, CT <: CassandraDataType](implicit tableExists: TableExists[V, K, T]): Aux[V, K, T, C, CT] =
     new ColumnType[V, K, T, C] { type Out = CT }
-
-  implicit def implicitNotFoundMacro[V, K, T, C, CT]: Aux[V, K, T, C, CT] = macro implicitNotFoundMacroImpl[V, K, T, C]
-
-  def implicitNotFoundMacroImpl[V, K, T, C](c: Context) = c.abort(c.enclosingPosition, "Column Not Found")
 }
