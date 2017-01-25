@@ -11,7 +11,7 @@ trait Selection[Version, Keyspace, Table, S] {
   type Out <: HList
 }
 
-object Selection {
+object Selection extends LowPriority {
   import Select._
 
   type Aux[V, K, T, S, O] = Selection[V, K, T, S] { type Out = O }
@@ -34,8 +34,17 @@ object Selection {
     headType: FunctionType[V, FKeyspace, FName, FParamTypes],
     tailType: Selection[V, K, T, ST]
   ) = instance[V, K, T, Function[FKeyspace, FName, FParams] :: ST, headType.Out :: tailType.Out]
+}
 
-  implicit def implicitNotFoundMacro[V, K, T, C, CT]: Aux[V, K, T, C, CT] = macro implicitNotFoundMacroImpl[V, K, T, C]
+trait LowPriority {
+  import Select._
+  import Selection.Aux
 
-  def implicitNotFoundMacroImpl[V, K, T, C](c: Context) = c.abort(c.enclosingPosition, "a7a")
+  implicit def hColumnNotFoundInstance[V, K, T, ColumnName, ST <: HList]: Aux[V, K, T, Column[ColumnName] :: ST, Nothing] = macro ImplicitNotFoundMacro.columnNotFound[V, K, T, ColumnName]
+}
+
+object ImplicitNotFoundMacro {
+  def columnNotFound[V, K, T, ColumnName](c: Context) = {
+    c.abort(c.enclosingPosition, "Some column doesn't exist in this query") // TODO: Extract column names from literal types
+  }
 }
