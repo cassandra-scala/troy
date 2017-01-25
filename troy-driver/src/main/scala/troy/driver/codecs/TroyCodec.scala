@@ -12,7 +12,7 @@ trait TroyCodec[C <: CT, S] {
   def set[T <: SettableByIndexData[T]](settable: T, i: Int, value: S): T
 }
 
-object TroyCodec {
+object TroyCodec extends PrimitivesCodecs {
 
   def instance[C <: CT, S](typeCodec: TypeCodec[S]) =
     new TroyCodec[C, S] {

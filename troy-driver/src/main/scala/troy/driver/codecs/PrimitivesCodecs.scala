@@ -34,7 +34,7 @@ object PrimitivesConverter {
     )
 }
 
-object PrimitivesCodecs {
+trait PrimitivesCodecs {
 
   implicit val intAsInt = new TroyCodec[CT.Int, Int] {
     override def get(gettable: GettableByIndexData, i: Int): Int = gettable.getInt(i)
@@ -92,3 +92,5 @@ object PrimitivesCodecs {
           Some(inner.get(gettable, i))
     }
 }
+
+object PrimitivesCodecs extends PrimitivesCodecs
