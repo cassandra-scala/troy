@@ -12,6 +12,10 @@ trait Utils {
     scala.meta.abort(str)
   }
 
+  def notImplemented(msg: String) = {
+    abort("Not implemented " + msg)
+  }
+
   def getOrAbort[T](result: CqlParser.ParseResult[T]): T =
     result.getOrElse(abort("Parse error"))
 
