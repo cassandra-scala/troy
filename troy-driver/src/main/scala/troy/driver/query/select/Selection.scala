@@ -44,7 +44,7 @@ trait LowPriority {
 }
 
 object ImplicitNotFoundMacro {
-  def columnNotFound[V, K, T, ColumnName](c: Context) = {
-    c.abort(c.enclosingPosition, "Some column doesn't exist in this query") // TODO: Extract column names from literal types
+  def columnNotFound[V, K, T, ColumnName](c: Context)(implicit columnName: c.WeakTypeTag[ColumnName]) = {
+    c.abort(c.enclosingPosition, s"Undefined name ${columnName.tpe} in selection clause.")
   }
 }
