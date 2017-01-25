@@ -99,5 +99,44 @@ object Select {
   trait Term
   trait AnonymousBindMarker extends Term
   trait NamedBindMarker[Name] extends Term
+
+  object Query {
+    /**
+     * Type Params to be sent by macro
+     */
+    def apply[Version, Keyspace, Table, SelectonClause, Relations, QueryInputScalaType, QueryOutputRowScalaType] =
+      new Query[Version, Keyspace, Table, SelectonClause, Relations, QueryInputScalaType, QueryOutputRowScalaType]
+  }
+  class Query[Version, Keyspace, Table, SelectonClause, Relations, QueryInputScalaType, QueryOutputRowScalaType] {
+    /**
+     * Type Params to be inferred by compiler
+     */
+    def apply[PInfo <: HList, IndexedPInfo <: HList, QInfo <: HList, IndexedQInfo <: HList, IRepr <: HList, ORepr <: HList](raw: String)(
+      implicit
+      versionExists: VersionExists[Version],
+      keyspaceExists: KeyspaceExists[Version, Keyspace],
+      tableExists: TableExists[Version, Keyspace, Table],
+      selection: Selection.Aux[Version, Keyspace, Table, SelectonClause, QInfo],
+      relations: Where.Aux[Version, Keyspace, Table, Relations, PInfo],
+      zipSelectionWithIndex: ZipWithIndex.Aux[QInfo, IndexedQInfo],
+      zipParamsWithIndex: ZipWithIndex.Aux[PInfo, IndexedPInfo],
+      iGen: Generic.Aux[QueryInputScalaType, IRepr],
+      oGen: Generic.Aux[QueryOutputRowScalaType, ORepr],
+      binder: StatementBinder[IndexedPInfo, IRepr],
+      parser: RowParser[IndexedQInfo, ORepr],
+      //      preparationStrategy: PreparationStrategy.Aux[String, PreparedStatement],
+      //      bindStrategy: BindStrategy.Aux[PreparedStatement, IRepr, BoundStatement],
+      //      executionStrategy: ExecutionStrategy.Aux[BoundStatement, ResultSet],
+      //      parsingStrategy: ParsingStrategy.Aux[ResultSet, ORepr]
+      session: Session,
+      ec: ExecutionContext
+    ) = new Select[QueryInputScalaType, QueryOutputRowScalaType] {
+      val prepared = session.prepare(raw)
+      override def apply(input: QueryInputScalaType): Future[Iterable[QueryOutputRowScalaType]] = {
+        val bound = binder.bind(prepared.bind, iGen.to(input))
+        val resultSet = session.executeAsync(bound).asScala
+        resultSet.map(_.asScala.map(parser.parse).map(oGen.from))
+      }
+    }
   }
 }
