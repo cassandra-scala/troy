@@ -35,12 +35,6 @@ object Selection {
     tailType: Selection[V, K, T, ST]
   ) = instance[V, K, T, Function[FKeyspace, FName, FParams] :: ST, headType.Out :: tailType.Out]
 
-  implicit def genericInstance[V, K, T, S, SRepr <: HList](
-    implicit
-    sGen: Generic.Aux[S, SRepr],
-    selection: Lazy[Selection[V, K, T, SRepr]]
-  ) = instance[V, K, T, S, selection.value.Out]
-
   implicit def implicitNotFoundMacro[V, K, T, C, CT]: Aux[V, K, T, C, CT] = macro implicitNotFoundMacroImpl[V, K, T, C]
 
   def implicitNotFoundMacroImpl[V, K, T, C](c: Context) = c.abort(c.enclosingPosition, "a7a")
