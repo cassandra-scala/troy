@@ -3,8 +3,6 @@ package driver.query.select
 
 import com.datastax.driver.core._
 import shapeless._
-import troy.driver.schema.{ FunctionType, KeyspaceExists, TableExists, VersionExists }
-import troy.driver.schema.column.ColumnType
 import shapeless.ops.hlist.ZipWithIndex
 import shapeless.ops.nat.ToInt
 import troy.driver.CassandraDataType
@@ -13,7 +11,6 @@ import troy.driver.JavaConverters.RichListenableFuture
 import troy.driver.codecs.TroyCodec
 import troy.driver.JavaConverters.RichListenableFuture
 
-import scala.concurrent.Future
 import scala.annotation.implicitNotFound
 import scala.collection.JavaConverters._
 import scala.concurrent.{ ExecutionContext, Future }
@@ -87,5 +84,20 @@ object Select {
   // trait Asterisk
   trait NoKeyspace // Used to mark absence of a specific keyspace
 
+  trait Relation[ColumnName, O, T]
+
+  //  trait Operator
+  /**
+   * Denotes ==, <, >, >, <=, >=, !=
+   */
+  trait Equality
+  trait In
+  trait Contains
+  trait ContainsKey
+  trait Like
+
+  trait Term
+  trait AnonymousBindMarker extends Term
+  trait NamedBindMarker[Name] extends Term
   }
 }
