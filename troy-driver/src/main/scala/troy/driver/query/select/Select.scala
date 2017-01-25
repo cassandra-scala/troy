@@ -1,28 +1,62 @@
 package troy
 package driver.query.select
 
+import com.datastax.driver.core._
 import shapeless._
 import troy.driver.schema.{ FunctionType, KeyspaceExists, TableExists, VersionExists }
 import troy.driver.schema.column.ColumnType
+import shapeless.ops.hlist.ZipWithIndex
+import shapeless.ops.nat.ToInt
+import troy.driver.CassandraDataType
+import troy.driver.schema.{ KeyspaceExists, TableExists, VersionExists }
+import troy.driver.JavaConverters.RichListenableFuture
+import troy.driver.codecs.TroyCodec
+import troy.driver.JavaConverters.RichListenableFuture
 
 import scala.concurrent.Future
+import scala.annotation.implicitNotFound
+import scala.collection.JavaConverters._
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.reflect.macros.blackbox.Context
+
+/*
+ * PInfo: Compile time info about schema
+ * Params: type of params to be sent in runtime
+ */
+trait StatementBinder[PInfo, Params] {
+  def bind(bs: BoundStatement, params: Params): BoundStatement
+}
+
+
+object StatementBinder {
+  def instance[PInfo, Params <: HList](binder: (BoundStatement, Params) => BoundStatement) = new StatementBinder[PInfo, Params] {
+    override def bind(bs: BoundStatement, params: Params): BoundStatement = binder(bs, params)
+  }
+
+  implicit val hNilInstance = instance[HNil, HNil]((s, _) => s)
+
+  implicit def hListInstance[Index <: Nat, CassandraType <: CassandraDataType, ScalaType, PInfoTail <: HList, ParamsTail <: HList](
+    implicit
+    index: ToInt[Index],
+    headCodec: TroyCodec[CassandraType, ScalaType],
+    tailBinder: StatementBinder[PInfoTail, ParamsTail]
+  ) = instance[(CassandraType, Index) :: PInfoTail, ScalaType :: ParamsTail] { (statement, params) =>
+    val newS = headCodec.set(statement, Nat.toInt[Index], params.head)
+    tailBinder.bind(newS, params.tail)
+  }
+
+  //
+  //    implicit def implicitNotFoundMacro[X, Ps <: HList]: StatementBinder[X, Ps] = macro implicitNotFoundMacroImpl[Ps]
+  //
+  //    def implicitNotFoundMacroImpl[Ps](c: Context) = c.abort(c.enclosingPosition, s"a7a need 3ala fekra")
+}
+
 
 trait Select[I, O] {
-  type RawType <: HList
-  type ParamsType <: HList
-
-  def rawQuery: String
-
-  def apply(i: I): O = {
-    println(rawQuery)
-    ???
-  }
+  def apply(input: I): Future[Iterable[O]]
 }
 
 object Select {
-  //  type Aux[V, K, T, S, O] = Select[V, K, T, S] { type Out = O }
-  //  def apply[V, K, T, S](implicit s: Select[V, K, T, S]): Aux[V, K, T, S, s.Out] = s
-
   // TODO
   // trait Aliased[S, Alias]
   trait Column[Name]
@@ -30,15 +64,5 @@ object Select {
   // trait Asterisk
   trait NoKeyspace // Used to mark absence of a specific keyspace
 
-  def select[V, K, T, S, I, O](raw: String)(
-    implicit
-    versionExists: VersionExists[V],
-    keyspaceExists: KeyspaceExists[V, K],
-    tableExists: TableExists[V, K, T],
-    selection: Selection[V, K, T, S]
-  ) = new Select[I, Future[O]] {
-    override type RawType = selection.Out
-    override type ParamsType = Nothing
-    override val rawQuery = raw
   }
 }
