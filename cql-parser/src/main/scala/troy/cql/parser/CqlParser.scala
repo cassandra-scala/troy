@@ -74,11 +74,14 @@ object CqlParser extends JavaTokenParsers
 
     str | blob | uuid | floats | int | boolean | nullConst
   }
+
+  // Ignores comments
+  protected override val whiteSpace = """(\s|//.*|--.*|(?m)/\*(\*(?!/)|[^*])*\*/)+""".r
+
   def identifier: Parser[Identifier] = "[a-zA-Z0-9_]+".r.filter(k => !Keywords.contains(k.toUpperCase))
 
   def optionInstruction: Parser[OptionInstruction] = {
     def identifierOption = identifier ~ ("=".i ~> identifier) ^^^^ IdentifierOption
-
     def constantOption = identifier ~ ("=".i ~> constant) ^^^^ ConstantOption
     def mapLiteralOption = identifier ~ ("=".i ~> mapLiteral) ^^^^ MapLiteralOption
 
