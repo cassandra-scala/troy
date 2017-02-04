@@ -100,15 +100,23 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
   private def extractVariableTypes(tableName: TableName, where: WhereClause): Result[Seq[DataType]] =
     schema.getTable(tableName).flatMap { table => extractVariableTypes(table, where) }
 
-  private def extractVariableTypes(table: Table, where: WhereClause): Result[Seq[DataType]] =
+  private def extractVariableTypes(table: Table, where: WhereClause): Result[Seq[DataType]] = {
+    import ColumnOps.Operations
     V.merge(where.relations.map {
       case WhereClause.Relation.Simple(columnName, op, BindMarker.Anonymous) =>
-        import ColumnOps.Operations
         table.getColumn(columnName).flatMap(_.operandType(op)).map(dt => Seq(dt))
+
+      case WhereClause.Relation.Simple(columnName, op, m: MapLiteral) =>
+        table.getColumn(columnName).flatMap(_.operandType(op)).map { dt =>
+          Seq.fill(m.pairs.count(_._2 == BindMarker.Anonymous))(dt)
+        }
+
       case WhereClause.Relation.Tupled(identifiers, _, _) => ???
+
       case WhereClause.Relation.Token(_, identifiers, _)  => ???
       case _                                              => noVariables
     }).map(_.flatten)
+  }
 
   private def extractVariableTypes(table: TableName, insertClause: Insert.NamesValues): Result[Seq[DataType]] = {
     val markedColumns = (insertClause.columnNames zip insertClause.values.values).collect {
