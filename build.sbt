@@ -45,6 +45,21 @@ lazy val troy = project
     parallelExecution in Test := false
   ): _*)
 
+/**
+  * Post 1.0 era
+  */
+lazy val typelevelUtils = project
+  .in(file("typelevel-utils"))
+  .settings(name := "typelevel-utils")
+  .settings(libraryDependencies ++= Vector(
+    Library.shapeless
+  ))
+
+lazy val tast = project
+  .in(file("typelevel-ast"))
+  .dependsOn(typelevelUtils % "test->test;compile->compile")
+  .settings(name := "typelevel-ast")
+
 lazy val troyMeta = project
   .in(file("troy-meta"))
   .settings(name := "troy-meta")
