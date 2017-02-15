@@ -21,17 +21,6 @@ lazy val troySchema = project
     Library.scalaTest % Test
   ))
 
-lazy val troyDriver = project
-  .in(file("troy-driver"))
-  .settings(name := "troy-driver")
-  .settings(libraryDependencies ++= Vector(
-    Library.scalaReflect,
-    Library.scalaTest % Test,
-    Library.mockito % Test,
-    Library.cassandraDriverCore,
-    Library.shapeless
-  ))
-
 lazy val troy = project
   .in(file("troy-macro"))
   .settings(libraryDependencies ++= Vector(
@@ -59,6 +48,19 @@ lazy val tast = project
   .in(file("typelevel-ast"))
   .dependsOn(typelevelUtils % "test->test;compile->compile")
   .settings(name := "typelevel-ast")
+
+
+lazy val troyDriver = project
+  .in(file("troy-driver"))
+  .dependsOn(tast)
+  .settings(name := "troy-driver")
+  .settings(libraryDependencies ++= Vector(
+    Library.scalaReflect,
+    Library.scalaTest % Test,
+    Library.mockito % Test,
+    Library.cassandraDriverCore,
+    Library.shapeless
+  ))
 
 lazy val troyMeta = project
   .in(file("troy-meta"))

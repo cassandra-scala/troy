@@ -5,6 +5,7 @@ import java.io.InputStream
 
 import troy.cql.ast.{CqlParser, DataType, KeyspaceName, TableName}
 import troy.schema.{SchemaEngineImpl, VersionedSchemaEngine, VersionedSchemaEngineImpl}
+import troy.tutils.TSome
 
 import scala.io.Source
 import scala.meta._
@@ -16,7 +17,9 @@ object SchemaUtils extends Utils {
   val imports = Seq(
     q"import troy.driver.schema._",
     q"import troy.driver.schema.column._",
-    q"import troy.driver.InternalDsl.CDT"
+    q"import troy.driver.InternalDsl.CDT",
+    q"import troy.tast._",
+    q"import troy.tutils._"
   )
 
   def writeSchema: Seq[Stat] = {
@@ -46,22 +49,23 @@ object SchemaUtils extends Utils {
       (v, schema: SchemaEngineImpl) <- schemas
       vLit = literal(v)
       (KeyspaceName(k), keyspace) <- schema.schema.keyspaces
-      kLit = literal(k)
-      (TableName(_, t), table) <- keyspace.tables
-      tLit = literal(t)
-    } yield constructImplicitVal(s"table${t}ExistsInKeyspace${k}InV$v", q"TableExists.instance[$vLit, $kLit, $tLit]")
+      kLit = t[TSome[_]](literal(k))
+      (TableName(_, tableName), table) <- keyspace.tables
+      tLit = literal(tableName)
+    } yield constructImplicitVal(s"table${tableName}ExistsInKeyspace${k}InV$v", q"TableExists.instance[$vLit, $kLit, $tLit]")
 
     val columnsSchemaImplicits = for {
       (v, schema: SchemaEngineImpl) <- schemas
       vLit = literal(v)
       (KeyspaceName(k), keyspace) <- schema.schema.keyspaces
       kLit = literal(k)
-      (TableName(_, t), table) <- keyspace.tables
-      tLit = literal(t)
+      (TableName(_, tName), table) <- keyspace.tables
+      tLit = literal(tName)
       (cName, column) <- table.columns
       cLit = literal(cName)
+      tableType = t[troy.tast.TableName[_, _]](t[TSome[_]](literal(k)), tLit)
       ct = translateColumnType(column.dataType)
-    } yield constructImplicitVal(s"column${cName}ExistsInTable${t}InKeyspace${k}InV$v", q"ColumnType.instance[$vLit, $kLit, $tLit, $cLit, $ct]")
+    } yield constructImplicitVal(s"column${cName}ExistsInTable${tName}InKeyspace${k}InV$v", q"ColumnType.instance[$vLit, $tableType, $cLit, $ct]")
 
     imports ++ globalSchemaImplicits ++ versionsSchemaImplicits ++ keyspacesSchemaImplicits ++ tablesSchemaImplicits ++ columnsSchemaImplicits
   }
@@ -88,10 +92,6 @@ object SchemaUtils extends Utils {
       case CqlParser.Failure(msg, next) =>
         abort(s"Failure during parsing the schema. Error ($msg) near line ${next.pos.line}, column ${next.pos.column}")
     }
-
-  private def translateColumnTypes(types: Seq[DataType]) = {
-    types.map(t => translateColumnType(t))
-  }
 
   private def translateColumnType(t: DataType) = {
     t match {
