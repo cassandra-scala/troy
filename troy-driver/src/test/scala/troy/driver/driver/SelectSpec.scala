@@ -2,7 +2,7 @@ package troy
 package driver.driver
 
 import shapeless._
-import troy.driver.query.select.Selection
+import troy.driver.query.select.SelectionTypeResolver$
 import troy.driver.{CassandraDataType => CDT}
 import troy.driver.query.select._
 
@@ -10,7 +10,7 @@ object SelectionSpec {
   import Select._
   import TestSchema._
 
-  def assertSelectionOut[V, K, T, S, O](implicit s: Selection.Aux[V, K, T, S, O]) = ()
+  def assertSelectionOut[V, K, T, S, O](implicit s: SelectionTypeResolver.Aux[V, K, T, S, O]) = ()
 
   assertSelectionOut[1, "test", "posts",
     HNil,

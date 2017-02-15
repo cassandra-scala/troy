@@ -20,8 +20,9 @@ package driver.schema.column
 import troy.driver.codecs.TroyCodec
 import troy.driver.schema.TypeBinding
 import troy.driver.{ CassandraDataType => CDT }
+import troy.tast.{ TableName, Identifier }
 
-sealed trait CodecForColumn[Version, Keyspace, Table, Column] {
+sealed trait CodecForColumn[Version, Table <: TableName[_, _], Column <: Identifier] {
   type CassandraType <: CDT
   type ScalaType
 
@@ -29,19 +30,19 @@ sealed trait CodecForColumn[Version, Keyspace, Table, Column] {
 }
 
 object CodecForColumn {
-  type Aux[V, K, T, C, CT, ST] = CodecForColumn[V, K, T, C] {
+  type Aux[V, T <: TableName[_, _], C <: Identifier, CT <: CDT, ST] = CodecForColumn[V, T, C] {
     type CassandraType = CT
     type ScalaType = ST
   }
 
-  def apply[V, K, T, C](implicit cf: CodecForColumn[V, K, T, C]): Aux[V, K, T, C, cf.CassandraType, cf.ScalaType] = cf
+  def apply[V, T <: TableName[_, _], C <: Identifier](implicit cf: CodecForColumn[V, T, C]): Aux[V, T, C, cf.CassandraType, cf.ScalaType] = cf
 
-  implicit def instance[V, K, T, C, CT <: CDT, ST](
+  implicit def instance[V, T <: TableName[_, _], C <: Identifier, CT <: CDT, ST](
     implicit
-    columnType: ColumnType.Aux[V, K, T, C, CT],
+    columnType: ColumnType.Aux[V, T, C, CT],
     typeBinding: TypeBinding.Aux[CT, ST],
     codec: TroyCodec[CT, ST]
-  ): Aux[V, K, T, C, CT, ST] = new CodecForColumn[V, K, T, C] {
+  ): Aux[V, T, C, CT, ST] = new CodecForColumn[V, T, C] {
     type CassandraType = CT
     type ScalaType = ST
     val codec: TroyCodec[CassandraType, ScalaType] = codec

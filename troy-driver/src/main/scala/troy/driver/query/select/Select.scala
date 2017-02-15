@@ -1,20 +1,18 @@
 package troy
 package driver.query.select
 
-import com.datastax.driver.core._
+import com.datastax.driver.core.{ BoundStatement, Row }
 import shapeless._
 import shapeless.ops.hlist.ZipWithIndex
 import shapeless.ops.nat.ToInt
 import troy.driver.CassandraDataType
 import troy.driver.schema.{ KeyspaceExists, TableExists, VersionExists }
-import troy.driver.JavaConverters.RichListenableFuture
 import troy.driver.codecs.TroyCodec
-import troy.driver.JavaConverters.RichListenableFuture
+import troy.tast._
+import troy.tast.ops.{ GetSelectionClause, GetFullTableName, GetKeyspaceName }
+import troy.tutils.TEither
 
-import scala.annotation.implicitNotFound
-import scala.collection.JavaConverters._
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.reflect.macros.blackbox.Context
 
 /*
  * PInfo: Compile time info about schema
@@ -76,69 +74,52 @@ trait Select[I, O] {
 }
 
 object Select {
-  // TODO
-  // trait Aliased[S, Alias]
-  trait Column[Name]
-  trait Function[Keyspace, Name, Params <: HList]
-  // trait Asterisk
-  trait NoKeyspace // Used to mark absence of a specific keyspace
-
-  trait Relation[ColumnName, O, T]
-
-  //  trait Operator
-  /**
-   * Denotes ==, <, >, >, <=, >=, !=
-   */
-  trait Equality
-  trait In
-  trait Contains
-  trait ContainsKey
-  trait Like
-
-  trait Term
-  trait AnonymousBindMarker extends Term
-  trait NamedBindMarker[Name] extends Term
 
   object Query {
     /**
      * Type Params to be sent by macro
      */
-    def apply[Version, Keyspace, Table, SelectonClause, Relations, QueryInputScalaType, QueryOutputRowScalaType] =
-      new Query[Version, Keyspace, Table, SelectonClause, Relations, QueryInputScalaType, QueryOutputRowScalaType]
+    def apply[Version <: Int, Statement <: troy.tast.SelectStatement[_, _, _, _, _, _, _, _], QueryInputScalaType, QueryOutputRowScalaType] =
+      new Query[Version, Statement, QueryInputScalaType, QueryOutputRowScalaType]
   }
 
-  implicit val nothingZipWithIndex: ZipWithIndex.Aux[Nothing, Nothing] = ???
+  implicit def nothingZipWithIndex: ZipWithIndex.Aux[Nothing, Nothing] = ???
   implicit def nothingRowParser[T <: HList]: RowParser[Nothing, T] = ???
 
-  class Query[Version, Keyspace, Table, SelectonClause, Relations, QueryInputScalaType, QueryOutputRowScalaType] {
+  class Query[Version <: Int, Statement <: troy.tast.SelectStatement[_, _, _, _, _, _, _, _], QueryInputScalaType, QueryOutputRowScalaType] {
     /**
      * Type Params to be inferred by compiler
      */
-    def apply[PInfo <: HList, IndexedPInfo <: HList, QInfo <: HList, IndexedQInfo <: HList, IRepr <: HList, ORepr <: HList](raw: String)(
+    def apply[K <: MaybeKeyspaceName, T <: TableName[_, _], S <: troy.tast.Select.Selection, TryQInfo <: TEither[THList[String], THList[CassandraDataType]], QInfo <: THList[CassandraDataType], PInfo <: HList, IndexedPInfo <: HList, IndexedQInfo <: HList, IRepr <: HList, ORepr <: HList](raw: String)(
       implicit
-      versionExists: VersionExists[Version],
-      keyspaceExists: KeyspaceExists[Version, Keyspace],
-      tableExists: TableExists[Version, Keyspace, Table],
-      selection: Selection.Aux[Version, Keyspace, Table, SelectonClause, QInfo],
-      relations: Where.Aux[Version, Keyspace, Table, Relations, PInfo],
-      zipSelectionWithIndex: ZipWithIndex.Aux[QInfo, IndexedQInfo],
-      zipParamsWithIndex: ZipWithIndex.Aux[PInfo, IndexedPInfo],
-      iGen: Generic.Aux[QueryInputScalaType, IRepr],
-      oGen: Generic.Aux[QueryOutputRowScalaType, ORepr],
-      binder: StatementBinder[IndexedPInfo, IRepr],
-      parser: RowParser[IndexedQInfo, ORepr],
-      //      preparationStrategy: PreparationStrategy.Aux[String, PreparedStatement],
-      //      bindStrategy: BindStrategy.Aux[PreparedStatement, IRepr, BoundStatement],
-      //      executionStrategy: ExecutionStrategy.Aux[BoundStatement, ResultSet],
-      //      parsingStrategy: ParsingStrategy.Aux[ResultSet, ORepr]
-      session: Session,
+      checkVersionExists: VersionExists[Version],
+      getKeyspace: GetKeyspaceName.Aux[Statement, K],
+      checkKeyspaceExists: KeyspaceExists[Version, K],
+      getTable: GetFullTableName.Aux[Statement, T],
+      checkTableExists: TableExists[Version, T],
+      getSelectionClause: GetSelectionClause.Aux[Statement, S],
+      tryGetSelectionType: SelectionTypeResolver.Aux[Version, T, S, TryQInfo],
+      getSelectionType: GetOrElseFail.Aux[TryQInfo, QInfo],
+      //      relations: Where.Aux[Version, Keyspace, Table, Relations, PInfo],
+      //      zipSelectionWithIndex: ZipWithIndex.Aux[QInfo, IndexedQInfo],
+      //      zipParamsWithIndex: ZipWithIndex.Aux[PInfo, IndexedPInfo],
+      //      iGen: Generic.Aux[QueryInputScalaType, IRepr],
+      //      oGen: Generic.Aux[QueryOutputRowScalaType, ORepr],
+      //      binder: StatementBinder[IndexedPInfo, IRepr],
+      //      parser: RowParser[IndexedQInfo, ORepr],
+      //      //      preparationStrategy: PreparationStrategy.Aux[String, PreparedStatement],
+      //      //      bindStrategy: BindStrategy.Aux[PreparedStatement, IRepr, BoundStatement],
+      //      //      executionStrategy: ExecutionStrategy.Aux[BoundStatement, ResultSet],
+      //      //      parsingStrategy: ParsingStrategy.Aux[ResultSet, ORepr]
+      //      session: Session,
       ec: ExecutionContext
     ) = new Select[QueryInputScalaType, QueryOutputRowScalaType] {
-      val prepared = session.prepare(raw)
+      //      val prepared = session.prepare(raw)
       override def apply(input: QueryInputScalaType): Future[Iterable[QueryOutputRowScalaType]] = {
-        val bound = binder.bind(prepared.bind, iGen.to(input))
-        val resultSet = session.executeAsync(bound).asScala
-        resultSet.map(_.asScala.map(parser.parse).map(oGen.from))
+        //        val bound = binder.bind(prepared.bind, iGen.to(input))
+        //        val resultSet = session.executeAsync(bound).asScala
+        //        resultSet.map(_.asScala.map(parser.parse).map(oGen.from))
+        ???
       }
     }
   }
