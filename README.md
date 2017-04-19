@@ -3,6 +3,8 @@
 [![Coverage Status](https://coveralls.io/repos/github/cassandra-scala/troy/badge.svg?branch=master)](https://coveralls.io/github/cassandra-scala/troy?branch=master)
 # What is Troy?
 
+[![Join the chat at https://gitter.im/cassandra-scala/troy](https://badges.gitter.im/cassandra-scala/troy.svg)](https://gitter.im/cassandra-scala/troy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Type-safe & compile-time-checked wrapper around the Cassandra driver. That allows you to write raw CQL queries like:
 ```
 cql"SELECT post_id, post_title FROM test.posts WHERE author_id = $authorId".prepared.as(Post)
