@@ -8,9 +8,9 @@ object ColumnOps {
     import Operator._
     import DataType._
 
-    // TODO: Add NotEquals, In
+    // TODO: Add In
     def operandType(operator: Operator): Result[DataType] = operator match {
-      case Equals | LessThan | GreaterThan | LessThanOrEqual | GreaterThanOrEqual =>
+      case Equals | LessThan | GreaterThan | LessThanOrEqual | GreaterThanOrEqual | NotEquals =>
         V.Success(column.dataType).collect(operatorNotSupported(operator)) {
           case n: Native => n
         }
