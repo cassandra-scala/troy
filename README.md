@@ -1,6 +1,10 @@
 [![Build Status](https://travis-ci.org/cassandra-scala/troy.svg?branch=master)](https://travis-ci.org/cassandra-scala/troy)
 [![Gitter](https://badges.gitter.im/cassandra-scala/troy.svg)](https://gitter.im/cassandra-scala/troy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![Coverage Status](https://coveralls.io/repos/github/cassandra-scala/troy/badge.svg?branch=master)](https://coveralls.io/github/cassandra-scala/troy?branch=master)
+# Warning
+Code in this branch [(as preseneted in ScalaExchange 2016)](https://skillsmatter.com/skillscasts/9039-introducing-troy-the-schema-safe-cassandra-toolkit) is old and unmaintained. The new approach (as presented in ScalaSwarm 2017, and Scala.World 2017) lives in master branch.
+
+
 # What is Troy?
 
 Type-safe & compile-time-checked wrapper around the Cassandra driver. That allows you to write raw CQL queries like:
@@ -21,7 +25,7 @@ Check our [examples](examples) for more usecases.
 ```
 resolvers += Resolver.bintrayRepo("tabdulradi", "maven")
 
-libraryDependencies += "io.github.cassandra-scala" %% "troy" % "0.4.0"
+libraryDependencies += "io.github.cassandra-scala" %% "troy" % "0.5.0"
 ```
 
 ### 2. Add schema.cql files

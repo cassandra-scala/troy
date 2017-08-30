@@ -22,7 +22,7 @@ object Main extends App {
   val getCommentsByLine = withSchema.minVersion(2).maxVersion(2) {
     (authorId: String, postId: UUID) =>
       cql"""
-         SELECT post_id, post_img, foo
+         SELECT post_id, post_img
          FROM test.posts
          WHERE author_id = $authorId
            AND post_id = $postId

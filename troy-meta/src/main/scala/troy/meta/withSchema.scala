@@ -13,7 +13,6 @@ class withSchema extends scala.annotation.StaticAnnotation {
   inline def apply(defn: Defn) = meta {
 
     def findCqlQuery(expr: Term): (Seq[Term.Arg], Seq[Term.Arg]) = {
-      println(expr)
       expr match {
         case query: Term.Interpolate if query.prefix.value == "cql" =>
           (query.parts, query.args)
@@ -112,8 +111,6 @@ class withSchema extends scala.annotation.StaticAnnotation {
 
     def abort(msg: String) = throw new Exception(msg)
     def warn(msg: String) = println(msg)
-    def log[T](o: T): T = {println(o); o}
-
 
     def replaceCqlQuery(expr: Term, replacement: Term): Term =
       expr match {
@@ -189,9 +186,9 @@ class withSchema extends scala.annotation.StaticAnnotation {
     )
 
     val stats = imports ++ Seq(parser, replacedExpr)
-    log(q"""
+    q"""
       val prepared = implicitly[com.datastax.driver.core.Session].prepare($rawQuery)
       ..$mods def ${name: Term.Name}[..$tparams](..$params) = { ..$stats }
-    """)
+    """
   }
 }

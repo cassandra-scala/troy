@@ -25,8 +25,6 @@ package object macros {
 
   private val loadedSchema = new ResourceFileOrFolderSchemaLoader("/schema.cql", "/schema/").load
 
-  def log[T](value: T): T = { println(value); value }
-
   def troyImpl[F](c: Context)(code: c.Expr[F]): c.Expr[F] = {
     import c.universe._
     implicit val c_ = c
@@ -91,7 +89,7 @@ package object macros {
       q"(..$params) => {..$fullBody}"
     ).filter(!_.isEmpty)
 
-    c.Expr(log(q"{ ..$stats }"))
+    c.Expr(q"{ ..$stats }")
   }
 
   private def removeMacroDslClasses(c: Context)(expr: c.universe.Tree): c.universe.Tree = {
